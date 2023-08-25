@@ -29,6 +29,10 @@ subprojects {
         implementation 'io.grpc:grpc-protobuf:1.57.2'
         implementation 'io.grpc:grpc-stub:1.57.2'
         implementation 'io.reactivex.rxjava3:rxjava:3.1.7'
+        implementation 'com.google.inject:guice:7.0.0'
+        implementation 'org.reflections:reflections:0.10.2'
+        implementation 'ch.qos.logback:logback-classic:1.4.11'
+        implementation 'org.slf4j:slf4j-api:1.7.25'
     }
 }
 
