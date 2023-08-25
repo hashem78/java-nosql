@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "me.hashemalayan.nosql.shared";
+option java_outer_classname = "SignalingProto";
+
+import "google/protobuf/empty.proto";
+
+package signaling;
+
+service SignalingService {
+  rpc NodeStream(stream PortContainingMessage) returns(stream PortContainingMessage);
+}
+
+message PortContainingMessage {
+  string port = 1;
+}

@@ -28,6 +28,7 @@ subprojects {
         implementation 'io.grpc:grpc-netty-shaded:1.57.2'
         implementation 'io.grpc:grpc-protobuf:1.57.2'
         implementation 'io.grpc:grpc-stub:1.57.2'
+        implementation 'io.reactivex.rxjava3:rxjava:3.1.7'
     }
 }
 

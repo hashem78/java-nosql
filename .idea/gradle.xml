@@ -12,6 +12,8 @@
             <option value="$PROJECT_DIR$/node-client" />
             <option value="$PROJECT_DIR$/node-server" />
             <option value="$PROJECT_DIR$/shared" />
+            <option value="$PROJECT_DIR$/signaling-client" />
+            <option value="$PROJECT_DIR$/signaling-server" />
           </set>
         </option>
       </GradleProjectSettings>

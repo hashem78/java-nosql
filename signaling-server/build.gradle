@@ -1,0 +1,19 @@
+plugins {
+    id 'java'
+}
+
+group = 'me.hashemalayan'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(path: ':shared')
+    implementation 'com.google.guava:guava:32.1.2-jre'
+}
+
+test {
+    useJUnitPlatform()
+}

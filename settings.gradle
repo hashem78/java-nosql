@@ -3,4 +3,6 @@ include 'node-client'
 include 'node-server'
 include 'shared'
 findProject(':shared:src:main:proto')?.name = 'proto'
+include 'signaling-server'
+include 'signaling-client'
 
