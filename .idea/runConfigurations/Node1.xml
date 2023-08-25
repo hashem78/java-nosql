@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Node1" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="me.hashemalayan.Main" />
+    <module name="nosql.node.main" />
+    <option name="PROGRAM_PARAMETERS" value="8001" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
