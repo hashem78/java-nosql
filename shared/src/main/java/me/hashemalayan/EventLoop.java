@@ -3,15 +3,16 @@ package me.hashemalayan;
 import com.google.inject.Inject;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.function.Consumer;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.function.Consumer;
 
 public class EventLoop {
 
     private final Map<Class<? extends Event>, Consumer<Event>> registry = new ConcurrentHashMap<>();
-    private final ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
+    private final BlockingQueue<Event> eventQueue = new LinkedBlockingQueue<>();
 
     @Inject
     public EventLoop(Set<EventHandler<? extends Event>> handlers) {
@@ -24,13 +25,19 @@ public class EventLoop {
     }
 
     public void dispatch(Event event) {
-        eventQueue.add(event);
+        eventQueue.add(event);  // Or use eventQueue.put(event) if you want it to block when queue is full.
     }
 
     public void process() {
-        Event event;
-        while ((event = eventQueue.poll()) != null) {
-            registry.getOrDefault(event.getClass(), e -> {}).accept(event);
+        while (true) {
+            try {
+                Event event = eventQueue.take(); // Blocks until an event is available.
+                registry.getOrDefault(event.getClass(), e -> {}).accept(event);
+            } catch (InterruptedException e) {
+                // This thread was interrupted while waiting. You can handle this case appropriately.
+                Thread.currentThread().interrupt(); // Preserve the interrupt status.
+                break;
+            }
         }
     }
 }

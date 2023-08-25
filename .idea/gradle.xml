@@ -9,8 +9,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/node-client" />
-            <option value="$PROJECT_DIR$/node-server" />
+            <option value="$PROJECT_DIR$/node" />
             <option value="$PROJECT_DIR$/shared" />
             <option value="$PROJECT_DIR$/signaling-client" />
             <option value="$PROJECT_DIR$/signaling-server" />

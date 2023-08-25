@@ -1,0 +1,5 @@
+<configuration>
+
+    <logger name="io.grpc" level="ERROR" />
+    <logger name="io.netty" level="ERROR" />
+</configuration>
