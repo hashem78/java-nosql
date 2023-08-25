@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "me.hashemalayan.nosql.shared";
+option java_outer_classname = "NodeProto";
+
+package node;
+
+service NodeService {
+  rpc GetNodeState(GetNodeStateRequest) returns(GetNodeStateResponse);
+}
+message GetNodeStateRequest {
+  string sender = 1;
+}
+
+message GetNodeStateResponse{
+  string port = 1;
+  NodeState nodeState = 2;
+}
+
+enum NodeState{
+  HEAlTHY = 0;
+  WAITING = 1;
+  ERROR = 2;
+}

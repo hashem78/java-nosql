@@ -10,8 +10,17 @@ package signaling;
 
 service SignalingService {
   rpc NodeStream(stream PortContainingMessage) returns(stream PortContainingMessage);
+  rpc NodeDiscovery(NodeDiscoveryRequest) returns (NodeDiscoveryResponse);
 }
 
 message PortContainingMessage {
   string port = 1;
+}
+
+message NodeDiscoveryRequest {
+  string localPort = 1;
+}
+
+message NodeDiscoveryResponse {
+  repeated string ports = 1;
 }

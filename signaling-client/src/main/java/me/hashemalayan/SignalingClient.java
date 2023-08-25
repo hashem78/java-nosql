@@ -5,9 +5,11 @@ import com.google.inject.name.Named;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
+import me.hashemalayan.nosql.shared.NodeDiscoveryRequest;
 import me.hashemalayan.nosql.shared.PortContainingMessage;
 import me.hashemalayan.nosql.shared.SignalingServiceGrpc;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -15,9 +17,11 @@ import java.util.concurrent.TimeUnit;
 public class SignalingClient {
 
     private final ManagedChannel channel;
-    private final SignalingServiceGrpc.SignalingServiceStub stub;
+    private final SignalingServiceGrpc.SignalingServiceStub asyncStub;
 
-    StreamObserver<PortContainingMessage> portContainingMessageStreamObserver;
+    private final SignalingServiceGrpc.SignalingServiceBlockingStub blockingStub;
+
+    StreamObserver<PortContainingMessage> nodeStreamObserver;
 
     @Inject
     public SignalingClient(@Named("host") String host, @Named("port") int port) {
@@ -25,29 +29,36 @@ public class SignalingClient {
                 .usePlaintext()
                 .build();
 
-        stub = SignalingServiceGrpc.newStub(channel);
+        asyncStub = SignalingServiceGrpc.newStub(channel);
+        blockingStub = SignalingServiceGrpc.newBlockingStub(channel);
     }
 
     public void connect() {
 
-        if (portContainingMessageStreamObserver == null) {
-            this.portContainingMessageStreamObserver = stub.nodeStream(
+        if (nodeStreamObserver == null) {
+            this.nodeStreamObserver = Objects.requireNonNull(asyncStub).nodeStream(
                     new SignalingServerObserver()
             );
         }
     }
 
-    public void sendMessage(Object message) {
-
-    }
-
     public void announcePresence(String portToAnnouncePresenceOn) {
 
-        Objects.requireNonNull(portContainingMessageStreamObserver).onNext(
+        Objects.requireNonNull(nodeStreamObserver).onNext(
                 PortContainingMessage.newBuilder()
                         .setPort(portToAnnouncePresenceOn)
                         .build()
         );
+    }
+
+    public List<String> discoverRemoteNodes(String localPort) {
+        var response = Objects.requireNonNull(blockingStub).nodeDiscovery(
+                NodeDiscoveryRequest.newBuilder()
+                        .setLocalPort(localPort)
+                        .build()
+        );
+
+        return response.getPortsList();
     }
 
     public void shutdown() throws InterruptedException {

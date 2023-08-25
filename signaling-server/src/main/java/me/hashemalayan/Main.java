@@ -5,6 +5,8 @@ import com.google.common.collect.HashBiMap;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 
+import me.hashemalayan.nosql.shared.NodeDiscoveryRequest;
+import me.hashemalayan.nosql.shared.NodeDiscoveryResponse;
 import me.hashemalayan.nosql.shared.PortContainingMessage;
 import me.hashemalayan.nosql.shared.SignalingServiceGrpc;
 
@@ -71,7 +73,19 @@ class SignalingServerImpl extends SignalingServiceGrpc.SignalingServiceImplBase 
             }
         };
     }
+
+    @Override
+    public void nodeDiscovery(NodeDiscoveryRequest request, StreamObserver<NodeDiscoveryResponse> responseObserver) {
+        System.out.println("Received Node Discovery Request from: " + request.getLocalPort());
+        responseObserver.onNext(
+                NodeDiscoveryResponse.newBuilder()
+                        .addAllPorts(clientMap.keySet())
+                        .build()
+        );
+        responseObserver.onCompleted();
+    }
 }
+
 
 public class Main {
     public static void main(String[] args) throws IOException, InterruptedException {
