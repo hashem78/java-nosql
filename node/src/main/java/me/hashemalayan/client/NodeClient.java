@@ -12,7 +12,10 @@ public class NodeClient {
 
     private final NodeServiceGrpc.NodeServiceStub asyncStub;
 
+    private final String port;
+
     public NodeClient(String port) {
+        this.port = port;
         ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", Integer.parseInt(port))
                 .usePlaintext()
                 .build();
@@ -22,7 +25,12 @@ public class NodeClient {
     }
 
     public NodeState getNodeState() {
-        var response = blockingStub.getNodeState(GetNodeStateRequest.newBuilder().build());
+        var response = blockingStub.getNodeState(
+                GetNodeStateRequest
+                        .newBuilder()
+                        .setSender(port)
+                        .build()
+        );
         return response.getNodeState();
     }
 }

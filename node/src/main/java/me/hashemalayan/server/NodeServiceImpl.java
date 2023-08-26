@@ -25,5 +25,6 @@ public class NodeServiceImpl extends NodeServiceGrpc.NodeServiceImplBase {
                         .setNodeState(NodeState.HEAlTHY)
                         .build()
         );
+        responseObserver.onCompleted();
     }
 }

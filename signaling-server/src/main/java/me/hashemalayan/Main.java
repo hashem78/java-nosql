@@ -28,7 +28,7 @@ class SignalingServerImpl extends SignalingServiceGrpc.SignalingServiceImplBase 
             @Override
             public void onNext(PortContainingMessage request) {
 
-                System.out.println("Received " + request);
+                System.out.println("Received PortContainingMessage: " + request);
 
                 final Set<StreamObserver<PortContainingMessage>> clientsToCleanup = new HashSet<>();
 
@@ -76,11 +76,16 @@ class SignalingServerImpl extends SignalingServiceGrpc.SignalingServiceImplBase 
 
     @Override
     public void nodeDiscovery(NodeDiscoveryRequest request, StreamObserver<NodeDiscoveryResponse> responseObserver) {
-        System.out.println("Received Node Discovery Request from: " + request.getLocalPort());
         responseObserver.onNext(
                 NodeDiscoveryResponse.newBuilder()
                         .addAllPorts(clientMap.keySet())
                         .build()
+        );
+        System.out.println(
+                "Received Node Discovery Request from: "
+                        + request.getLocalPort()
+                        + ", returning: "
+                        + clientMap.keySet()
         );
         responseObserver.onCompleted();
     }

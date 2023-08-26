@@ -1,5 +1,0 @@
-<configuration>
-
-<!--    <logger name="io.grpc" level="DEBUG" />-->
-<!--    <logger name="io.netty" level="DEBUG" />-->
-</configuration>

@@ -5,28 +5,33 @@ import me.hashemalayan.EventHandler;
 import me.hashemalayan.SignalingClient;
 import me.hashemalayan.server.RemoteNodesManager;
 import me.hashemalayan.signaling.events.DiscoverRemoteNodesEvent;
+import org.slf4j.Logger;
 
 public class DiscoverRemoteNodesEventHandler implements EventHandler<DiscoverRemoteNodesEvent> {
     final private SignalingClient signalingClient;
     final private RemoteNodesManager remoteNodesManager;
+    final private Logger logger;
 
     @Inject
     public DiscoverRemoteNodesEventHandler(
             SignalingClient signalingClient,
-            RemoteNodesManager remoteNodesManager
-    ) {
+            RemoteNodesManager remoteNodesManager,
+            Logger logger) {
         this.signalingClient = signalingClient;
         this.remoteNodesManager = remoteNodesManager;
+        this.logger = logger;
     }
 
     @Override
     public void handle(DiscoverRemoteNodesEvent event) {
-        System.out.println("Discovering Remote Nodes");
+        logger.debug("Discovering Remote Nodes...");
         var remoteNodes = signalingClient.discoverRemoteNodes(event.localPort());
-        System.out.println("Found: " + remoteNodes);
+        logger.debug("Found: " + remoteNodes);
         for (var remoteNode : remoteNodes) {
+            logger.debug("Adding RemoteNode: " + remoteNode);
             remoteNodesManager.addRemoteNode(remoteNode);
-            System.out.println("State of: " + remoteNodesManager.getNodeState(remoteNode));
+            logger.debug("Added Remote: " + remoteNode);
+            logger.debug("State of: " + remoteNode + " is " + remoteNodesManager.getNodeState(remoteNode));
         }
     }
 
