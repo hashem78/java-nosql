@@ -1,10 +1,13 @@
 package me.hashemalayan;
 
+import btree4j.BTreeException;
 import com.google.inject.Guice;
+import me.hashemalayan.db.DBManager;
+
+import java.io.IOException;
 
 public class Main {
-    public static void main(String[] args) {
-        System.setProperty("io.grpc.netty.shaded.io.netty.log.level", "DEBUG");
+    public static void main(String[] args) throws BTreeException, IOException {
 
         if(args.length != 1)
         {
@@ -14,10 +17,13 @@ public class Main {
         var injector = Guice.createInjector(
                 new EventLoopModule(),
                 new SignalingClientModule(),
-                new NodeModule()
+                new NodeModule(args[0])
         );
-        System.out.println("Starting on port: " + args[0]);
-        injector.getInstance(NodeEntryPoint.class).run(args[0]);
+        var dbManager = injector.getInstance(DBManager.class);
+        dbManager.addStuff();
+        dbManager.getAllStuff();
+//        System.out.println("Starting on port: " + args[0]);
+//        injector.getInstance(NodeEntryPoint.class).run(args[0]);
     }
 }
 

@@ -33,6 +33,7 @@ subprojects {
         implementation 'ch.qos.logback:logback-classic:1.4.11'
         implementation 'org.slf4j:slf4j-api:1.7.25'
         implementation 'io.vavr:vavr:0.10.4'
+        implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.4'
     }
 }
 
