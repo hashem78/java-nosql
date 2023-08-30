@@ -1,7 +1,6 @@
 package me.hashemalayan.signaling;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;

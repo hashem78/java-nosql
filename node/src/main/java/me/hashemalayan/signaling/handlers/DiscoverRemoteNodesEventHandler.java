@@ -2,8 +2,8 @@ package me.hashemalayan.signaling.handlers;
 
 import com.google.inject.Inject;
 import me.hashemalayan.EventHandler;
-import me.hashemalayan.signaling.SignalingClient;
 import me.hashemalayan.server.RemoteNodesManager;
+import me.hashemalayan.signaling.SignalingClient;
 import me.hashemalayan.signaling.events.DiscoverRemoteNodesEvent;
 import org.slf4j.Logger;
 

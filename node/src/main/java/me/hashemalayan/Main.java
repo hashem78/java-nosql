@@ -1,9 +1,6 @@
 package me.hashemalayan;
 
-import btree4j.BTreeException;
 import com.google.inject.Guice;
-
-import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) {
