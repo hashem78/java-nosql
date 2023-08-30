@@ -2,15 +2,20 @@ package me.hashemalayan.signaling.handlers;
 
 import com.google.inject.Inject;
 import me.hashemalayan.EventHandler;
-import me.hashemalayan.SignalingClient;
+import me.hashemalayan.signaling.SignalingClient;
 import me.hashemalayan.signaling.events.SendSignalingPrescenceEvent;
 
 public class SendSignalingMessageHandler implements EventHandler<SendSignalingPrescenceEvent> {
+    private final SignalingClient signalingClient;
+
     @Inject
-    private SignalingClient signalingClient;
+    public SendSignalingMessageHandler(SignalingClient signalingClient) {
+        this.signalingClient = signalingClient;
+    }
+
     @Override
     public void handle(SendSignalingPrescenceEvent event) {
-        signalingClient.announcePresence(event.port());
+        signalingClient.announcePresence();
     }
 
     @Override

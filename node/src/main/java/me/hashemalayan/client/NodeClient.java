@@ -12,11 +12,11 @@ public class NodeClient {
 
     private final NodeServiceGrpc.NodeServiceStub asyncStub;
 
-    private final String port;
+    private final Integer port;
 
-    public NodeClient(String port) {
+    public NodeClient(Integer port) {
         this.port = port;
-        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", Integer.parseInt(port))
+        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", port)
                 .usePlaintext()
                 .build();
 

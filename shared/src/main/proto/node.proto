@@ -10,11 +10,11 @@ service NodeService {
   rpc GetNodeState(GetNodeStateRequest) returns(GetNodeStateResponse);
 }
 message GetNodeStateRequest {
-  string sender = 1;
+  int32 sender = 1;
 }
 
 message GetNodeStateResponse{
-  string port = 1;
+  int32 port = 1;
   NodeState nodeState = 2;
 }
 

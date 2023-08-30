@@ -14,13 +14,13 @@ service SignalingService {
 }
 
 message PortContainingMessage {
-  string port = 1;
+  int32 port = 1;
 }
 
 message NodeDiscoveryRequest {
-  string localPort = 1;
+  int32 localPort = 1;
 }
 
 message NodeDiscoveryResponse {
-  repeated string ports = 1;
+  repeated int32 ports = 1;
 }

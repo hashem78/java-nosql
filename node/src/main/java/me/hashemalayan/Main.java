@@ -14,10 +14,9 @@ public class Main {
         }
         var injector = Guice.createInjector(
                 new EventLoopModule(),
-                new SignalingClientModule(),
-                new NodeModule(args[0])
+                new NodeModule()
         );
-        injector.getInstance(NodeEntryPoint.class).run(args[0]);
+        injector.getInstance(NodeEntryPoint.class).run();
     }
 }
 

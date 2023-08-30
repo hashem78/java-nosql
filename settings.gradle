@@ -2,6 +2,5 @@ rootProject.name = 'nosql'
 include 'shared'
 findProject(':shared:src:main:proto')?.name = 'proto'
 include 'signaling-server'
-include 'signaling-client'
 include 'node'
 

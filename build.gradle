@@ -9,6 +9,7 @@ buildscript {
 
 plugins {
     id 'java'
+    id 'io.freefair.lombok' version '8.3'
 }
 
 group = 'me.hashemalayan'
@@ -22,6 +23,7 @@ allprojects {
 
 subprojects {
     apply plugin: 'java'
+    apply plugin: 'io.freefair.lombok'
     dependencies {
         testImplementation platform('org.junit:junit-bom:5.9.1')
         testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -34,6 +36,8 @@ subprojects {
         implementation 'org.slf4j:slf4j-api:1.7.25'
         implementation 'io.vavr:vavr:0.10.4'
         implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.4'
+        compileOnly 'org.projectlombok:lombok:1.18.28' // Check for the latest version
+        annotationProcessor 'org.projectlombok:lombok:1.18.28'
     }
 }
 

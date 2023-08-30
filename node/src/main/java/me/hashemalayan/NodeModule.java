@@ -1,6 +1,6 @@
 package me.hashemalayan;
 
-import btree4j.BTree;
+
 import btree4j.BTreeException;
 import btree4j.BTreeIndex;
 import btree4j.BTreeIndexDup;
@@ -11,6 +11,7 @@ import com.google.inject.Provides;
 import me.hashemalayan.db.DBManager;
 import me.hashemalayan.server.LocalNodeManager;
 import me.hashemalayan.server.RemoteNodesManager;
+import me.hashemalayan.signaling.SignalingClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,18 +20,14 @@ import java.util.Random;
 
 public class NodeModule extends AbstractModule {
 
-    final String port;
-
-    public NodeModule(String port) {
-        this.port = port;
-    }
-
     @Override
     protected void configure() {
         bind(LocalNodeManager.class).asEagerSingleton();
         bind(RemoteNodesManager.class).asEagerSingleton();
         bind(BTreeIndexDup.class).toProvider(BTreeProvider.class).asEagerSingleton();
         bind(DBManager.class).asEagerSingleton();
+        bind(NodeProperties.class).asEagerSingleton();
+        bind(SignalingClient.class).asEagerSingleton();
     }
 
     @Provides

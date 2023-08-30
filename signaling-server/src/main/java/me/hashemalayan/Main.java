@@ -16,7 +16,7 @@ import java.util.Set;
 
 class SignalingServerImpl extends SignalingServiceGrpc.SignalingServiceImplBase {
 
-    final BiMap<String, StreamObserver<PortContainingMessage>> clientMap;
+    final BiMap<Integer, StreamObserver<PortContainingMessage>> clientMap;
 
     SignalingServerImpl() {
         clientMap = HashBiMap.create();
@@ -95,7 +95,7 @@ class SignalingServerImpl extends SignalingServiceGrpc.SignalingServiceImplBase 
 public class Main {
     public static void main(String[] args) throws IOException, InterruptedException {
 
-        var server = ServerBuilder.forPort(8080)
+        var server = ServerBuilder.forPort(8000)
                 .addService(new SignalingServerImpl())
                 .build();
 

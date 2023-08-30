@@ -12,23 +12,23 @@ import java.util.List;
 
 public class RemoteNodesManager {
 
-    final private BiMap<String, NodeClient> clients;
+    final private BiMap<Integer, NodeClient> clients;
 
     @Inject
     public RemoteNodesManager() {
         clients = HashBiMap.create();
     }
 
-    public void addRemoteNode(String port) {
+    public void addRemoteNode(Integer port) {
         clients.put(port, new NodeClient(port));
     }
 
-    public NodeState getNodeState(String nodePort) {
+    public NodeState getNodeState(Integer nodePort) {
         return clients.get(nodePort).getNodeState();
     }
 
-    public List<Tuple2<String, NodeState>> getAllNodeStates() {
-        var states = new ArrayList<Tuple2<String, NodeState>>();
+    public List<Tuple2<Integer, NodeState>> getAllNodeStates() {
+        var states = new ArrayList<Tuple2<Integer, NodeState>>();
         for (var entry : clients.entrySet()) {
             states.add(new Tuple2<>(entry.getKey(), entry.getValue().getNodeState()));
         }

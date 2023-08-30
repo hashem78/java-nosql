@@ -10,11 +10,11 @@ public class NodeEntryPoint {
     @Inject
     private EventLoop eventLoop;
 
-    void run(String grpcServerPort) {
-        eventLoop.dispatch(new InitializeLocalServerEvent(grpcServerPort));
+    void run() {
+        eventLoop.dispatch(new InitializeLocalServerEvent());
         eventLoop.dispatch(new InitializeSignalingClientEvent());
-        eventLoop.dispatch(new SendSignalingPrescenceEvent(grpcServerPort));
-        eventLoop.dispatch(new DiscoverRemoteNodesEvent(grpcServerPort));
+        eventLoop.dispatch(new SendSignalingPrescenceEvent());
+        eventLoop.dispatch(new DiscoverRemoteNodesEvent());
         eventLoop.process();
     }
 }

@@ -20,7 +20,7 @@ public class InitializeLocalServerEventHandler implements EventHandler<Initializ
     public void handle(InitializeLocalServerEvent event) {
         try {
             System.out.println("Initializing NodeServer");
-            manager.init(event.port());
+            manager.init();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -1,10 +1,11 @@
-package me.hashemalayan;
+package me.hashemalayan.signaling;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
+import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.NodeDiscoveryRequest;
 import me.hashemalayan.nosql.shared.PortContainingMessage;
 import me.hashemalayan.nosql.shared.SignalingServiceGrpc;
@@ -21,11 +22,15 @@ public class SignalingClient {
 
     private final SignalingServiceGrpc.SignalingServiceBlockingStub blockingStub;
 
+    private final NodeProperties nodeProperties;
+
     StreamObserver<PortContainingMessage> nodeStreamObserver;
 
     @Inject
-    public SignalingClient(@Named("host") String host, @Named("port") int port) {
-        this.channel = ManagedChannelBuilder.forAddress(host, port)
+    public SignalingClient(NodeProperties nodeProperties) {
+
+        this.nodeProperties = nodeProperties;
+        this.channel = ManagedChannelBuilder.forAddress("127.0.0.1", nodeProperties.getSignalingPort())
                 .usePlaintext()
                 .build();
 
@@ -42,19 +47,19 @@ public class SignalingClient {
         }
     }
 
-    public void announcePresence(String portToAnnouncePresenceOn) {
+    public void announcePresence() {
 
         Objects.requireNonNull(nodeStreamObserver).onNext(
                 PortContainingMessage.newBuilder()
-                        .setPort(portToAnnouncePresenceOn)
+                        .setPort(nodeProperties.getPort())
                         .build()
         );
     }
 
-    public List<String> discoverRemoteNodes(String localPort) {
+    public List<Integer> discoverRemoteNodes() {
         var response = Objects.requireNonNull(blockingStub).nodeDiscovery(
                 NodeDiscoveryRequest.newBuilder()
-                        .setLocalPort(localPort)
+                        .setLocalPort(nodeProperties.getPort())
                         .build()
         );
 

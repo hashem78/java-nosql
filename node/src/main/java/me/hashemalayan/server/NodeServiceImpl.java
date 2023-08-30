@@ -7,8 +7,8 @@ import me.hashemalayan.nosql.shared.NodeServiceGrpc;
 import me.hashemalayan.nosql.shared.NodeState;
 
 public class NodeServiceImpl extends NodeServiceGrpc.NodeServiceImplBase {
-    final String port;
-    public NodeServiceImpl(String port) {
+    final int port;
+    public NodeServiceImpl(int port) {
         this.port = port;
     }
 
@@ -17,7 +17,7 @@ public class NodeServiceImpl extends NodeServiceGrpc.NodeServiceImplBase {
             GetNodeStateRequest request,
             StreamObserver<GetNodeStateResponse> responseObserver) {
 
-        System.out.println(request.getSender() + " is asked for my state!");
+        System.out.println(request.getSender() + " asked for my state!");
 
         responseObserver.onNext(
                 GetNodeStateResponse.newBuilder()
