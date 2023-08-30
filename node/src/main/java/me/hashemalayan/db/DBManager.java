@@ -29,31 +29,18 @@ public class DBManager {
     }
 
     public void getAllStuff() throws BTreeException, IOException {
-//        var value = bTree.getValue(new Value("temp"));
-//        assert value != null;
-//        System.out.println("CONTENT LENGTH IS: " + value.getLength());
-//        var inputStream = Objects.requireNonNull(value).getInputStream();
-//        var reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_16));
-//        var stringBuilder = new StringBuilder();
-//
-//        String line;
-//        while ((line = reader.readLine()) != null) {
-//            System.out.println("Here");
-//            stringBuilder.append(line).append("\n");
-//        }
-//        logger.debug("DBManager.getAllStuff: " + stringBuilder.toString().trim());
+        var value = bTree.getValue(new Value("temp"));
+        assert value != null;
+        System.out.println("CONTENT LENGTH IS: " + value.getLength());
+        var inputStream = Objects.requireNonNull(value).getInputStream();
+        var reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_16));
+        var stringBuilder = new StringBuilder();
 
-
-        bTree.search(new BasicIndexQuery.IndexConditionANY(), new BTreeCallback() {
-            @Override
-            public boolean indexInfo(Value value, long pointer) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public boolean indexInfo(Value key, byte[] value) {
-
-            }
-        });
+        String line;
+        while ((line = reader.readLine()) != null) {
+            System.out.println("Here");
+            stringBuilder.append(line).append("\n");
+        }
+        logger.debug("DBManager.getAllStuff: " + stringBuilder.toString().trim());
     }
 }
