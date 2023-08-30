@@ -16,7 +16,7 @@ public class NodeClient {
 
     public NodeClient(Integer port) {
         this.port = port;
-        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", port)
+        ManagedChannel channel = ManagedChannelBuilder.forAddress("127.0.0.1", port)
                 .usePlaintext()
                 .build();
 
