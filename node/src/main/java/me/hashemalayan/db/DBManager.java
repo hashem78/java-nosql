@@ -1,8 +1,6 @@
 package me.hashemalayan.db;
 
 import btree4j.*;
-import btree4j.indexer.BasicIndexQuery;
-import btree4j.utils.lang.Primitives;
 import com.google.inject.Inject;
 import org.slf4j.Logger;
 
