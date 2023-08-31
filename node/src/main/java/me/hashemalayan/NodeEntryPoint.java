@@ -1,6 +1,7 @@
 package me.hashemalayan;
 
 import com.google.inject.Inject;
+import me.hashemalayan.db.events.InitializeLocalDatabaseEvent;
 import me.hashemalayan.server.events.InitializeLocalServerEvent;
 import me.hashemalayan.signaling.events.DiscoverRemoteNodesEvent;
 import me.hashemalayan.signaling.events.InitializeSignalingClientEvent;
@@ -15,6 +16,7 @@ public class NodeEntryPoint {
         eventLoop.dispatch(new InitializeSignalingClientEvent());
         eventLoop.dispatch(new SendSignalingPrescenceEvent());
         eventLoop.dispatch(new DiscoverRemoteNodesEvent());
+        eventLoop.dispatch(new InitializeLocalDatabaseEvent());
         eventLoop.process();
     }
 }

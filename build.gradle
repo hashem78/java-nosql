@@ -38,6 +38,7 @@ subprojects {
         implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.4'
         compileOnly 'org.projectlombok:lombok:1.18.28' // Check for the latest version
         annotationProcessor 'org.projectlombok:lombok:1.18.28'
+        implementation 'com.github.erosb:json-sKema:0.8.0'
     }
 }
 
