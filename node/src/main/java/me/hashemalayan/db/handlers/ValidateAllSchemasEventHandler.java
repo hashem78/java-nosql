@@ -5,13 +5,11 @@ import me.hashemalayan.EventHandler;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.db.SchemaManager;
 import me.hashemalayan.db.events.ValidateAllSchemasEvent;
-import me.hashemalayan.util.JsonDirectoryIterator;
 import me.hashemalayan.util.JsonDirectoryIteratorFactory;
 import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class ValidateAllSchemasEventHandler implements EventHandler<ValidateAllSchemasEvent> {
