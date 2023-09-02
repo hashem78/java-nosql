@@ -16,7 +16,7 @@ import me.hashemalayan.db.DBSchemaLoader;
 import me.hashemalayan.db.SchemaManager;
 import me.hashemalayan.server.LocalNodeManager;
 import me.hashemalayan.server.RemoteNodesManager;
-import me.hashemalayan.signaling.SignalingClient;
+import me.hashemalayan.signaling.RemoteSignalingClient;
 import me.hashemalayan.util.JsonDirectoryIteratorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +32,7 @@ public class NodeModule extends AbstractModule {
         bind(LocalNodeManager.class).asEagerSingleton();
         bind(RemoteNodesManager.class).asEagerSingleton();
         bind(DBManager.class).asEagerSingleton();
-        bind(SignalingClient.class).asEagerSingleton();
+        bind(RemoteSignalingClient.class).asEagerSingleton();
 
         install(
                 new FactoryModuleBuilder()

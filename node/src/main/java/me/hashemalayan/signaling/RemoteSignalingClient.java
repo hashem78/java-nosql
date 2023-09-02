@@ -7,6 +7,7 @@ import io.grpc.stub.StreamObserver;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.NodeDiscoveryRequest;
 import me.hashemalayan.nosql.shared.PortContainingMessage;
+import me.hashemalayan.nosql.shared.SignalingMessage;
 import me.hashemalayan.nosql.shared.SignalingServiceGrpc;
 
 import java.util.List;
@@ -14,7 +15,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 
-public class SignalingClient {
+public class RemoteSignalingClient {
 
     private final ManagedChannel channel;
     private final SignalingServiceGrpc.SignalingServiceStub asyncStub;
@@ -23,10 +24,10 @@ public class SignalingClient {
 
     private final NodeProperties nodeProperties;
 
-    StreamObserver<PortContainingMessage> nodeStreamObserver;
+    StreamObserver<SignalingMessage> nodeStreamObserver;
 
     @Inject
-    public SignalingClient(NodeProperties nodeProperties) {
+    public RemoteSignalingClient(NodeProperties nodeProperties) {
 
         this.nodeProperties = nodeProperties;
         this.channel = ManagedChannelBuilder.forAddress("127.0.0.1", nodeProperties.getSignalingPort())
@@ -41,7 +42,7 @@ public class SignalingClient {
 
         if (nodeStreamObserver == null) {
             this.nodeStreamObserver = Objects.requireNonNull(asyncStub).nodeStream(
-                    new SignalingServerObserver()
+                    new RemoteSignalingServerObserver()
             );
         }
     }
@@ -49,8 +50,13 @@ public class SignalingClient {
     public void announcePresence() {
 
         Objects.requireNonNull(nodeStreamObserver).onNext(
-                PortContainingMessage.newBuilder()
-                        .setPort(nodeProperties.getPort())
+                SignalingMessage.newBuilder()
+                        .setPortContainingMessage(
+                                PortContainingMessage.newBuilder()
+                                        .setPort(nodeProperties.getPort())
+                                        .build()
+                        )
+                        .setSenderPort(nodeProperties.getPort())
                         .build()
         );
     }
@@ -71,11 +77,11 @@ public class SignalingClient {
         }
     }
 
-    private static class SignalingServerObserver implements StreamObserver<PortContainingMessage> {
+    private static class RemoteSignalingServerObserver implements StreamObserver<SignalingMessage> {
 
         @Override
-        public void onNext(PortContainingMessage response) {
-            System.out.println(response.getPort() + " Wants to connect");
+        public void onNext(SignalingMessage response) {
+
         }
 
         @Override
