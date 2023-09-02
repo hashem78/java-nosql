@@ -9,9 +9,9 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/bootstrap-server" />
             <option value="$PROJECT_DIR$/node" />
             <option value="$PROJECT_DIR$/shared" />
-            <option value="$PROJECT_DIR$/signaling-server" />
           </set>
         </option>
       </GradleProjectSettings>

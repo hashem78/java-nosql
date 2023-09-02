@@ -15,6 +15,8 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
 
     implementation 'io.github.myui:btree4j:0.9.1'
+
+    implementation 'org.slf4j:jul-to-slf4j:2.0.7'
 }
 
 test {

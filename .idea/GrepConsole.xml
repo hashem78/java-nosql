@@ -45,28 +45,7 @@
                 </RunConfigurationRef>
               </key>
               <value>
-                <Pins>
-                  <option name="pins">
-                    <list>
-                      <Pin>
-                        <option name="consoleUUID" value="51c62e7a-0bc6-4a26-a5c7-885b2712fe41" />
-                        <option name="contentType" value="ConsoleContent" />
-                        <option name="grepCompositeModel">
-                          <GrepCompositeModel>
-                            <option name="customTitle" value="Node1 - grep" />
-                            <option name="models">
-                              <list>
-                                <GrepModel>
-                                  <option name="expression" value="[main] DEBUG NodeLogger" />
-                                </GrepModel>
-                              </list>
-                            </option>
-                          </GrepCompositeModel>
-                        </option>
-                      </Pin>
-                    </list>
-                  </option>
-                </Pins>
+                <Pins />
               </value>
             </entry>
             <entry>

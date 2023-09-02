@@ -3,7 +3,6 @@ package me.hashemalayan.modules;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
-import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
@@ -14,9 +13,11 @@ import me.hashemalayan.db.BasicDBSchemaLoader;
 import me.hashemalayan.db.DBManager;
 import me.hashemalayan.db.DBSchemaLoader;
 import me.hashemalayan.db.SchemaManager;
+import me.hashemalayan.loadbalancing.LoadBalancingService;
 import me.hashemalayan.server.LocalNodeManager;
+import me.hashemalayan.server.NodeService;
 import me.hashemalayan.server.RemoteNodesManager;
-import me.hashemalayan.signaling.RemoteSignalingClient;
+import me.hashemalayan.signaling.SignalingStreamMeshObserverFactory;
 import me.hashemalayan.util.JsonDirectoryIteratorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,11 +33,18 @@ public class NodeModule extends AbstractModule {
         bind(LocalNodeManager.class).asEagerSingleton();
         bind(RemoteNodesManager.class).asEagerSingleton();
         bind(DBManager.class).asEagerSingleton();
-        bind(RemoteSignalingClient.class).asEagerSingleton();
+        bind(LoadBalancingService.class).asEagerSingleton();
+        bind(LocalNodeManager.class).asEagerSingleton();
+        bind(NodeService.class).asEagerSingleton();
 
         install(
                 new FactoryModuleBuilder()
                         .build(JsonDirectoryIteratorFactory.class)
+        );
+
+        install(
+                new FactoryModuleBuilder()
+                        .build(SignalingStreamMeshObserverFactory.class)
         );
     }
 
@@ -54,12 +62,5 @@ public class NodeModule extends AbstractModule {
     @Provides
     JsonSchemaFactory jsonSchemaFactory() {
         return JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
-    }
-
-    private static class ObjectMapperProvider implements Provider<ObjectMapper> {
-        @Override
-        public ObjectMapper get() {
-            return new ObjectMapper();
-        }
     }
 }

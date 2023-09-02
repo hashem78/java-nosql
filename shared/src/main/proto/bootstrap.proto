@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "me.hashemalayan.nosql.shared";
+option java_outer_classname = "BootStrapProto";
+
+package bootstrap;
+
+service SignalingService {
+  rpc JoinMeshStream(PortContainingMessage) returns (stream PortContainingMessage);
+  rpc DiscoverLoad(LoadDiscoveryRequest) returns (LoadDiscoveryResponse);
+}
+
+service LoadBalancingService {
+  rpc DiscoverLoad(LoadDiscoveryRequest) returns (LoadDiscoveryResponse);
+}
+
+message PortContainingMessage {
+  int32 port = 1;
+}
+
+message LoadDiscoveryRequest {
+
+}
+
+message LoadDiscoveryResponse {
+  int32 port = 1;
+  int32 load = 2;
+}
