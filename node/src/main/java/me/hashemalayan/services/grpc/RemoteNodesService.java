@@ -1,4 +1,4 @@
-package me.hashemalayan.services;
+package me.hashemalayan.services.grpc;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -42,8 +42,6 @@ public class RemoteNodesService {
 
         private final NodeServiceGrpc.NodeServiceBlockingStub blockingStub;
 
-        private final NodeServiceGrpc.NodeServiceStub asyncStub;
-
         private final Integer port;
 
         public RemoteNodeService(Integer port) {
@@ -53,7 +51,6 @@ public class RemoteNodesService {
                     .build();
 
             blockingStub = NodeServiceGrpc.newBlockingStub(channel);
-            asyncStub = NodeServiceGrpc.newStub(channel);
         }
 
         public NodeState getNodeState() {

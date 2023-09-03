@@ -8,10 +8,13 @@ import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
-import me.hashemalayan.NodeProperties;
 import me.hashemalayan.services.*;
 import me.hashemalayan.factories.SignalingStreamMeshObserverFactory;
 import me.hashemalayan.factories.JsonDirectoryIteratorFactory;
+import me.hashemalayan.services.grpc.LoadBalancingService;
+import me.hashemalayan.services.grpc.LocalNodeService;
+import me.hashemalayan.services.grpc.RemoteNodesService;
+import me.hashemalayan.services.grpc.LocalServicesManager;
 import me.hashemalayan.services.interfaces.SchemaLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,12 +27,12 @@ public class NodeModule extends AbstractModule {
         bind(SchemaLoader.class).to(SchemaLoaderService.class);
         bind(NodeProperties.class).asEagerSingleton();
         bind(SchemaService.class).asEagerSingleton();
-        bind(LocalNodeService.class).asEagerSingleton();
+        bind(LocalServicesManager.class).asEagerSingleton();
         bind(RemoteNodesService.class).asEagerSingleton();
         bind(DatabaseService.class).asEagerSingleton();
         bind(LoadBalancingService.class).asEagerSingleton();
+        bind(LocalServicesManager.class).asEagerSingleton();
         bind(LocalNodeService.class).asEagerSingleton();
-        bind(NodeService.class).asEagerSingleton();
 
         install(
                 new FactoryModuleBuilder()

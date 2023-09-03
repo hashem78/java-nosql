@@ -1,4 +1,4 @@
-package me.hashemalayan.services;
+package me.hashemalayan.services.grpc;
 
 import com.google.inject.Inject;
 import io.grpc.Server;
@@ -7,23 +7,22 @@ import me.hashemalayan.NodeProperties;
 
 import java.io.IOException;
 
-public class LocalNodeService {
+public class LocalServicesManager {
 
     private Server server;
-
     private final NodeProperties nodeProperties;
     private final LoadBalancingService loadBalancingService;
-    private final NodeService nodeService;
+    private final LocalNodeService localNodeService;
 
     @Inject
-    public LocalNodeService(
+    public LocalServicesManager(
             NodeProperties nodeProperties,
             LoadBalancingService loadBalancingService,
-            NodeService nodeService
+            LocalNodeService localNodeService
     ) {
         this.nodeProperties = nodeProperties;
         this.loadBalancingService = loadBalancingService;
-        this.nodeService = nodeService;
+        this.localNodeService = localNodeService;
     }
 
     public void init() throws IOException {
@@ -31,7 +30,7 @@ public class LocalNodeService {
         assert server == null;
 
         server = ServerBuilder.forPort(nodeProperties.getPort())
-                .addService(nodeService)
+                .addService(localNodeService)
                 .addService(loadBalancingService)
                 .build();
 

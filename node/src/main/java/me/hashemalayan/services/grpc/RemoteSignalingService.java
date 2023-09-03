@@ -1,4 +1,4 @@
-package me.hashemalayan.services;
+package me.hashemalayan.services.grpc;
 
 import com.google.inject.Inject;
 import io.grpc.ManagedChannelBuilder;
@@ -8,15 +8,19 @@ import me.hashemalayan.nosql.shared.PortContainingMessage;
 import me.hashemalayan.nosql.shared.SignalingServiceGrpc;
 
 
-public class SignalingService {
+public class RemoteSignalingService {
 
-    @Inject
-    private NodeProperties nodeProperties;
-    @Inject
-    SignalingStreamMeshObserverFactory signalingStreamMeshObserverFactory;
+    private final NodeProperties nodeProperties;
+    private final SignalingStreamMeshObserverFactory signalingStreamMeshObserverFactory;
     private SignalingServiceGrpc.SignalingServiceStub stub;
 
-    public SignalingService() {
+    @Inject
+    public RemoteSignalingService(
+            NodeProperties nodeProperties,
+            SignalingStreamMeshObserverFactory signalingStreamMeshObserverFactory
+    ) {
+        this.nodeProperties = nodeProperties;
+        this.signalingStreamMeshObserverFactory = signalingStreamMeshObserverFactory;
         stub = null;
     }
 

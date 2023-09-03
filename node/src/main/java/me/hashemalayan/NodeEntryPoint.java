@@ -2,8 +2,8 @@ package me.hashemalayan;
 
 import com.google.inject.Inject;
 import me.hashemalayan.services.SchemaService;
-import me.hashemalayan.services.LocalNodeService;
-import me.hashemalayan.services.SignalingService;
+import me.hashemalayan.services.grpc.LocalServicesManager;
+import me.hashemalayan.services.grpc.RemoteSignalingService;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -13,8 +13,8 @@ import java.nio.file.Paths;
 
 public class NodeEntryPoint {
 
-    final private LocalNodeService nodeManager;
-    final private SignalingService signalingService;
+    final private LocalServicesManager nodeManager;
+    final private RemoteSignalingService remoteSignalingService;
 
     final private SchemaService schemaService;
 
@@ -23,13 +23,13 @@ public class NodeEntryPoint {
     final private Logger logger;
     @Inject
     public NodeEntryPoint(
-            LocalNodeService nodeManager,
-            SignalingService signalingService,
+            LocalServicesManager nodeManager,
+            RemoteSignalingService remoteSignalingService,
             SchemaService schemaService,
             NodeProperties nodeProperties,
             Logger logger) {
         this.nodeManager = nodeManager;
-        this.signalingService = signalingService;
+        this.remoteSignalingService = remoteSignalingService;
         this.schemaService = schemaService;
         this.nodeProperties = nodeProperties;
         this.logger = logger;
@@ -40,7 +40,7 @@ public class NodeEntryPoint {
             logger.info("Initializing NodeManager");
             nodeManager.init();
             logger.info("Initializing SignalingClient");
-            signalingService.init();
+            remoteSignalingService.init();
             logger.info("Initializing LocalDatabase");
             initializeLocalDatabase();
             logger.info("Loading Schemas to memory");

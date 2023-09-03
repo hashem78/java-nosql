@@ -1,4 +1,4 @@
-package me.hashemalayan.services;
+package me.hashemalayan.services.grpc;
 
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
@@ -8,7 +8,7 @@ import me.hashemalayan.nosql.shared.GetNodeStateResponse;
 import me.hashemalayan.nosql.shared.NodeServiceGrpc;
 import me.hashemalayan.nosql.shared.NodeState;
 
-public class NodeService extends NodeServiceGrpc.NodeServiceImplBase {
+public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
     @Inject
     private NodeProperties nodeProperties;
 

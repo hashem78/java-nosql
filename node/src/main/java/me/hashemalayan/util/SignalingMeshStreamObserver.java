@@ -3,7 +3,7 @@ package me.hashemalayan.util;
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
 import me.hashemalayan.nosql.shared.PortContainingMessage;
-import me.hashemalayan.services.RemoteNodesService;
+import me.hashemalayan.services.grpc.RemoteNodesService;
 import org.slf4j.Logger;
 
 public class SignalingMeshStreamObserver implements StreamObserver<PortContainingMessage> {
