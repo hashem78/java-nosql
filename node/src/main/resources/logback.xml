@@ -12,6 +12,7 @@
     </appender>
 
     <!-- Turn off logging for gRPC and Netty -->
-    <logger name="io.grpc" level="OFF" />
-    <logger name="io.netty" level="OFF" />
+    <logger name="io.grpc" level="INFO" />
+    <logger name="io.netty" level="INFO" />
+    <logger name="com.networknt.schema" level="INFO"/>
 </configuration>

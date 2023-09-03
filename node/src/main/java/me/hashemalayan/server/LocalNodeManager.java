@@ -39,6 +39,10 @@ public class LocalNodeManager {
         server.start();
     }
 
+    public void awaitTermination() throws InterruptedException {
+        server.awaitTermination();
+    }
+
     public void cleanup() {
 
         if (server != null && !server.isShutdown()) {

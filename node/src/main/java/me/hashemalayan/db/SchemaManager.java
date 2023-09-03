@@ -6,6 +6,7 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
 import me.hashemalayan.NodeProperties;
+import me.hashemalayan.util.JsonDirectoryIteratorFactory;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -21,16 +22,21 @@ public class SchemaManager {
     private final JsonSchemaFactory jsonSchemaFactory;
     private final DBSchemaLoader dbSchemaLoader;
 
+    private final JsonDirectoryIteratorFactory jsonDirectoryIteratorFactory;
+
     @Inject
     public SchemaManager(
             NodeProperties nodeProperties,
             Logger logger,
             JsonSchemaFactory jsonSchemaFactory,
-            DBSchemaLoader dbSchemaLoader) {
+            DBSchemaLoader dbSchemaLoader,
+            JsonDirectoryIteratorFactory jsonDirectoryIteratorFactory
+    ) {
         this.nodeProperties = nodeProperties;
         this.logger = logger;
         this.jsonSchemaFactory = jsonSchemaFactory;
         this.dbSchemaLoader = dbSchemaLoader;
+        this.jsonDirectoryIteratorFactory = jsonDirectoryIteratorFactory;
     }
 
     public void load() {
@@ -70,5 +76,41 @@ public class SchemaManager {
         );
         logger.debug("schema for collection " + collectionName + " is: " + schema);
         return schema.validate(jsonNode);
+    }
+
+    public void validateAll() {
+        final var storagePath = Paths.get(nodeProperties.getName());
+        final var collectionsPath = storagePath.resolve("collections");
+
+        // /nodeX/collections/
+        try (final var collectionsStream = Files.newDirectoryStream(collectionsPath)) {
+
+            // /nodeX/collections/collectionX/
+            for (final var collectionDirectoryPath : collectionsStream) {
+
+                logger.debug("Validating collection: " + collectionDirectoryPath);
+
+                final var documentsPath = collectionDirectoryPath.resolve("documents");
+                final var documentsIterator = jsonDirectoryIteratorFactory.create(documentsPath);
+
+                for (var iterationResult : documentsIterator) {
+                    final var errors = validateDocument(
+                            collectionDirectoryPath.getFileName().toString(),
+                            iterationResult.jsonNode()
+                    );
+                    if (errors.isEmpty()) {
+                        logger.debug("Successfully validated " + iterationResult.documentName());
+                    } else {
+                        logger.error("Failed to validate schema for document: " + iterationResult.documentName() + " in " + documentsPath);
+                        for (final var error : errors) {
+                            logger.error(error.getMessage());
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            logger.error("An I/O error occurred");
+            e.printStackTrace();
+        }
     }
 }
