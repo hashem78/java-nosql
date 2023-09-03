@@ -41,6 +41,5 @@ bin/
 ### Mac OS ###
 .DS_Store
 .env
-env/
-
-node1/
+/env/
+/node1/
