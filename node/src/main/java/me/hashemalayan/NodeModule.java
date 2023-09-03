@@ -1,4 +1,4 @@
-package me.hashemalayan.modules;
+package me.hashemalayan;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,13 +9,10 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 import me.hashemalayan.NodeProperties;
-import me.hashemalayan.db.*;
-import me.hashemalayan.loadbalancing.LoadBalancingService;
-import me.hashemalayan.server.LocalNodeManager;
-import me.hashemalayan.server.NodeService;
-import me.hashemalayan.server.RemoteNodesManager;
-import me.hashemalayan.signaling.SignalingStreamMeshObserverFactory;
-import me.hashemalayan.util.JsonDirectoryIteratorFactory;
+import me.hashemalayan.services.*;
+import me.hashemalayan.factories.SignalingStreamMeshObserverFactory;
+import me.hashemalayan.factories.JsonDirectoryIteratorFactory;
+import me.hashemalayan.services.interfaces.SchemaLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,14 +21,14 @@ public class NodeModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(DBSchemaLoader.class).to(BasicDBSchemaLoader.class);
-        bind(NodeProperties.class);
-        bind(SchemaManager.class).asEagerSingleton();
-        bind(LocalNodeManager.class).asEagerSingleton();
-        bind(RemoteNodesManager.class).asEagerSingleton();
-        bind(DBManager.class).asEagerSingleton();
+        bind(SchemaLoader.class).to(SchemaLoaderService.class);
+        bind(NodeProperties.class).asEagerSingleton();
+        bind(SchemaService.class).asEagerSingleton();
+        bind(LocalNodeService.class).asEagerSingleton();
+        bind(RemoteNodesService.class).asEagerSingleton();
+        bind(DatabaseService.class).asEagerSingleton();
         bind(LoadBalancingService.class).asEagerSingleton();
-        bind(LocalNodeManager.class).asEagerSingleton();
+        bind(LocalNodeService.class).asEagerSingleton();
         bind(NodeService.class).asEagerSingleton();
 
         install(

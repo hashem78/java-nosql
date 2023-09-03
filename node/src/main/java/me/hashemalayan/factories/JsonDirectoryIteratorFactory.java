@@ -1,4 +1,6 @@
-package me.hashemalayan.util;
+package me.hashemalayan.factories;
+
+import me.hashemalayan.util.JsonDirectoryIterator;
 
 import java.nio.file.Path;
 

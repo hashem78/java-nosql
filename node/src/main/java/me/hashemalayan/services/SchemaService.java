@@ -1,4 +1,4 @@
-package me.hashemalayan.db;
+package me.hashemalayan.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
@@ -6,7 +6,8 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
 import me.hashemalayan.NodeProperties;
-import me.hashemalayan.util.JsonDirectoryIteratorFactory;
+import me.hashemalayan.services.interfaces.SchemaLoader;
+import me.hashemalayan.factories.JsonDirectoryIteratorFactory;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -15,32 +16,32 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
 
-public class SchemaManager {
+public class SchemaService {
     private Map<String, JsonSchema> schemaMap;
     private final NodeProperties nodeProperties;
     private final Logger logger;
     private final JsonSchemaFactory jsonSchemaFactory;
-    private final DBSchemaLoader dbSchemaLoader;
+    private final SchemaLoader schemaLoader;
 
     private final JsonDirectoryIteratorFactory jsonDirectoryIteratorFactory;
 
     @Inject
-    public SchemaManager(
+    public SchemaService(
             NodeProperties nodeProperties,
             Logger logger,
             JsonSchemaFactory jsonSchemaFactory,
-            DBSchemaLoader dbSchemaLoader,
+            SchemaLoader schemaLoader,
             JsonDirectoryIteratorFactory jsonDirectoryIteratorFactory
     ) {
         this.nodeProperties = nodeProperties;
         this.logger = logger;
         this.jsonSchemaFactory = jsonSchemaFactory;
-        this.dbSchemaLoader = dbSchemaLoader;
+        this.schemaLoader = schemaLoader;
         this.jsonDirectoryIteratorFactory = jsonDirectoryIteratorFactory;
     }
 
     public void load() {
-        schemaMap = dbSchemaLoader.load();
+        schemaMap = schemaLoader.load();
     }
 
     public void putSchema(String collectionName, JsonNode schemaNode) {

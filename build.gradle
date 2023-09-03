@@ -32,13 +32,9 @@ subprojects {
         implementation 'io.grpc:grpc-stub:1.57.2'
         implementation 'com.google.inject:guice:7.0.0'
         implementation 'com.google.inject.extensions:guice-assistedinject:7.0.0'
-        implementation 'org.reflections:reflections:0.10.2'
         implementation 'ch.qos.logback:logback-classic:1.4.11'
         implementation 'org.slf4j:slf4j-api:1.7.25'
-        implementation 'io.vavr:vavr:0.10.4'
         implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.4'
-        compileOnly 'org.projectlombok:lombok:1.18.28' // Check for the latest version
-        annotationProcessor 'org.projectlombok:lombok:1.18.28'
         implementation 'com.networknt:json-schema-validator:1.0.86'
     }
 }

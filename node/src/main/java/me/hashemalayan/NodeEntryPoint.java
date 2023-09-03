@@ -1,9 +1,9 @@
 package me.hashemalayan;
 
 import com.google.inject.Inject;
-import me.hashemalayan.db.SchemaManager;
-import me.hashemalayan.server.LocalNodeManager;
-import me.hashemalayan.signaling.SignalingClient;
+import me.hashemalayan.services.SchemaService;
+import me.hashemalayan.services.LocalNodeService;
+import me.hashemalayan.services.SignalingService;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -13,24 +13,24 @@ import java.nio.file.Paths;
 
 public class NodeEntryPoint {
 
-    final private LocalNodeManager nodeManager;
-    final private SignalingClient signalingClient;
+    final private LocalNodeService nodeManager;
+    final private SignalingService signalingService;
 
-    final private SchemaManager schemaManager;
+    final private SchemaService schemaService;
 
     final private NodeProperties nodeProperties;
 
     final private Logger logger;
     @Inject
     public NodeEntryPoint(
-            LocalNodeManager nodeManager,
-            SignalingClient signalingClient,
-            SchemaManager schemaManager,
+            LocalNodeService nodeManager,
+            SignalingService signalingService,
+            SchemaService schemaService,
             NodeProperties nodeProperties,
             Logger logger) {
         this.nodeManager = nodeManager;
-        this.signalingClient = signalingClient;
-        this.schemaManager = schemaManager;
+        this.signalingService = signalingService;
+        this.schemaService = schemaService;
         this.nodeProperties = nodeProperties;
         this.logger = logger;
     }
@@ -40,13 +40,13 @@ public class NodeEntryPoint {
             logger.info("Initializing NodeManager");
             nodeManager.init();
             logger.info("Initializing SignalingClient");
-            signalingClient.init();
+            signalingService.init();
             logger.info("Initializing LocalDatabase");
             initializeLocalDatabase();
             logger.info("Loading Schemas to memory");
-            schemaManager.load();
+            schemaService.load();
             logger.info("Validating all Schemas");
-            schemaManager.validateAll();
+            schemaService.validateAll();
             nodeManager.awaitTermination();
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);

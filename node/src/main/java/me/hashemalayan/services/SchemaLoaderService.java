@@ -1,10 +1,11 @@
-package me.hashemalayan.db;
+package me.hashemalayan.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import me.hashemalayan.NodeProperties;
+import me.hashemalayan.services.interfaces.SchemaLoader;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -13,19 +14,25 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-public class BasicDBSchemaLoader implements DBSchemaLoader {
+public class SchemaLoaderService implements SchemaLoader {
+
+    private final NodeProperties nodeProperties;
+    private final ObjectMapper objectMapper;
+    private final JsonSchemaFactory jsonSchemaFactory;
+    private final Logger logger;
 
     @Inject
-    private NodeProperties nodeProperties;
-
-    @Inject
-    private ObjectMapper objectMapper;
-
-    @Inject
-    private JsonSchemaFactory jsonSchemaFactory;
-
-    @Inject
-    private Logger logger;
+    public SchemaLoaderService(
+            NodeProperties nodeProperties,
+            ObjectMapper objectMapper,
+            JsonSchemaFactory jsonSchemaFactory,
+            Logger logger
+    ) {
+        this.nodeProperties = nodeProperties;
+        this.objectMapper = objectMapper;
+        this.jsonSchemaFactory = jsonSchemaFactory;
+        this.logger = logger;
+    }
 
     @Override
     public Map<String, JsonSchema> load() {

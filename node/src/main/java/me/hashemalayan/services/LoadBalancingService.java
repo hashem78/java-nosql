@@ -1,4 +1,4 @@
-package me.hashemalayan.loadbalancing;
+package me.hashemalayan.services;
 
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;

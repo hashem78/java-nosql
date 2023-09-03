@@ -1,14 +1,13 @@
-package me.hashemalayan.server;
+package me.hashemalayan.services;
 
 import com.google.inject.Inject;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import me.hashemalayan.NodeProperties;
-import me.hashemalayan.loadbalancing.LoadBalancingService;
 
 import java.io.IOException;
 
-public class LocalNodeManager {
+public class LocalNodeService {
 
     private Server server;
 
@@ -17,7 +16,7 @@ public class LocalNodeManager {
     private final NodeService nodeService;
 
     @Inject
-    public LocalNodeManager(
+    public LocalNodeService(
             NodeProperties nodeProperties,
             LoadBalancingService loadBalancingService,
             NodeService nodeService
