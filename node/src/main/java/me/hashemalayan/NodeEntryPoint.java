@@ -1,7 +1,7 @@
 package me.hashemalayan;
 
 import com.google.inject.Inject;
-import me.hashemalayan.services.SchemaService;
+import me.hashemalayan.services.db.SchemaService;
 import me.hashemalayan.services.grpc.LocalServicesManager;
 import me.hashemalayan.services.grpc.RemoteSignalingService;
 import org.slf4j.Logger;

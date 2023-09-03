@@ -30,6 +30,7 @@ subprojects {
         implementation 'io.grpc:grpc-netty-shaded:1.57.2'
         implementation 'io.grpc:grpc-protobuf:1.57.2'
         implementation 'io.grpc:grpc-stub:1.57.2'
+        implementation 'com.google.protobuf:protobuf-java-util:3.24.2'
         implementation 'com.google.inject:guice:7.0.0'
         implementation 'com.google.inject.extensions:guice-assistedinject:7.0.0'
         implementation 'ch.qos.logback:logback-classic:1.4.11'

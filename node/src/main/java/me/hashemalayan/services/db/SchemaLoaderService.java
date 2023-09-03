@@ -1,4 +1,4 @@
-package me.hashemalayan.services;
+package me.hashemalayan.services.db;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
