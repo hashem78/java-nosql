@@ -10,6 +10,7 @@ import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 import me.hashemalayan.factories.SignalingStreamMeshObserverFactory;
 import me.hashemalayan.factories.JsonDirectoryIteratorFactory;
+import me.hashemalayan.services.db.CollectionsMetaDataService;
 import me.hashemalayan.services.db.DatabaseService;
 import me.hashemalayan.services.db.SchemaLoaderService;
 import me.hashemalayan.services.db.SchemaService;
@@ -35,6 +36,7 @@ public class NodeModule extends AbstractModule {
         bind(LoadBalancingService.class).asEagerSingleton();
         bind(LocalServicesManager.class).asEagerSingleton();
         bind(LocalNodeService.class).asEagerSingleton();
+        bind(CollectionsMetaDataService.class).asEagerSingleton();
 
         install(
                 new FactoryModuleBuilder()

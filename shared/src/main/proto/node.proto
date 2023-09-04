@@ -11,6 +11,7 @@ package node;
 service NodeService {
   rpc GetNodeState(GetNodeStateRequest) returns (GetNodeStateResponse);
   rpc CreateCollection(CreateCollectionRequest) returns (CollectionMetaData);
+  rpc GetCollections(GetCollectionsRequest) returns (GetCollectionsResponse);
 }
 
 message CreateCollectionRequest {
@@ -30,6 +31,14 @@ message GetNodeStateRequest {
 message GetNodeStateResponse{
   int32 port = 1;
   NodeState nodeState = 2;
+}
+
+message GetCollectionsRequest {
+
+}
+
+message GetCollectionsResponse {
+  repeated CollectionMetaData collectionsMetaData = 1;
 }
 
 enum NodeState{
