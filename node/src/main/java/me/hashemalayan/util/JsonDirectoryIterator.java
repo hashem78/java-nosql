@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,6 +26,9 @@ public class JsonDirectoryIterator implements Iterator<JsonIteratorResult>, Iter
     }
 
     private void init() throws IOException {
+
+        if(!Files.exists(startPath))
+            Files.createDirectories(startPath);
 
         try (var directoryStream = Files.newDirectoryStream(startPath)) {
             for (var directory : directoryStream) {
