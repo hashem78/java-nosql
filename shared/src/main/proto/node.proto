@@ -21,7 +21,9 @@ message GetCollectionDocumentsRequest {
 
 message DocumentMetaData {
   string id = 1;
-  google.protobuf.Timestamp created_on = 2;
+  int32 affinity = 2;
+  google.protobuf.Timestamp created_on = 3;
+  google.protobuf.Timestamp last_edited_on = 4;
 }
 
 message CollectionDocument {
