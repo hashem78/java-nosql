@@ -82,5 +82,6 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
                         .addAllCollectionsMetaData(databaseService.getCollections())
                         .build()
         );
+        responseObserver.onCompleted();
     }
 }

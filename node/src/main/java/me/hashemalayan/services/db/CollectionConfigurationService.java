@@ -27,7 +27,7 @@ public class CollectionConfigurationService {
     private final JsonSchemaFactory jsonSchemaFactory;
     private final Map<String, CollectionConfiguration> configurationMap;
 
-    private final Path collectionPath;
+    private final Path collectionsPath;
 
     @Inject
     public CollectionConfigurationService(
@@ -40,7 +40,7 @@ public class CollectionConfigurationService {
         this.objectMapper = objectMapper;
         this.jsonSchemaFactory = jsonSchemaFactory;
         this.configurationMap = new ConcurrentHashMap<>();
-        collectionPath = Paths.get(
+        collectionsPath = Paths.get(
                 nodeProperties.getName(),
                 "collections"
         );
@@ -104,7 +104,12 @@ public class CollectionConfigurationService {
                 .build();
 
         final var config = new CollectionConfiguration(metaData, null);
-        final var configFilePath = collectionPath.resolve(collectionName).resolve("config.json");
+        final var collectionPath = collectionsPath.resolve(collectionName);
+
+        if(!Files.exists(collectionPath))
+            Files.createDirectories(collectionPath);
+
+        final var configFilePath = collectionPath.resolve("config.json");
 
         save(configFilePath, config);
 
@@ -119,7 +124,7 @@ public class CollectionConfigurationService {
         final var config = configurationMap.get(collectionName);
         config.setSchema(schema);
 
-        final var configFilePath = collectionPath.resolve(collectionName).resolve("config.json");
+        final var configFilePath = collectionsPath.resolve(collectionName).resolve("config.json");
         save(configFilePath, config);
     }
 
