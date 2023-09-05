@@ -19,6 +19,7 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
     private final NodeProperties nodeProperties;
 
     private final Logger logger;
+
     @Inject
     public LocalNodeService(
             DatabaseService databaseService,
@@ -92,11 +93,19 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             StreamObserver<CollectionDocument> responseObserver
     ) {
         try {
-            databaseService.getDocuments(request.getCollectionName(), responseObserver);
+            databaseService.getDocuments(
+                    request.getCollectionName(),
+                    responseObserver::onNext
+            );
         } catch (CollectionDoesNotExistException e) {
             logger.error("User requested " + request.getCollectionName() + " but it does not exist");
             var status = Status.INTERNAL
                     .withDescription(request.getCollectionName() + "does not exist")
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        } catch (IOException e) {
+            var status = Status.INTERNAL
+                    .withDescription("An IO Error occurred while creating collection " + request.getCollectionName())
                     .withCause(e);
             responseObserver.onError(status.asException());
         }
