@@ -156,5 +156,8 @@ public class CollectionConfigurationService {
                 .collect(Collectors.toList());
     }
 
+    boolean collectionConfigurationIsLoaded(String collectionName) {
+        return configurationMap.containsKey(collectionName);
+    }
 
 }

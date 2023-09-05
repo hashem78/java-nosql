@@ -8,6 +8,7 @@ import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.*;
 import me.hashemalayan.services.db.DatabaseService;
 import me.hashemalayan.services.db.exceptions.CollectionAlreadyExistsException;
+import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -82,6 +83,23 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
                         .addAllCollectionsMetaData(databaseService.getCollections())
                         .build()
         );
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getCollectionDocuments(
+            GetCollectionDocumentsRequest request,
+            StreamObserver<CollectionDocument> responseObserver
+    ) {
+        try {
+            databaseService.getDocuments(request.getCollectionName(), responseObserver);
+        } catch (CollectionDoesNotExistException e) {
+            logger.error("User requested " + request.getCollectionName() + " but it does not exist");
+            var status = Status.INTERNAL
+                    .withDescription(request.getCollectionName() + "does not exist")
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        }
         responseObserver.onCompleted();
     }
 }

@@ -12,6 +12,21 @@ service NodeService {
   rpc GetNodeState(GetNodeStateRequest) returns (GetNodeStateResponse);
   rpc CreateCollection(CreateCollectionRequest) returns (CollectionMetaData);
   rpc GetCollections(GetCollectionsRequest) returns (GetCollectionsResponse);
+  rpc GetCollectionDocuments(GetCollectionDocumentsRequest) returns (stream CollectionDocument);
+}
+
+message GetCollectionDocumentsRequest {
+  string collection_name = 1;
+}
+
+message DocumentMetaData {
+  string id = 1;
+  google.protobuf.Timestamp created_on = 2;
+}
+
+message CollectionDocument {
+  DocumentMetaData meta_data = 1;
+  string data = 2;
 }
 
 message CreateCollectionRequest {
