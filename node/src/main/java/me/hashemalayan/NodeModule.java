@@ -14,10 +14,7 @@ import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 import me.hashemalayan.factories.SignalingStreamMeshObserverFactory;
 import me.hashemalayan.factories.JsonDirectoryIteratorFactory;
-import me.hashemalayan.services.db.CollectionConfigurationService;
-import me.hashemalayan.services.db.CollectionService;
-import me.hashemalayan.services.db.DatabaseService;
-import me.hashemalayan.services.db.SchemaService;
+import me.hashemalayan.services.db.*;
 import me.hashemalayan.services.grpc.LoadBalancingService;
 import me.hashemalayan.services.grpc.LocalNodeService;
 import me.hashemalayan.services.grpc.RemoteNodesService;
@@ -42,6 +39,7 @@ public class NodeModule extends AbstractModule {
         bind(LocalNodeService.class).asEagerSingleton();
         bind(CollectionConfigurationService.class).asEagerSingleton();
         bind(CollectionService.class).asEagerSingleton();
+        bind(SampleFromSchemaService.class).asEagerSingleton();
 
         install(
                 new FactoryModuleBuilder()

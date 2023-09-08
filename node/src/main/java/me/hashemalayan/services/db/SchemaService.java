@@ -1,11 +1,15 @@
 package me.hashemalayan.services.db;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.factories.JsonDirectoryIteratorFactory;
+import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
+import me.hashemalayan.services.db.exceptions.SampleMalformedException;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -16,6 +20,8 @@ import java.util.Set;
 public class SchemaService {
 
     private final CollectionConfigurationService configurationService;
+    private final SampleFromSchemaService sampleFromSchemaService;
+    private final ObjectMapper objectMapper;
     private final NodeProperties nodeProperties;
     private final Logger logger;
     private final JsonDirectoryIteratorFactory jsonDirectoryIteratorFactory;
@@ -24,24 +30,43 @@ public class SchemaService {
     @Inject
     public SchemaService(
             CollectionConfigurationService configurationService,
-            NodeProperties nodeProperties,
+            SampleFromSchemaService sampleFromSchemaService,
+            ObjectMapper objectMapper, NodeProperties nodeProperties,
             Logger logger,
             JsonDirectoryIteratorFactory jsonDirectoryIteratorFactory,
             JsonSchemaFactory jsonSchemaFactory) {
         this.configurationService = configurationService;
+        this.sampleFromSchemaService = sampleFromSchemaService;
+        this.objectMapper = objectMapper;
         this.nodeProperties = nodeProperties;
         this.logger = logger;
         this.jsonDirectoryIteratorFactory = jsonDirectoryIteratorFactory;
         this.jsonSchemaFactory = jsonSchemaFactory;
     }
 
-    public void load()  {
+    public void load() {
 
         try {
             configurationService.load();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    String getSample(String collectionId)
+            throws CollectionDoesNotExistException,
+            SampleMalformedException,
+            JsonProcessingException {
+
+        final var schema = configurationService.getCollectionSchema(collectionId);
+
+        if (schema.isEmpty()) throw new CollectionDoesNotExistException();
+
+        final var sample = sampleFromSchemaService.getSample(collectionId, schema.get().getSchemaNode());
+
+        if (!sample.has("data")) throw new SampleMalformedException();
+
+        return objectMapper.writeValueAsString(sample.get("data"));
     }
 
 

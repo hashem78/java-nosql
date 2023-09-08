@@ -15,6 +15,15 @@ service NodeService {
   rpc GetCollectionDocuments(GetCollectionDocumentsRequest) returns (stream CollectionDocument);
   rpc EditCollection(EditCollectionRequest) returns (EditCollectionResponse);
   rpc DeleteCollection(DeleteCollectionRequest) returns (DeleteCollectionResponse);
+  rpc GetDocumentSample(GetDocumentSampleRequest) returns (GetDocumentSampleResponse);
+}
+
+message GetDocumentSampleRequest{
+  string collection_id = 1;
+}
+
+message GetDocumentSampleResponse {
+  string document_sample = 1;
 }
 
 message DeleteCollectionRequest {

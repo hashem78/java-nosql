@@ -1,5 +1,6 @@
 package me.hashemalayan.services.grpc;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.grpc.Status;
@@ -10,6 +11,7 @@ import me.hashemalayan.services.db.DatabaseService;
 import me.hashemalayan.services.db.exceptions.CollectionAlreadyExistsException;
 import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
 import me.hashemalayan.services.db.exceptions.InvalidCollectionSchemaException;
+import me.hashemalayan.services.db.exceptions.SampleMalformedException;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -174,6 +176,34 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             logger.error("An IO Error occurred while deleting collection " + request.getCollectionId());
             var status = Status.INTERNAL
                     .withDescription("An IO Error occurred while deleting collection " + request.getCollectionId())
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        }
+    }
+
+    @Override
+    public void getDocumentSample(
+            GetDocumentSampleRequest request,
+            StreamObserver<GetDocumentSampleResponse> responseObserver
+    ) {
+        try {
+            var sample = databaseService.getDocumentSample(request.getCollectionId());
+            responseObserver.onNext(
+                    GetDocumentSampleResponse.newBuilder()
+                            .setDocumentSample(sample)
+                            .build()
+            );
+            responseObserver.onCompleted();
+        } catch (SampleMalformedException | JsonProcessingException e) {
+            logger.error("User requested a sample for" + request.getCollectionId() + " but it's malformed");
+            var status = Status.INTERNAL
+                    .withDescription("Sample for " + request.getCollectionId() + " is malformed")
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        } catch (CollectionDoesNotExistException e) {
+            logger.error("User requested to get a sample for" + request.getCollectionId() + " but it's not found");
+            var status = Status.INTERNAL
+                    .withDescription(request.getCollectionId() + " does not exist")
                     .withCause(e);
             responseObserver.onError(status.asException());
         }
