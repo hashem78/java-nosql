@@ -86,4 +86,10 @@ public class CollectionService {
             }
         }
     }
+
+    public void editCollection(String collectionId, String collectionName)
+            throws CollectionDoesNotExistException,
+            IOException {
+        configService.editCollection(collectionId, collectionName);
+    }
 }

@@ -124,4 +124,31 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             responseObserver.onError(status.asException());
         }
     }
+
+    @Override
+    public void editCollection(
+            EditCollectionRequest request,
+            StreamObserver<EditCollectionResponse> responseObserver
+    ) {
+        try {
+            databaseService.editCollection(
+                    request.getCollectionId(),
+                    request.getCollectionName()
+            );
+            responseObserver.onNext(EditCollectionResponse.newBuilder().build());
+            responseObserver.onCompleted();
+        } catch (CollectionDoesNotExistException e) {
+            logger.error("User requested to edit" + request.getCollectionId() + " but it does not exist");
+            var status = Status.INTERNAL
+                    .withDescription(request.getCollectionId() + "does not exist")
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        } catch (IOException e) {
+            logger.error("An IO Error occurred while editing collection " + request.getCollectionId());
+            var status = Status.INTERNAL
+                    .withDescription("An IO Error occurred while editing collection " + request.getCollectionId())
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        }
+    }
 }

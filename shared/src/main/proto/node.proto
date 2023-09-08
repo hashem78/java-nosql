@@ -13,6 +13,16 @@ service NodeService {
   rpc CreateCollection(CreateCollectionRequest) returns (CollectionMetaData);
   rpc GetCollections(GetCollectionsRequest) returns (GetCollectionsResponse);
   rpc GetCollectionDocuments(GetCollectionDocumentsRequest) returns (stream CollectionDocument);
+  rpc EditCollection(EditCollectionRequest) returns (EditCollectionResponse);
+}
+
+message EditCollectionRequest {
+  string collection_id = 1;
+  string collection_name = 2;
+}
+
+message EditCollectionResponse {
+
 }
 
 message GetCollectionDocumentsRequest {

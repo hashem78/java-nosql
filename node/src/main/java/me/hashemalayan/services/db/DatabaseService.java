@@ -42,4 +42,12 @@ public class DatabaseService {
             throws CollectionDoesNotExistException, IOException {
         collectionService.getDocuments(collectionId,onDocumentLoaded);
     }
+
+    public void editCollection(
+            String collectionId,
+            String collectionName
+    ) throws CollectionDoesNotExistException,
+            IOException {
+        collectionService.editCollection(collectionId, collectionName);
+    }
 }

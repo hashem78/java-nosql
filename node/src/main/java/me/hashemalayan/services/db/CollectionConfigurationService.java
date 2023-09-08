@@ -2,7 +2,6 @@ package me.hashemalayan.services.db;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.protobuf.util.Timestamps;
 import com.networknt.schema.*;
 import jakarta.inject.Inject;
@@ -10,6 +9,7 @@ import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.CollectionMetaData;
 import me.hashemalayan.services.db.exceptions.CollectionAlreadyExistsException;
 import me.hashemalayan.services.db.exceptions.CollectionConfigurationNotFoundException;
+import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
 import me.hashemalayan.services.db.exceptions.InvalidCollectionSchemaException;
 import me.hashemalayan.util.Constants;
 import org.slf4j.Logger;
@@ -20,7 +20,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class CollectionConfigurationService {
@@ -146,16 +145,6 @@ public class CollectionConfigurationService {
         return metaData;
     }
 
-    public void setCollectionSchema(String collectionName, JsonNode schemaNode) throws IOException {
-
-        final var schema = jsonSchemaFactory.getSchema(schemaNode);
-        final var config = configurationMap.get(collectionName);
-        config.setSchema(schema);
-
-        final var configFilePath = collectionsPath.resolve(collectionName).resolve("config.json");
-        save(configFilePath, config);
-    }
-
     Optional<CollectionMetaData> getCollectionMetaData(String collectionId) {
 
         if (!configurationMap.containsKey(collectionId))
@@ -190,4 +179,22 @@ public class CollectionConfigurationService {
                 .collect(Collectors.toSet());
     }
 
+    public void editCollection(String collectionId, String collectionName)
+            throws CollectionDoesNotExistException,
+            IOException {
+
+        if(!configurationMap.containsKey(collectionId))
+            throw new CollectionDoesNotExistException();
+
+        final var currentMetaData = configurationMap.get(collectionId).metaData;
+
+        configurationMap.get(collectionId).setMetaData(
+                currentMetaData.toBuilder()
+                        .setName(collectionName != null ? collectionName : currentMetaData.getName())
+                        .build()
+        );
+
+        final var configFilePath = collectionsPath.resolve(collectionId).resolve("config.json");
+        save(configFilePath, configurationMap.get(collectionId));
+    }
 }
