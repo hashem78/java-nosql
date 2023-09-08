@@ -107,7 +107,7 @@ public class CollectionConfigurationService {
 
         for (final var config : configurationMap.values()) {
             final var name = config.getMetaData().getName();
-            if (collectionName.equals(name)) {
+            if (collectionName.equals(name) && !config.metaData.getDeleted()) {
                 throw new CollectionAlreadyExistsException();
             }
         }
