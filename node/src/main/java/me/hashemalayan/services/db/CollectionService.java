@@ -92,4 +92,8 @@ public class CollectionService {
             IOException {
         configService.editCollection(collectionId, collectionName);
     }
+
+    public void deleteCollection(String collectionId) throws CollectionDoesNotExistException, IOException {
+        configService.deleteCollection(collectionId);
+    }
 }

@@ -151,4 +151,31 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             responseObserver.onError(status.asException());
         }
     }
+
+    @Override
+    public void deleteCollection(
+            DeleteCollectionRequest request,
+            StreamObserver<DeleteCollectionResponse> responseObserver
+    ) {
+        try {
+            databaseService.deleteCollection(request.getCollectionId());
+            responseObserver.onNext(
+                    DeleteCollectionResponse.newBuilder()
+                            .build()
+            );
+            responseObserver.onCompleted();
+        } catch (CollectionDoesNotExistException e) {
+            logger.error("User requested to delete" + request.getCollectionId() + " but it's already marked as deleted");
+            var status = Status.INTERNAL
+                    .withDescription(request.getCollectionId() + " does not exist")
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        } catch (IOException e) {
+            logger.error("An IO Error occurred while deleting collection " + request.getCollectionId());
+            var status = Status.INTERNAL
+                    .withDescription("An IO Error occurred while deleting collection " + request.getCollectionId())
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        }
+    }
 }

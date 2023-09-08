@@ -14,6 +14,15 @@ service NodeService {
   rpc GetCollections(GetCollectionsRequest) returns (GetCollectionsResponse);
   rpc GetCollectionDocuments(GetCollectionDocumentsRequest) returns (stream CollectionDocument);
   rpc EditCollection(EditCollectionRequest) returns (EditCollectionResponse);
+  rpc DeleteCollection(DeleteCollectionRequest) returns (DeleteCollectionResponse);
+}
+
+message DeleteCollectionRequest {
+  string collection_id = 1;
+}
+
+message DeleteCollectionResponse {
+
 }
 
 message EditCollectionRequest {
@@ -50,6 +59,7 @@ message CollectionMetaData {
   string id = 1;
   string name = 2;
   google.protobuf.Timestamp created_on = 3;
+  bool deleted = 4;
 }
 
 message GetNodeStateRequest {

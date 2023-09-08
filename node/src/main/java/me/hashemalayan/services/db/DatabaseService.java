@@ -50,4 +50,8 @@ public class DatabaseService {
             IOException {
         collectionService.editCollection(collectionId, collectionName);
     }
+
+    public void deleteCollection(String collectionId) throws CollectionDoesNotExistException, IOException {
+        collectionService.deleteCollection(collectionId);
+    }
 }

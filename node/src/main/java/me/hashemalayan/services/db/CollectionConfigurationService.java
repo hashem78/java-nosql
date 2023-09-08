@@ -166,6 +166,7 @@ public class CollectionConfigurationService {
         return configurationMap.values()
                 .stream()
                 .map(CollectionConfiguration::getMetaData)
+                .filter(x -> !x.getDeleted())
                 .collect(Collectors.toList());
     }
 
@@ -191,6 +192,25 @@ public class CollectionConfigurationService {
         configurationMap.get(collectionId).setMetaData(
                 currentMetaData.toBuilder()
                         .setName(collectionName != null ? collectionName : currentMetaData.getName())
+                        .build()
+        );
+
+        final var configFilePath = collectionsPath.resolve(collectionId).resolve("config.json");
+        save(configFilePath, configurationMap.get(collectionId));
+    }
+
+    public void deleteCollection(String collectionId)
+            throws CollectionDoesNotExistException,
+            IOException {
+
+        if(!configurationMap.containsKey(collectionId))
+            throw new CollectionDoesNotExistException();
+
+        final var currentMetaData = configurationMap.get(collectionId).metaData;
+
+        configurationMap.get(collectionId).setMetaData(
+                currentMetaData.toBuilder()
+                        .setDeleted(true)
                         .build()
         );
 
