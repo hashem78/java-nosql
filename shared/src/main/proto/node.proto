@@ -16,7 +16,7 @@ service NodeService {
 }
 
 message GetCollectionDocumentsRequest {
-  string collection_name = 1;
+  string collection_id = 1;
 }
 
 message DocumentMetaData {

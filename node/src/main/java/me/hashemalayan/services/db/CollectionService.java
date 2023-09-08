@@ -40,14 +40,8 @@ public class CollectionService {
 
     public CollectionMetaData createCollection(String collectionName, String schema)
             throws IOException,
-            CollectionAlreadyExistsException,
-            InvalidCollectionSchemaException {
-
-        var collectionPath = collectionsPath.resolve(collectionName);
-
-        if (Files.exists(collectionPath))
-            throw new CollectionAlreadyExistsException();
-
+            InvalidCollectionSchemaException,
+            CollectionAlreadyExistsException {
 
         return configService.createMetaData(collectionName, schema);
     }
@@ -57,12 +51,12 @@ public class CollectionService {
         return configService.getAllCollectionsMetaData();
     }
 
-    public void getDocuments(String collectionName, Consumer<CollectionDocument> onDocumentLoaded)
+    public void getDocuments(String collectionId, Consumer<CollectionDocument> onDocumentLoaded)
             throws CollectionDoesNotExistException, IOException {
 
-        final var collectionPath = collectionsPath.resolve(collectionName);
+        final var collectionPath = collectionsPath.resolve(collectionId);
         final var collectionExistsOnDisk = Files.exists(collectionPath);
-        final var configIsLoaded = configService.collectionConfigurationIsLoaded(collectionName);
+        final var configIsLoaded = configService.collectionConfigurationIsLoaded(collectionId);
 
         if (!collectionExistsOnDisk || !configIsLoaded)
             throw new CollectionDoesNotExistException();

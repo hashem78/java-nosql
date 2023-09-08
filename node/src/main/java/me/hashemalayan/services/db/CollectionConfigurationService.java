@@ -8,6 +8,7 @@ import com.networknt.schema.*;
 import jakarta.inject.Inject;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.CollectionMetaData;
+import me.hashemalayan.services.db.exceptions.CollectionAlreadyExistsException;
 import me.hashemalayan.services.db.exceptions.CollectionConfigurationNotFoundException;
 import me.hashemalayan.services.db.exceptions.InvalidCollectionSchemaException;
 import me.hashemalayan.util.Constants;
@@ -81,7 +82,7 @@ public class CollectionConfigurationService {
                             CollectionConfiguration.class
                     );
 
-                    configurationMap.put(configuration.getMetaData().getName(), configuration);
+                    configurationMap.put(configuration.getMetaData().getId(), configuration);
 
                     logger.info("Loaded configuration for collection " + path.getFileName());
 
@@ -100,7 +101,17 @@ public class CollectionConfigurationService {
                 .writeValue(filePath.toFile(), config);
     }
 
-    CollectionMetaData createMetaData(String collectionName, String schema) throws IOException, InvalidCollectionSchemaException {
+    CollectionMetaData createMetaData(String collectionName, String schema)
+            throws IOException,
+            InvalidCollectionSchemaException,
+            CollectionAlreadyExistsException {
+
+        for (final var config : configurationMap.values()) {
+            final var name = config.getMetaData().getName();
+            if (collectionName.equals(name)) {
+                throw new CollectionAlreadyExistsException();
+            }
+        }
 
         final var metaData = CollectionMetaData.newBuilder()
                 .setName(collectionName)
@@ -121,7 +132,7 @@ public class CollectionConfigurationService {
 
         final var jsonSchema = jsonSchemaFactory.getSchema(mappedSchema);
         final var config = new CollectionConfiguration(metaData, jsonSchema);
-        final var collectionPath = collectionsPath.resolve(collectionName);
+        final var collectionPath = collectionsPath.resolve(metaData.getId());
 
         if (!Files.exists(collectionPath))
             Files.createDirectories(collectionPath);
@@ -130,7 +141,7 @@ public class CollectionConfigurationService {
 
         save(configFilePath, config);
 
-        configurationMap.put(collectionName, config);
+        configurationMap.put(metaData.getId(), config);
 
         return metaData;
     }
@@ -145,20 +156,20 @@ public class CollectionConfigurationService {
         save(configFilePath, config);
     }
 
-    Optional<CollectionMetaData> getCollectionMetaData(String collectionName) {
+    Optional<CollectionMetaData> getCollectionMetaData(String collectionId) {
 
-        if (!configurationMap.containsKey(collectionName))
+        if (!configurationMap.containsKey(collectionId))
             return Optional.empty();
 
-        return Optional.of(configurationMap.get(collectionName).getMetaData());
+        return Optional.of(configurationMap.get(collectionId).getMetaData());
     }
 
-    Optional<JsonSchema> getCollectionSchema(String collectionName) {
+    Optional<JsonSchema> getCollectionSchema(String collectionId) {
 
-        if (!configurationMap.containsKey(collectionName))
+        if (!configurationMap.containsKey(collectionId))
             return Optional.empty();
 
-        return Optional.of(configurationMap.get(collectionName).getSchema());
+        return Optional.of(configurationMap.get(collectionId).getSchema());
     }
 
     List<CollectionMetaData> getAllCollectionsMetaData() {
@@ -169,8 +180,8 @@ public class CollectionConfigurationService {
                 .collect(Collectors.toList());
     }
 
-    boolean collectionConfigurationIsLoaded(String collectionName) {
-        return configurationMap.containsKey(collectionName);
+    boolean collectionConfigurationIsLoaded(String collectionId) {
+        return configurationMap.containsKey(collectionId);
     }
 
     private Set<String> validateAgainstMetaSchema(JsonNode schema) {

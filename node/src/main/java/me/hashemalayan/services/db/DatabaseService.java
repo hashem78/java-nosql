@@ -38,8 +38,8 @@ public class DatabaseService {
         return collectionService.getCollections();
     }
 
-    public void getDocuments(String collectionName, Consumer<CollectionDocument> onDocumentLoaded)
+    public void getDocuments(String collectionId, Consumer<CollectionDocument> onDocumentLoaded)
             throws CollectionDoesNotExistException, IOException {
-        collectionService.getDocuments(collectionName,onDocumentLoaded);
+        collectionService.getDocuments(collectionId,onDocumentLoaded);
     }
 }

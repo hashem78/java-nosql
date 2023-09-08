@@ -107,21 +107,21 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
     ) {
         try {
             databaseService.getDocuments(
-                    request.getCollectionName(),
+                    request.getCollectionId(),
                     responseObserver::onNext
             );
+            responseObserver.onCompleted();
         } catch (CollectionDoesNotExistException e) {
-            logger.error("User requested " + request.getCollectionName() + " but it does not exist");
+            logger.error("User requested " + request.getCollectionId() + " but it does not exist");
             var status = Status.INTERNAL
-                    .withDescription(request.getCollectionName() + "does not exist")
+                    .withDescription(request.getCollectionId() + "does not exist")
                     .withCause(e);
             responseObserver.onError(status.asException());
         } catch (IOException e) {
             var status = Status.INTERNAL
-                    .withDescription("An IO Error occurred while creating collection " + request.getCollectionName())
+                    .withDescription("An IO Error occurred while creating collection " + request.getCollectionId())
                     .withCause(e);
             responseObserver.onError(status.asException());
         }
-        responseObserver.onCompleted();
     }
 }
