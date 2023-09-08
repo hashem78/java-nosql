@@ -2,13 +2,15 @@ package me.hashemalayan.services.db;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.protobuf.util.Timestamps;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.*;
 import jakarta.inject.Inject;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.CollectionMetaData;
 import me.hashemalayan.services.db.exceptions.CollectionConfigurationNotFoundException;
+import me.hashemalayan.services.db.exceptions.InvalidCollectionSchemaException;
+import me.hashemalayan.util.Constants;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -17,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class CollectionConfigurationService {
@@ -26,8 +29,9 @@ public class CollectionConfigurationService {
     private final ObjectMapper objectMapper;
     private final JsonSchemaFactory jsonSchemaFactory;
     private final Map<String, CollectionConfiguration> configurationMap;
-
     private final Path collectionsPath;
+
+    private final JsonSchema metaSchema;
 
     @Inject
     public CollectionConfigurationService(
@@ -44,6 +48,7 @@ public class CollectionConfigurationService {
                 nodeProperties.getName(),
                 "collections"
         );
+        metaSchema = jsonSchemaFactory.getSchema(Constants.Draft7MetaScheme);
     }
 
     public void load() throws IOException {
@@ -95,7 +100,7 @@ public class CollectionConfigurationService {
                 .writeValue(filePath.toFile(), config);
     }
 
-    CollectionMetaData createMetaData(String collectionName) throws IOException {
+    CollectionMetaData createMetaData(String collectionName, String schema) throws IOException, InvalidCollectionSchemaException {
 
         final var metaData = CollectionMetaData.newBuilder()
                 .setName(collectionName)
@@ -103,10 +108,22 @@ public class CollectionConfigurationService {
                 .setCreatedOn(Timestamps.fromMillis(System.currentTimeMillis()))
                 .build();
 
-        final var config = new CollectionConfiguration(metaData, null);
+        final var mappedSchema = objectMapper.readTree(schema);
+        final var report = validateAgainstMetaSchema(mappedSchema);
+
+        if (!report.isEmpty()) {
+            throw new InvalidCollectionSchemaException(
+                    report.stream()
+                            .reduce(String::concat)
+                            .orElse("")
+            );
+        }
+
+        final var jsonSchema = jsonSchemaFactory.getSchema(mappedSchema);
+        final var config = new CollectionConfiguration(metaData, jsonSchema);
         final var collectionPath = collectionsPath.resolve(collectionName);
 
-        if(!Files.exists(collectionPath))
+        if (!Files.exists(collectionPath))
             Files.createDirectories(collectionPath);
 
         final var configFilePath = collectionPath.resolve("config.json");
@@ -141,11 +158,7 @@ public class CollectionConfigurationService {
         if (!configurationMap.containsKey(collectionName))
             return Optional.empty();
 
-        final var schema = configurationMap.get(collectionName).getSchema();
-
-        if (schema == null) return Optional.empty();
-
-        return Optional.of(schema);
+        return Optional.of(configurationMap.get(collectionName).getSchema());
     }
 
     List<CollectionMetaData> getAllCollectionsMetaData() {
@@ -158,6 +171,12 @@ public class CollectionConfigurationService {
 
     boolean collectionConfigurationIsLoaded(String collectionName) {
         return configurationMap.containsKey(collectionName);
+    }
+
+    private Set<String> validateAgainstMetaSchema(JsonNode schema) {
+        return metaSchema.validate(schema).stream()
+                .map(ValidationMessage::getMessage)
+                .collect(Collectors.toSet());
     }
 
 }

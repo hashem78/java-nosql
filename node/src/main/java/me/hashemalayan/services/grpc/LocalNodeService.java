@@ -9,6 +9,7 @@ import me.hashemalayan.nosql.shared.*;
 import me.hashemalayan.services.db.DatabaseService;
 import me.hashemalayan.services.db.exceptions.CollectionAlreadyExistsException;
 import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
+import me.hashemalayan.services.db.exceptions.InvalidCollectionSchemaException;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -53,7 +54,12 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             StreamObserver<CollectionMetaData> responseObserver
     ) {
         try {
-            responseObserver.onNext(databaseService.createCollection(request.getName()));
+            responseObserver.onNext(
+                    databaseService.createCollection(
+                            request.getName(),
+                            request.getSchema()
+                    )
+            );
             responseObserver.onCompleted();
         } catch (InvalidProtocolBufferException e) {
             var status = Status.INTERNAL
@@ -69,6 +75,13 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             logger.error("An IO Error occurred while creating collection " + request.getName());
             var status = Status.INTERNAL
                     .withDescription("An IO Error occurred while creating collection " + request.getName())
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+            e.printStackTrace();
+        } catch (InvalidCollectionSchemaException e) {
+            logger.error("Invalid Collection Schema " + request.getName() + " " + request.getSchema());
+            var status = Status.INTERNAL
+                    .withDescription("Invalid Collection Schema " + e.getMessage())
                     .withCause(e);
             responseObserver.onError(status.asException());
         }

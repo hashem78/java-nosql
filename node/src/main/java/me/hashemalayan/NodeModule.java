@@ -23,6 +23,7 @@ import me.hashemalayan.services.grpc.LocalNodeService;
 import me.hashemalayan.services.grpc.RemoteNodesService;
 import me.hashemalayan.services.grpc.LocalServicesManager;
 import me.hashemalayan.util.JsonSchemaDeserializer;
+import me.hashemalayan.util.JsonSchemaSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,6 +66,7 @@ public class NodeModule extends AbstractModule {
         ProtobufJacksonConfig.getDefaultInstance().acceptLiteralFieldnames();
         var module = new SimpleModule();
         module.addDeserializer(JsonSchema.class, new JsonSchemaDeserializer());
+        module.addSerializer(JsonSchema.class, new JsonSchemaSerializer());
 
         return new ObjectMapper()
                 .registerModule(new ProtobufModule())

@@ -2,13 +2,14 @@ package me.hashemalayan.services.db;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
+import com.networknt.schema.JsonSchemaException;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.CollectionDocument;
 import me.hashemalayan.nosql.shared.CollectionMetaData;
 import me.hashemalayan.nosql.shared.DocumentMetaData;
 import me.hashemalayan.services.db.exceptions.CollectionAlreadyExistsException;
 import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
-import org.slf4j.Logger;
+import me.hashemalayan.services.db.exceptions.InvalidCollectionSchemaException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -22,6 +23,7 @@ public class CollectionService {
     private final CollectionConfigurationService configService;
     private final Path collectionsPath;
     private final ObjectMapper objectMapper;
+
     @Inject
     public CollectionService(
             CollectionConfigurationService configService,
@@ -36,16 +38,18 @@ public class CollectionService {
         this.objectMapper = objectMapper;
     }
 
-    public CollectionMetaData createCollection(String collectionName)
+    public CollectionMetaData createCollection(String collectionName, String schema)
             throws IOException,
-            CollectionAlreadyExistsException {
+            CollectionAlreadyExistsException,
+            InvalidCollectionSchemaException {
 
         var collectionPath = collectionsPath.resolve(collectionName);
 
         if (Files.exists(collectionPath))
             throw new CollectionAlreadyExistsException();
 
-        return configService.createMetaData(collectionName);
+
+        return configService.createMetaData(collectionName, schema);
     }
 
     public List<CollectionMetaData> getCollections() {

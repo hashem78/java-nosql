@@ -33,6 +33,7 @@ message CollectionDocument {
 
 message CreateCollectionRequest {
   string name = 1;
+  string schema = 2;
 }
 
 message CollectionMetaData {

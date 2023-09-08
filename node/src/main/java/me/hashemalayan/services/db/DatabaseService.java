@@ -6,6 +6,7 @@ import me.hashemalayan.nosql.shared.CollectionDocument;
 import me.hashemalayan.nosql.shared.CollectionMetaData;
 import me.hashemalayan.services.db.exceptions.CollectionAlreadyExistsException;
 import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
+import me.hashemalayan.services.db.exceptions.InvalidCollectionSchemaException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,10 +26,11 @@ public class DatabaseService {
         this.collectionService = collectionService;
     }
 
-    public CollectionMetaData createCollection(String collectionName)
+    public CollectionMetaData createCollection(String collectionName, String schema)
             throws IOException,
-            CollectionAlreadyExistsException {
-        return collectionService.createCollection(collectionName);
+            CollectionAlreadyExistsException,
+            InvalidCollectionSchemaException {
+        return collectionService.createCollection(collectionName, schema);
     }
 
     public List<CollectionMetaData> getCollections() {
