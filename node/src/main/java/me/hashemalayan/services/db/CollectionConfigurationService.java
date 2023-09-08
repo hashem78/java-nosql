@@ -129,6 +129,10 @@ public class CollectionConfigurationService {
             );
         }
 
+        if (!isValidRootSchema(mappedSchema)) {
+            throw new InvalidCollectionSchemaException("Root schema should be an object");
+        }
+
         final var jsonSchema = jsonSchemaFactory.getSchema(mappedSchema);
         final var config = new CollectionConfiguration(metaData, jsonSchema);
         final var collectionPath = collectionsPath.resolve(metaData.getId());
@@ -143,6 +147,24 @@ public class CollectionConfigurationService {
         configurationMap.put(metaData.getId(), config);
 
         return metaData;
+    }
+
+    public boolean isValidRootSchema(JsonNode schema) {
+
+        if (schema.has("type")) {
+            JsonNode typeNode = schema.get("type");
+            if (typeNode.isTextual()) {
+                return "object".equals(typeNode.asText());
+            } else if (typeNode.isArray()) {
+                for (JsonNode typeValue : typeNode) {
+                    if (!"object".equals(typeValue.asText())) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     Optional<CollectionMetaData> getCollectionMetaData(String collectionId) {
@@ -184,7 +206,7 @@ public class CollectionConfigurationService {
             throws CollectionDoesNotExistException,
             IOException {
 
-        if(!configurationMap.containsKey(collectionId))
+        if (!configurationMap.containsKey(collectionId))
             throw new CollectionDoesNotExistException();
 
         final var currentMetaData = configurationMap.get(collectionId).metaData;
@@ -203,7 +225,7 @@ public class CollectionConfigurationService {
             throws CollectionDoesNotExistException,
             IOException {
 
-        if(!configurationMap.containsKey(collectionId))
+        if (!configurationMap.containsKey(collectionId))
             throw new CollectionDoesNotExistException();
 
         final var currentMetaData = configurationMap.get(collectionId).metaData;
