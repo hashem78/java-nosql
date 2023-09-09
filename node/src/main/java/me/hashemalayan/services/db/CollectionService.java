@@ -1,6 +1,7 @@
 package me.hashemalayan.services.db;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Inject;
 import com.google.protobuf.util.JsonFormat;
 import com.google.protobuf.util.Timestamps;
@@ -9,10 +10,7 @@ import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.CollectionDocument;
 import me.hashemalayan.nosql.shared.CollectionMetaData;
 import me.hashemalayan.nosql.shared.DocumentMetaData;
-import me.hashemalayan.services.db.exceptions.CollectionAlreadyExistsException;
-import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
-import me.hashemalayan.services.db.exceptions.DocumentSchemaValidationException;
-import me.hashemalayan.services.db.exceptions.InvalidCollectionSchemaException;
+import me.hashemalayan.services.db.exceptions.*;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -86,6 +84,8 @@ public class CollectionService {
                         DocumentMetaData.class
                 );
 
+                if (metaData.getDeleted()) continue;
+
                 final var dataString = objectMapper.writeValueAsString(documentJson.get("data"));
 
                 onDocumentLoaded.accept(
@@ -114,9 +114,13 @@ public class CollectionService {
             throw new CollectionDoesNotExistException();
         }
 
+        final var documentsPath = collectionsPath.resolve(collectionId)
+                .resolve("documents");
 
-        final var documentPath = collectionsPath.resolve(collectionId)
-                .resolve("documents")
+        if(!Files.exists(documentsPath))
+            Files.createDirectories(documentsPath);
+
+        final var documentPath = documentsPath
                 .resolve(actualDocumentId + ".json");
 
         DocumentMetaData metaData = null;
@@ -131,6 +135,7 @@ public class CollectionService {
                     .setLastEditedOn(timeStamp)
                     .build();
         } else {
+
             metaData = DocumentMetaData.newBuilder()
                     .setAffinity(nodeProperties.getPort())
                     .setId(actualDocumentId)
@@ -171,7 +176,7 @@ public class CollectionService {
                 .setMetaData(metaData)
                 .setData(
                         objectMapper.writerWithDefaultPrettyPrinter()
-                        .writeValueAsString(dataNode)
+                                .writeValueAsString(dataNode)
                 )
                 .build();
     }
@@ -184,5 +189,36 @@ public class CollectionService {
 
     public void deleteCollection(String collectionId) throws CollectionDoesNotExistException, IOException {
         configService.deleteCollection(collectionId);
+    }
+
+    public void deleteDocument(String collectionId, String documentId)
+            throws CollectionDoesNotExistException,
+            DocumentDoesNotExistException, IOException {
+
+        if (!Files.exists(collectionsPath.resolve(collectionId))) {
+            throw new CollectionDoesNotExistException();
+        }
+
+        final var documentPath = collectionsPath.resolve(collectionId)
+                .resolve("documents")
+                .resolve(documentId + ".json");
+
+        if (!Files.exists(documentPath)) {
+            throw new DocumentDoesNotExistException();
+        }
+
+        final var timeStamp = Timestamps.fromMillis(System.currentTimeMillis());
+
+        final var documentNode = objectMapper.readTree(Files.readString(documentPath));
+
+        final var metaDataNode = (ObjectNode) documentNode.get("metaData");
+        metaDataNode.put("lastEditedOn", Timestamps.toString(timeStamp));
+        metaDataNode.put("deleted", true);
+
+        objectMapper.writerWithDefaultPrettyPrinter()
+                .writeValue(
+                        documentPath.toFile(),
+                        documentNode
+                );
     }
 }

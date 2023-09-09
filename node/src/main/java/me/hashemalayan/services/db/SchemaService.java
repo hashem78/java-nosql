@@ -64,9 +64,10 @@ public class SchemaService {
 
         final var sample = sampleFromSchemaService.getSample(collectionId, schema.get().getSchemaNode());
 
-        if (!sample.has("data")) throw new SampleMalformedException();
+        if (sample.has("data"))
+            return objectMapper.writeValueAsString(sample.get("data"));
 
-        return objectMapper.writeValueAsString(sample.get("data"));
+        return objectMapper.writeValueAsString(sample);
     }
 
 

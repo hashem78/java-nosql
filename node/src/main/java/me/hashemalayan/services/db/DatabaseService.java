@@ -66,4 +66,11 @@ public class DatabaseService {
             JsonProcessingException {
         return schemaService.getSample(collectionId);
     }
+
+    public void deleteDocument(String collectionId, String documentId) throws
+            CollectionDoesNotExistException,
+            DocumentDoesNotExistException,
+            IOException {
+        collectionService.deleteDocument(collectionId, documentId);
+    }
 }

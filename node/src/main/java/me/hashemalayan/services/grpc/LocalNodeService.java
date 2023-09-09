@@ -250,6 +250,48 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             responseObserver.onError(status.asException());
             e.printStackTrace();
         }
+    }
 
+    @Override
+    public void deleteCollectionDocument(
+            DeleteCollectionDocumentRequest request,
+            StreamObserver<DeleteCollectionDocumentResponse> responseObserver
+    ) {
+        try {
+            databaseService.deleteDocument(request.getCollectionId(), request.getDocumentId());
+
+            responseObserver.onNext(DeleteCollectionDocumentResponse.newBuilder().build());
+            responseObserver.onCompleted();
+        } catch (CollectionDoesNotExistException e) {
+            logger.error("User wants to delete "
+                    + request.getDocumentId()
+                    + " from collection" + request.getCollectionId()
+                    + " But the collection doesn't exist"
+            );
+            var status = Status.INTERNAL
+                    .withDescription("Collection" + request.getCollectionId() + " does not exist")
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        } catch (DocumentDoesNotExistException e) {
+            logger.error("User wants to delete "
+                    + request.getDocumentId()
+                    + " from collection" + request.getCollectionId()
+                    + " But the document doesn't exist"
+            );
+            var status = Status.INTERNAL
+                    .withDescription("Document "
+                            + request.getDocumentId()
+                            + "from collection" + request.getCollectionId()
+                            + " does not exist"
+                    )
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        } catch (IOException e) {
+            logger.error("An IO Error occurred while delete document " + request);
+            var status = Status.INTERNAL
+                    .withDescription("An IO Error occurred while delete document " + request.getDocumentId())
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        }
     }
 }
