@@ -6,11 +6,21 @@ import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.LoadBalancingServiceGrpc;
 import me.hashemalayan.nosql.shared.LoadDiscoveryRequest;
 import me.hashemalayan.nosql.shared.LoadDiscoveryResponse;
+import me.hashemalayan.services.ClientCounterService;
 
 public class LoadBalancingService extends LoadBalancingServiceGrpc.LoadBalancingServiceImplBase {
 
+    private final ClientCounterService clientCounterService;
+    private final NodeProperties nodeProperties;
+
     @Inject
-    private NodeProperties nodeProperties;
+    public LoadBalancingService(
+            ClientCounterService clientCounterService,
+            NodeProperties nodeProperties
+    ) {
+        this.clientCounterService = clientCounterService;
+        this.nodeProperties = nodeProperties;
+    }
 
     @Override
     public void discoverLoad(
@@ -20,7 +30,7 @@ public class LoadBalancingService extends LoadBalancingServiceGrpc.LoadBalancing
         responseObserver.onNext(
                 LoadDiscoveryResponse.newBuilder()
                         .setPort(nodeProperties.getPort())
-                        .setLoad(nodeProperties.getLoad())
+                        .setLoad(clientCounterService.get())
                 .build()
         );
 

@@ -7,6 +7,7 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.*;
+import me.hashemalayan.services.ClientCounterService;
 import me.hashemalayan.services.db.DatabaseService;
 import me.hashemalayan.services.db.exceptions.*;
 import org.slf4j.Logger;
@@ -16,6 +17,7 @@ import java.io.IOException;
 public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
 
     private final DatabaseService databaseService;
+    private final ClientCounterService clientCounterService;
     private final NodeProperties nodeProperties;
 
     private final Logger logger;
@@ -23,10 +25,12 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
     @Inject
     public LocalNodeService(
             DatabaseService databaseService,
+            ClientCounterService clientCounterService,
             NodeProperties nodeProperties,
             Logger logger
     ) {
         this.databaseService = databaseService;
+        this.clientCounterService = clientCounterService;
         this.nodeProperties = nodeProperties;
         this.logger = logger;
     }
@@ -293,5 +297,31 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
                     .withCause(e);
             responseObserver.onError(status.asException());
         }
+    }
+
+    @Override
+    public StreamObserver<ClientHelloRequest> clientHello(
+            StreamObserver<ClientHelloResponse> responseObserver
+    ) {
+        return new StreamObserver<>() {
+            @Override
+            public void onNext(ClientHelloRequest value) {
+                logger.info("Client Connected");
+                clientCounterService.increment();
+                responseObserver.onNext(ClientHelloResponse.newBuilder().build());
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                logger.info("Client forcefully disconnected");
+                clientCounterService.decrement();
+            }
+
+            @Override
+            public void onCompleted() {
+                logger.info("Client safely disconnected");
+                clientCounterService.decrement();
+            }
+        };
     }
 }

@@ -18,6 +18,15 @@ service NodeService {
   rpc GetDocumentSample(GetDocumentSampleRequest) returns (GetDocumentSampleResponse);
   rpc SetCollectionDocument(SetCollectionDocumentRequest) returns (SetCollectionDocumentResponse);
   rpc DeleteCollectionDocument(DeleteCollectionDocumentRequest) returns (DeleteCollectionDocumentResponse);
+  rpc ClientHello(stream ClientHelloRequest) returns (stream ClientHelloResponse);
+}
+
+message ClientHelloRequest {
+
+}
+
+message ClientHelloResponse {
+
 }
 
 message DeleteCollectionDocumentRequest {
