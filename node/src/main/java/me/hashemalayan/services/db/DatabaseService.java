@@ -4,10 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
 import me.hashemalayan.nosql.shared.CollectionDocument;
 import me.hashemalayan.nosql.shared.CollectionMetaData;
-import me.hashemalayan.services.db.exceptions.CollectionAlreadyExistsException;
-import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
-import me.hashemalayan.services.db.exceptions.InvalidCollectionSchemaException;
-import me.hashemalayan.services.db.exceptions.SampleMalformedException;
+import me.hashemalayan.services.db.exceptions.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -40,7 +37,15 @@ public class DatabaseService {
 
     public void getDocuments(String collectionId, Consumer<CollectionDocument> onDocumentLoaded)
             throws CollectionDoesNotExistException, IOException {
-        collectionService.getDocuments(collectionId,onDocumentLoaded);
+        collectionService.getDocuments(collectionId, onDocumentLoaded);
+    }
+
+    public CollectionDocument setDocument(
+            String collectionId,
+            String documentId,
+            String documentJson
+    ) throws DocumentSchemaValidationException, CollectionDoesNotExistException, IOException {
+        return collectionService.setDocument(collectionId, documentId, documentJson);
     }
 
     public void editCollection(

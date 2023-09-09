@@ -79,6 +79,14 @@ public class SchemaService {
         return schema.validate(jsonNode);
     }
 
+    public Set<ValidationMessage> validateDocument(
+            String collectionName,
+            String jsonDocument
+    ) throws JsonProcessingException {
+
+        return validateDocument(collectionName, objectMapper.readTree(jsonDocument));
+    }
+
     public void validateAll() {
         final var storagePath = Paths.get(nodeProperties.getName());
         final var collectionsPath = storagePath.resolve("collections");

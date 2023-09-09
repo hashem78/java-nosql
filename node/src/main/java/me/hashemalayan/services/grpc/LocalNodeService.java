@@ -8,10 +8,7 @@ import io.grpc.stub.StreamObserver;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.*;
 import me.hashemalayan.services.db.DatabaseService;
-import me.hashemalayan.services.db.exceptions.CollectionAlreadyExistsException;
-import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
-import me.hashemalayan.services.db.exceptions.InvalidCollectionSchemaException;
-import me.hashemalayan.services.db.exceptions.SampleMalformedException;
+import me.hashemalayan.services.db.exceptions.*;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -207,5 +204,52 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
                     .withCause(e);
             responseObserver.onError(status.asException());
         }
+    }
+
+    @Override
+    public void setCollectionDocument(
+            SetCollectionDocumentRequest request,
+            StreamObserver<SetCollectionDocumentResponse> responseObserver
+    ) {
+        try {
+            final var document = databaseService.setDocument(
+                    request.getCollectionId(),
+                    request.getDocumentId(),
+                    request.getDocument()
+            );
+            responseObserver.onNext(
+                    SetCollectionDocumentResponse.newBuilder()
+                            .setDocument(document)
+                            .build()
+            );
+            responseObserver.onCompleted();
+        } catch (DocumentSchemaValidationException e) {
+            logger.error(
+                    "Failed to validate document's schema " + request.getCollectionId()
+            );
+            var status = Status.INTERNAL
+                    .withDescription("Failed to validate schema")
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+            e.printStackTrace();
+        } catch (CollectionDoesNotExistException e) {
+            logger.error(
+                    "User requested to edit/create a document on collection"
+                            + request.getCollectionId()
+                            + " but it's not found"
+            );
+            var status = Status.INTERNAL
+                    .withDescription(request.getCollectionId() + " does not exist")
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        } catch (IOException e) {
+            logger.error("An IO Error occurred while editing collection " + request.getCollectionId());
+            var status = Status.INTERNAL
+                    .withDescription("An IO Error occurred while editing collection " + request.getCollectionId())
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+            e.printStackTrace();
+        }
+
     }
 }
