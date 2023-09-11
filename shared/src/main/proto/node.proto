@@ -19,6 +19,27 @@ service NodeService {
   rpc SetCollectionDocument(SetCollectionDocumentRequest) returns (SetCollectionDocumentResponse);
   rpc DeleteCollectionDocument(DeleteCollectionDocumentRequest) returns (DeleteCollectionDocumentResponse);
   rpc ClientHello(stream ClientHelloRequest) returns (stream ClientHelloResponse);
+  rpc IndexCollectionProperty(IndexCollectionPropertyRequest) returns (IndexCollectionPropertyResponse);
+  rpc EqualsQuery(EqualsQueryRequest) returns (stream EqualsQueryResponse);
+}
+
+message EqualsQueryRequest {
+  string collection_id = 1;
+  string property = 2;
+  string value = 3;
+}
+
+message EqualsQueryResponse{
+  string document_id = 1;
+}
+
+message IndexCollectionPropertyRequest {
+  string collection_id = 1;
+  string property = 2;
+}
+
+message IndexCollectionPropertyResponse {
+
 }
 
 message ClientHelloRequest {

@@ -39,6 +39,7 @@ subprojects {
         implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.15.2'
         implementation 'com.hubspot.jackson:jackson-datatype-protobuf:0.9.14'
         implementation 'com.networknt:json-schema-validator:1.0.86'
+        implementation 'commons-io:commons-io:2.13.0'
     }
 }
 

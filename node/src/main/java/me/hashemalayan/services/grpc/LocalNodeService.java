@@ -1,5 +1,6 @@
 package me.hashemalayan.services.grpc;
 
+import btree4j.BTreeException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -9,6 +10,7 @@ import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.*;
 import me.hashemalayan.services.ClientCounterService;
 import me.hashemalayan.services.db.DatabaseService;
+import me.hashemalayan.services.db.IndexService;
 import me.hashemalayan.services.db.exceptions.*;
 import org.slf4j.Logger;
 
@@ -20,6 +22,8 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
     private final ClientCounterService clientCounterService;
     private final NodeProperties nodeProperties;
 
+    private final IndexService indexService;
+
     private final Logger logger;
 
     @Inject
@@ -27,11 +31,13 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             DatabaseService databaseService,
             ClientCounterService clientCounterService,
             NodeProperties nodeProperties,
+            IndexService indexService,
             Logger logger
     ) {
         this.databaseService = databaseService;
         this.clientCounterService = clientCounterService;
         this.nodeProperties = nodeProperties;
+        this.indexService = indexService;
         this.logger = logger;
     }
 
@@ -323,5 +329,58 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
                 clientCounterService.decrement();
             }
         };
+    }
+
+    @Override
+    public void indexCollectionProperty(
+            IndexCollectionPropertyRequest request,
+            StreamObserver<IndexCollectionPropertyResponse> responseObserver
+    ) {
+        try {
+            logger.info("Indexing " + request.getProperty() + " in collection " + request.getCollectionId());
+            indexService.indexPropertyInCollection(request.getCollectionId(),request.getProperty());
+            responseObserver.onNext(IndexCollectionPropertyResponse.newBuilder().build());
+            responseObserver.onCompleted();
+        } catch (CollectionDoesNotExistException e) {
+            logger.error("User requested " + request.getCollectionId() + " but it does not exist");
+            var status = Status.INTERNAL
+                    .withDescription(request.getCollectionId() + "does not exist")
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        } catch (IOException | BTreeException e) {
+            logger.error("An IO Error occurred while indexing a collection " + request);
+            var status = Status.INTERNAL
+                    .withDescription("Internal Server error")
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        }
+    }
+
+    @Override
+    public void equalsQuery(
+            EqualsQueryRequest request,
+            StreamObserver<EqualsQueryResponse> responseObserver
+    ) {
+        try {
+            indexService.getEqual(
+                    request.getCollectionId(),
+                    request.getProperty(),
+                    request.getValue(),
+                    (x) -> responseObserver.onNext(
+                            EqualsQueryResponse.newBuilder()
+                                    .setDocumentId(x)
+                                    .build()
+                    )
+            );
+            responseObserver.onCompleted();
+        } catch (IndexNotFoundException e) {
+            logger.error("User requested an equals query on a non-indexed property " + request);
+            var status = Status.INTERNAL
+                    .withDescription("Equality on a property that does not have an index")
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        } catch (BTreeException | JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
