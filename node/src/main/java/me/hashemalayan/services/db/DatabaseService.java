@@ -8,6 +8,7 @@ import me.hashemalayan.services.db.exceptions.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public class DatabaseService {
@@ -72,5 +73,9 @@ public class DatabaseService {
             DocumentDoesNotExistException,
             IOException {
         collectionService.deleteDocument(collectionId, documentId);
+    }
+
+    public Optional<CollectionMetaData> getCollectionMetaData(String collectionId) {
+        return collectionService.getCollectionMetaData(collectionId);
     }
 }

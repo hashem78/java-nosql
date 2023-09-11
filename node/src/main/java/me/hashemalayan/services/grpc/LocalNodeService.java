@@ -338,7 +338,7 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
     ) {
         try {
             logger.info("Indexing " + request.getProperty() + " in collection " + request.getCollectionId());
-            indexService.indexPropertyInCollection(request.getCollectionId(),request.getProperty());
+            indexService.indexPropertyInCollection(request.getCollectionId(), request.getProperty());
             responseObserver.onNext(IndexCollectionPropertyResponse.newBuilder().build());
             responseObserver.onCompleted();
         } catch (CollectionDoesNotExistException e) {
@@ -380,7 +380,83 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
                     .withCause(e);
             responseObserver.onError(status.asException());
         } catch (BTreeException | JsonProcessingException e) {
-            throw new RuntimeException(e);
+            logger.error("An IO Error occurred while indexing a collection " + request);
+            var status = Status.INTERNAL
+                    .withDescription("Internal Server error")
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        }
+    }
+
+    @Override
+    public void isPropertyIndexed(
+            IsPropertyIndexedRequest request,
+            StreamObserver<IsPropertyIndexedResponse> responseObserver
+    ) {
+        final var isPropertyIndexed = indexService.isPropertyIndexed(
+                request.getCollectionId(),
+                request.getProperty()
+        );
+        responseObserver.onNext(
+                IsPropertyIndexedResponse.newBuilder()
+                        .setIsIndexed(isPropertyIndexed)
+                        .build()
+        );
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void removeIndexFromCollectionProperty(
+            RemoveIndexFromCollectionPropertyRequest request,
+            StreamObserver<RemoveIndexFromCollectionPropertyResponse> responseObserver
+    ) {
+        try {
+            indexService.removeIndexFromCollectionProperty(
+                    request.getCollectionId(),
+                    request.getProperty()
+            );
+            responseObserver.onNext(RemoveIndexFromCollectionPropertyResponse.newBuilder().build());
+            responseObserver.onCompleted();
+        } catch (IndexNotFoundException e) {
+            logger.error("User requested to remove an index on a non-indexed property " + request);
+            var status = Status.INTERNAL
+                    .withDescription("This property has no Index associated")
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        } catch (CollectionDoesNotExistException e) {
+            logger.error(
+                    "User wanted to delete index on property "
+                            + request.getProperty()
+                            + " from " + request.getCollectionId()
+                            + " but it does not exist"
+            );
+            var status = Status.INTERNAL
+                    .withDescription(request.getCollectionId() + "does not exist")
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        } catch (BTreeException | IOException e) {
+            logger.error("An IO Error occurred while removing an index from a collection " + request);
+            var status = Status.INTERNAL
+                    .withDescription("Internal Server error")
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        }
+    }
+
+    @Override
+    public void getCollectionMetaData(
+            GetCollectionMetaDataRequest request,
+            StreamObserver<CollectionMetaData> responseObserver
+    ) {
+        final var metaDataOpt = databaseService.getCollectionMetaData(request.getCollectionId());
+        if (metaDataOpt.isPresent()) {
+            responseObserver.onNext(metaDataOpt.get());
+            responseObserver.onCompleted();
+        } else {
+            logger.error("User requested to get metadata of collection" + request.getCollectionId() + " but it's not present");
+            var status = Status.INTERNAL
+                    .withDescription(request.getCollectionId() + " does not exist");
+            responseObserver.onError(status.asException());
         }
     }
 }

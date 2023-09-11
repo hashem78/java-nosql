@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.factories.JsonDirectoryIteratorFactory;
+import me.hashemalayan.nosql.shared.CollectionMetaData;
 import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
 import me.hashemalayan.services.db.exceptions.IndexNotFoundException;
 import me.hashemalayan.util.BTreeCallbackFactory;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,6 +34,8 @@ public class IndexService {
 
     private final BTreeCallbackFactory bTreeCallbackFactory;
 
+    private final CollectionConfigurationService configurationService;
+
     private final ObjectMapper objectMapper;
 
     private final Logger logger;
@@ -43,12 +47,14 @@ public class IndexService {
     public IndexService(
             JsonDirectoryIteratorFactory jsonDirectoryIteratorFactory,
             BTreeCallbackFactory bTreeCallbackFactory,
+            CollectionConfigurationService configurationService,
             ObjectMapper objectMapper,
             Logger logger,
             NodeProperties nodeProperties
     ) {
         this.jsonDirectoryIteratorFactory = jsonDirectoryIteratorFactory;
         this.bTreeCallbackFactory = bTreeCallbackFactory;
+        this.configurationService = configurationService;
         this.objectMapper = objectMapper;
         this.logger = logger;
         collectionsPath = Paths.get(nodeProperties.getName(), "collections");
@@ -104,7 +110,7 @@ public class IndexService {
             final var dataNode = documentNode.get("data");
             if (!dataNode.has(property)) continue;
             final var valueOfProperty = dataNode.get(property);
-            logger.info(Arrays.toString(objectMapper.writeValueAsBytes(valueOfProperty)));
+
             bTreeIndex.addValue(
                     new Value(objectMapper.writeValueAsBytes(valueOfProperty)),
                     new Value("\"" + FilenameUtils.removeExtension(iteratorResult.documentName()) + "\"")
@@ -114,6 +120,10 @@ public class IndexService {
         indexMap.put(
                 new CollectionPropertyPair(collectionId, property),
                 bTreeIndex
+        );
+        configurationService.editCollectionMetaData(
+                collectionId,
+                (metaData) -> metaData.addIndexedProperties(property)
         );
     }
 
@@ -140,5 +150,40 @@ public class IndexService {
         ));
     }
 
+    public boolean isPropertyIndexed(String collectionId, String property) {
+
+        final var metaDataOpt = configurationService.getCollectionMetaData(collectionId);
+
+        if (metaDataOpt.isEmpty())
+            return false;
+
+        final var metaData = metaDataOpt.get();
+        return metaData.getIndexedPropertiesList().contains(property);
+    }
+
+    public void removeIndexFromCollectionProperty(String collectionId, String property)
+            throws IndexNotFoundException,
+            BTreeException,
+            IOException, CollectionDoesNotExistException {
+
+        final var pair = new CollectionPropertyPair(collectionId, property);
+        if (!indexMap.containsKey(pair))
+            throw new IndexNotFoundException();
+
+        final var collectionIndexesPath = collectionsPath.resolve(collectionId).resolve("indexes");
+        final var indexFilePath = collectionIndexesPath.resolve(property);
+
+        final var index = indexMap.get(pair);
+        index.close();
+        indexMap.remove(pair);
+        configurationService.editCollectionMetaData(
+                collectionId, x -> {
+                    final var props = new ArrayList<>(x.getIndexedPropertiesList());
+                    props.remove(property);
+                    return x.clearIndexedProperties().addAllIndexedProperties(props);
+                }
+        );
+        Files.deleteIfExists(indexFilePath);
+    }
 }
 

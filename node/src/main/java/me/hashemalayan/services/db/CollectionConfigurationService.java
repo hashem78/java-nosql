@@ -7,6 +7,7 @@ import com.networknt.schema.*;
 import jakarta.inject.Inject;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.CollectionMetaData;
+import me.hashemalayan.nosql.shared.CollectionMetaDataOrBuilder;
 import me.hashemalayan.services.db.exceptions.CollectionAlreadyExistsException;
 import me.hashemalayan.services.db.exceptions.CollectionConfigurationNotFoundException;
 import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
@@ -20,6 +21,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class CollectionConfigurationService {
@@ -224,17 +227,22 @@ public class CollectionConfigurationService {
     public void deleteCollection(String collectionId)
             throws CollectionDoesNotExistException,
             IOException {
+        editCollectionMetaData(collectionId, (metadata) -> metadata.setDeleted(true));
+    }
+
+    public void editCollectionMetaData(
+            String collectionId,
+            Function<CollectionMetaData.Builder, CollectionMetaData.Builder> editor
+    ) throws CollectionDoesNotExistException, IOException {
 
         if (!configurationMap.containsKey(collectionId))
             throw new CollectionDoesNotExistException();
 
         final var currentMetaData = configurationMap.get(collectionId).metaData;
+        final var builder = currentMetaData.toBuilder();
+        final var newMetaData = editor.apply(builder).build();
 
-        configurationMap.get(collectionId).setMetaData(
-                currentMetaData.toBuilder()
-                        .setDeleted(true)
-                        .build()
-        );
+        configurationMap.get(collectionId).setMetaData(newMetaData);
 
         final var configFilePath = collectionsPath.resolve(collectionId).resolve("config.json");
         save(configFilePath, configurationMap.get(collectionId));
