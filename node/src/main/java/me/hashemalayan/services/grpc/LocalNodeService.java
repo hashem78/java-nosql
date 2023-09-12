@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.grpc.Status;
+import io.grpc.StatusException;
 import io.grpc.stub.StreamObserver;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.*;
@@ -357,38 +358,6 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
     }
 
     @Override
-    public void equalsQuery(
-            EqualsQueryRequest request,
-            StreamObserver<EqualsQueryResponse> responseObserver
-    ) {
-        try {
-            indexService.getEqual(
-                    request.getCollectionId(),
-                    request.getProperty(),
-                    request.getValue(),
-                    (x) -> responseObserver.onNext(
-                            EqualsQueryResponse.newBuilder()
-                                    .setDocumentId(x)
-                                    .build()
-                    )
-            );
-            responseObserver.onCompleted();
-        } catch (IndexNotFoundException e) {
-            logger.error("User requested an equals query on a non-indexed property " + request);
-            var status = Status.INTERNAL
-                    .withDescription("Equality on a property that does not have an index")
-                    .withCause(e);
-            responseObserver.onError(status.asException());
-        } catch (BTreeException | JsonProcessingException e) {
-            logger.error("An IO Error occurred while indexing a collection " + request);
-            var status = Status.INTERNAL
-                    .withDescription("Internal Server error")
-                    .withCause(e);
-            responseObserver.onError(status.asException());
-        }
-    }
-
-    @Override
     public void isPropertyIndexed(
             IsPropertyIndexedRequest request,
             StreamObserver<IsPropertyIndexedResponse> responseObserver
@@ -457,6 +426,49 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             var status = Status.INTERNAL
                     .withDescription(request.getCollectionId() + " does not exist");
             responseObserver.onError(status.asException());
+        }
+    }
+
+    @Override
+    public void queryDatabase(
+            QueryDatabaseRequest request,
+            StreamObserver<QueryDatabaseResponse> responseObserver
+    ) {
+        final var collectionId = request.getCollectionId();
+        final var property = request.getProperty();
+        final var operator = request.getOperator();
+        final var value = request.getValue();
+
+        try {
+            indexService.runQuery(
+                    collectionId, operator,
+                    property, value,
+                    result -> {
+                        responseObserver.onNext(
+                                QueryDatabaseResponse.newBuilder()
+                                        .setData(result)
+                                        .build()
+                        );
+                    }
+            );
+            responseObserver.onCompleted();
+        } catch (IndexNotFoundException e) {
+            responseObserver.onError(
+                    Status.FAILED_PRECONDITION
+                            .withDescription(
+                                    "Property " + property + " is not indexed in "
+                                            + request.getCollectionId()
+                            )
+                            .asException()
+            );
+        } catch (BTreeException e) {
+            throw new RuntimeException(e);
+        } catch (UnRecognizedOperatorException e) {
+            throw new RuntimeException(e);
+        } catch (InvalidOperatorUsage e) {
+            throw new RuntimeException(e);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
         }
     }
 }

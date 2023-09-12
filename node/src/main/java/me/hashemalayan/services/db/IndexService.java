@@ -1,15 +1,20 @@
 package me.hashemalayan.services.db;
 
-import btree4j.*;
-import btree4j.indexer.BasicIndexQuery;
+import btree4j.BTreeException;
+import btree4j.BTreeIndexDup;
+import btree4j.Value;
+import btree4j.indexer.LikeIndexQuery;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.inject.Inject;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.factories.JsonDirectoryIteratorFactory;
-import me.hashemalayan.nosql.shared.CollectionMetaData;
+import me.hashemalayan.nosql.shared.Operator;
 import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
 import me.hashemalayan.services.db.exceptions.IndexNotFoundException;
+import me.hashemalayan.services.db.exceptions.InvalidOperatorUsage;
+import me.hashemalayan.services.db.exceptions.UnRecognizedOperatorException;
 import me.hashemalayan.util.BTreeCallbackFactory;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
@@ -19,10 +24,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+
+import static btree4j.indexer.BasicIndexQuery.*;
 
 record CollectionPropertyPair(String collectionId, String propertyName) {
 
@@ -127,29 +133,6 @@ public class IndexService {
         );
     }
 
-    public void getEqual(
-            String collectionId,
-            String property,
-            String value,
-            Consumer<String> documentIdsConsumer
-    ) throws IndexNotFoundException, BTreeException, JsonProcessingException {
-
-        final var pair = new CollectionPropertyPair(collectionId, property);
-        if (!indexMap.containsKey(pair))
-            throw new IndexNotFoundException();
-
-        final var index = indexMap.get(pair);
-        final var valueAsBytes = objectMapper.writeValueAsBytes(value);
-        final var query = new BasicIndexQuery.IndexConditionEQ(new Value(valueAsBytes));
-
-        index.search(query, bTreeCallbackFactory.create(
-                (k, v) -> {
-                    documentIdsConsumer.accept(v.asText());
-                    return true;
-                }
-        ));
-    }
-
     public boolean isPropertyIndexed(String collectionId, String property) {
 
         final var metaDataOpt = configurationService.getCollectionMetaData(collectionId);
@@ -185,5 +168,63 @@ public class IndexService {
         );
         Files.deleteIfExists(indexFilePath);
     }
-}
 
+    public void runQuery(
+            String collectionId,
+            Operator operator,
+            String property,
+            String value,
+            Consumer<String> responseConsumer
+    ) throws IndexNotFoundException, JsonProcessingException, BTreeException, InvalidOperatorUsage, UnRecognizedOperatorException {
+        final var pair = new CollectionPropertyPair(collectionId, property);
+
+        if (!indexMap.containsKey(pair))
+            throw new IndexNotFoundException();
+
+        final var index = indexMap.get(pair);
+        final var valueAsJson = objectMapper.readTree(value);
+
+        final var bTreeValue = new Value(objectMapper.writeValueAsBytes(valueAsJson));
+        final var adapter = bTreeCallbackFactory.create(
+                (k, v) -> {
+                    try {
+                        responseConsumer.accept(objectMapper.writeValueAsString(v));
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                    }
+                    return true;
+                }
+        );
+
+        switch (operator) {
+
+            case EQUALS -> index.search(new IndexConditionEQ(bTreeValue), adapter);
+            case NOT_EQUALS -> index.search(new IndexConditionNE(bTreeValue), adapter);
+            case GREATER_THAN -> index.search(new IndexConditionGT(bTreeValue), adapter);
+            case LESS_THAN -> index.search(new IndexConditionLT(bTreeValue), adapter);
+            case GREATER_THAN_OR_EQUALS -> index.search(new IndexConditionGE(bTreeValue), adapter);
+            case LESS_THAN_OR_EQUALS -> index.search(new IndexConditionLE(bTreeValue), adapter);
+            case CONTAINS -> index.search(
+                    new LikeIndexQuery(new Value(objectMapper.writeValueAsBytes("%" + value)), "%"),
+                    adapter
+            );
+            case STARTS_WITH -> index.search(new LikeIndexQuery(bTreeValue, "%"), adapter);
+            case ENDS_WITH -> index.search(new LikeIndexQuery(new Value("%"), value), adapter);
+            case IN -> index.search(new IndexConditionIN(decodeAndMapValue(value)), adapter);
+            case NOT_IN -> index.search(new IndexConditionNIN(decodeAndMapValue(value)), adapter);
+            case UNRECOGNIZED -> throw new UnRecognizedOperatorException();
+        }
+    }
+
+    private Value[] decodeAndMapValue(String value) throws InvalidOperatorUsage, JsonProcessingException {
+        final var jsonNode = objectMapper.readTree(value);
+        if (!jsonNode.isArray())
+            throw new InvalidOperatorUsage();
+        final var valueList = new ArrayList<Value>();
+        final var arrayNode = (ArrayNode) jsonNode;
+        for (final var node : arrayNode) {
+            valueList.add(new Value(objectMapper.writeValueAsBytes(node)));
+        }
+        return valueList.toArray(Value[]::new);
+    }
+}

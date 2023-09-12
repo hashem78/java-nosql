@@ -20,10 +20,35 @@ service NodeService {
   rpc DeleteCollectionDocument(DeleteCollectionDocumentRequest) returns (DeleteCollectionDocumentResponse);
   rpc ClientHello(stream ClientHelloRequest) returns (stream ClientHelloResponse);
   rpc IndexCollectionProperty(IndexCollectionPropertyRequest) returns (IndexCollectionPropertyResponse);
-  rpc EqualsQuery(EqualsQueryRequest) returns (stream EqualsQueryResponse);
   rpc IsPropertyIndexed(IsPropertyIndexedRequest) returns (IsPropertyIndexedResponse);
   rpc RemoveIndexFromCollectionProperty(RemoveIndexFromCollectionPropertyRequest) returns (RemoveIndexFromCollectionPropertyResponse);
   rpc GetCollectionMetaData(GetCollectionMetaDataRequest) returns (CollectionMetaData);
+  rpc QueryDatabase(QueryDatabaseRequest) returns (stream QueryDatabaseResponse);
+}
+
+message QueryDatabaseRequest {
+  string collection_id = 1;
+  string property = 2;
+  Operator operator = 3;
+  string value = 4;
+}
+
+enum Operator {
+  EQUALS = 0;
+  NOT_EQUALS = 1;
+  GREATER_THAN = 2;
+  LESS_THAN = 3;
+  GREATER_THAN_OR_EQUALS = 4;
+  LESS_THAN_OR_EQUALS = 5;
+  CONTAINS = 6;
+  STARTS_WITH = 7;
+  ENDS_WITH = 8;
+  IN = 9;
+  NOT_IN = 10;
+}
+
+message QueryDatabaseResponse {
+  string data = 1;
 }
 
 message GetCollectionMetaDataRequest{
@@ -46,16 +71,6 @@ message IsPropertyIndexedRequest {
 
 message IsPropertyIndexedResponse {
   bool isIndexed = 1;
-}
-
-message EqualsQueryRequest {
-  string collection_id = 1;
-  string property = 2;
-  string value = 3;
-}
-
-message EqualsQueryResponse{
-  string document_id = 1;
 }
 
 message IndexCollectionPropertyRequest {
