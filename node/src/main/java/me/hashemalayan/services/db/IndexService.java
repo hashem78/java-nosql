@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static btree4j.indexer.BasicIndexQuery.*;
 
@@ -76,6 +77,8 @@ public class IndexService {
                 if (!Files.isDirectory(collectionPath)) continue;
                 final var collectionId = collectionPath.getFileName().toString();
                 final var collectionIndexesPath = collectionPath.resolve("indexes");
+                if (!Files.exists(collectionIndexesPath))
+                    Files.createDirectories(collectionIndexesPath);
                 try (final var collectionIndexesPathStream = Files.newDirectoryStream(collectionIndexesPath)) {
                     for (final var collectionIndexPath : collectionIndexesPathStream) {
                         final var propertyName = collectionIndexPath.getFileName().toString();
@@ -170,6 +173,7 @@ public class IndexService {
         );
         Files.deleteIfExists(indexFilePath);
     }
+
     public void runQuery(
             String collectionId,
             Operator operator,
@@ -188,12 +192,7 @@ public class IndexService {
 
         final var index = indexMap.get(pair);
 
-        final var valueBytes = switch (value.getValueCase()) {
-
-            case STRING_VALUE -> objectMapper.writeValueAsBytes(value.getStringValue());
-            case INT_VALUE -> objectMapper.writeValueAsBytes(value.getIntValue());
-            default -> objectMapper.writeValueAsBytes("");
-        };
+        final var valueBytes = getCustomValueBytes(value);
         final var bTreeValue = new Value(valueBytes);
         final var adapter = bTreeCallbackFactory.create(
                 (k, v) -> {
@@ -220,6 +219,24 @@ public class IndexService {
         }
     }
 
+    private Object getCustomValueBytesHelper(Customstruct.CustomValue value) {
+        return switch (value.getValueCase()) {
+
+            case STRING_VALUE -> value.getStringValue();
+            case INT_VALUE -> value.getIntValue();
+            case LIST_VALUE -> value.getListValue().getValuesList()
+                    .stream()
+                    .map(this::getCustomValueBytesHelper)
+                    .toList();
+            default -> "";
+        };
+    }
+
+    private byte[] getCustomValueBytes(Customstruct.CustomValue value) throws JsonProcessingException {
+
+        return objectMapper.writeValueAsBytes(getCustomValueBytesHelper(value));
+
+    }
     private Value[] decodeAndMapValue(String value) throws InvalidOperatorUsage, JsonProcessingException {
         final var jsonNode = objectMapper.readTree(value);
         if (!jsonNode.isArray())

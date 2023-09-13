@@ -140,12 +140,11 @@ public class SchemaService {
         if (propertyNode == null) throw new PropertyDoesNotExistException();
         final var propertyType = propertyNode.get("type").asText();
 
-        if (propertyType.equals("string")) {
-            return CollectionPropertyType.STRING;
-        } else if (propertyType.equals("integer")) {
-            return CollectionPropertyType.INTEGER;
-        } else {
-            return CollectionPropertyType.UNRECOGNIZED;
-        }
+        return switch (propertyType) {
+            case "string" -> CollectionPropertyType.STRING;
+            case "integer" -> CollectionPropertyType.INTEGER;
+            case "array" -> CollectionPropertyType.ARRAY;
+            default -> CollectionPropertyType.UNRECOGNIZED;
+        };
     }
 }

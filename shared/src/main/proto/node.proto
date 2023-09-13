@@ -37,6 +37,7 @@ message GetCollectionPropertyTypeRequest {
 enum CollectionPropertyType {
   INTEGER = 0;
   STRING = 1;
+  ARRAY = 2;
 }
 
 message GetCollectionPropertyTypeResponse {
