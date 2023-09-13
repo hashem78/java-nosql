@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
 import me.hashemalayan.nosql.shared.CollectionDocument;
 import me.hashemalayan.nosql.shared.CollectionMetaData;
+import me.hashemalayan.nosql.shared.CollectionPropertyType;
 import me.hashemalayan.services.db.exceptions.*;
 
 import java.io.IOException;
@@ -77,5 +78,18 @@ public class DatabaseService {
 
     public Optional<CollectionMetaData> getCollectionMetaData(String collectionId) {
         return collectionService.getCollectionMetaData(collectionId);
+    }
+
+    public CollectionDocument getDocument(String collectionId, String documentId)
+            throws CollectionDoesNotExistException,
+            DocumentDoesNotExistException,
+            IOException {
+        return collectionService.getDocument(collectionId, documentId);
+    }
+
+    public CollectionPropertyType getPropertyType(String collectionId, String property)
+            throws CollectionDoesNotExistException,
+            PropertyDoesNotExistException {
+        return schemaService.getPropertyType(collectionId, property);
     }
 }

@@ -8,7 +8,9 @@ import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.factories.JsonDirectoryIteratorFactory;
+import me.hashemalayan.nosql.shared.CollectionPropertyType;
 import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
+import me.hashemalayan.services.db.exceptions.PropertyDoesNotExistException;
 import me.hashemalayan.services.db.exceptions.SampleMalformedException;
 import org.slf4j.Logger;
 
@@ -121,6 +123,29 @@ public class SchemaService {
         } catch (IOException e) {
             logger.error("An I/O error occurred");
             e.printStackTrace();
+        }
+    }
+
+    public CollectionPropertyType getPropertyType(String collectionId, String property)
+            throws CollectionDoesNotExistException,
+            PropertyDoesNotExistException {
+
+        final var schemaOpt = configurationService.getCollectionSchema(collectionId);
+        if (schemaOpt.isEmpty()) throw new CollectionDoesNotExistException();
+
+        final var schema = schemaOpt.get();
+        final var schemaNode = schema.getSchemaNode();
+        final var propertyNode = schemaNode.get("properties").get(property);
+
+        if (propertyNode == null) throw new PropertyDoesNotExistException();
+        final var propertyType = propertyNode.get("type").asText();
+
+        if (propertyType.equals("string")) {
+            return CollectionPropertyType.STRING;
+        } else if (propertyType.equals("integer")) {
+            return CollectionPropertyType.INTEGER;
+        } else {
+            return CollectionPropertyType.UNRECOGNIZED;
         }
     }
 }

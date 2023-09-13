@@ -2,8 +2,10 @@ package me.hashemalayan.services.grpc;
 
 import btree4j.BTreeException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.util.JsonFormat;
 import io.grpc.Status;
 import io.grpc.StatusException;
 import io.grpc.stub.StreamObserver;
@@ -438,11 +440,13 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
         final var property = request.getProperty();
         final var operator = request.getOperator();
         final var value = request.getValue();
+        logger.info("Query Request: \n" + request);
 
         try {
             indexService.runQuery(
                     collectionId, operator,
-                    property, value,
+                    property,
+                    value,
                     result -> {
                         responseObserver.onNext(
                                 QueryDatabaseResponse.newBuilder()
@@ -461,14 +465,117 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
                             )
                             .asException()
             );
-        } catch (BTreeException e) {
-            throw new RuntimeException(e);
         } catch (UnRecognizedOperatorException e) {
-            throw new RuntimeException(e);
+            responseObserver.onError(
+                    Status.INVALID_ARGUMENT
+                            .withDescription(
+                                    "Operator " + request.getOperator()
+                                            + " is not valid"
+                            )
+                            .asException()
+            );
         } catch (InvalidOperatorUsage e) {
-            throw new RuntimeException(e);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            responseObserver.onError(
+                    Status.INTERNAL
+                            .withDescription(
+                                    "Invalid usage on operator IN/NIN, make sure you supply an array"
+                            )
+                            .asException()
+            );
+        } catch (JsonProcessingException | BTreeException e) {
+            logger.error("An IO Error occurred while querying " + request);
+
+            responseObserver.onError(
+                    Status.INTERNAL
+                            .withDescription("Internal Server error")
+                            .withCause(e).asException()
+            );
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void getCollectionDocument(
+            GetCollectionDocumentRequest request,
+            StreamObserver<CollectionDocument> responseObserver
+    ) {
+        try {
+            responseObserver.onNext(
+                    databaseService.getDocument(
+                            request.getCollectionId(),
+                            request.getDocumentId()
+                    )
+            );
+            responseObserver.onCompleted();
+        } catch (CollectionDoesNotExistException e) {
+            logger.error("User requested " + request.getCollectionId() + " but it does not exist");
+            var status = Status.INTERNAL
+                    .withDescription(request.getCollectionId() + "does not exist")
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        } catch (DocumentDoesNotExistException e) {
+            logger.error("User wants to get "
+                    + request.getDocumentId()
+                    + " from collection" + request.getCollectionId()
+                    + " But the document doesn't exist"
+            );
+            var status = Status.INTERNAL
+                    .withDescription("Document "
+                            + request.getDocumentId()
+                            + "from collection" + request.getCollectionId()
+                            + " does not exist"
+                    )
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        } catch (IOException e) {
+            logger.error("An IO Error occurred getting document " + request);
+
+            responseObserver.onError(
+                    Status.INTERNAL
+                            .withDescription("Internal Server error")
+                            .withCause(e).asException()
+            );
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void getPropertyType(
+            GetCollectionPropertyTypeRequest request,
+            StreamObserver<GetCollectionPropertyTypeResponse> responseObserver
+    ) {
+        try {
+            final var propertyType = databaseService.getPropertyType(
+                    request.getCollectionId(),
+                    request.getProperty()
+            );
+            responseObserver.onNext(
+                    GetCollectionPropertyTypeResponse.newBuilder()
+                            .setPropertyType(propertyType)
+                            .build()
+            );
+            responseObserver.onCompleted();
+        } catch (CollectionDoesNotExistException e) {
+            logger.error("User requested " + request.getCollectionId() + " but it does not exist");
+            var status = Status.INTERNAL
+                    .withDescription(request.getCollectionId() + "does not exist")
+                    .withCause(e);
+            responseObserver.onError(status.asException());
+        } catch (PropertyDoesNotExistException e) {
+            logger.error(
+                    "User requested property "
+                            + request.getProperty()
+                            + " from " + request.getCollectionId()
+                            + " but it does not exist"
+            );
+            var status = Status.INTERNAL
+                    .withDescription(
+                            "property "
+                                    + request.getProperty()
+                                    + " does not exist in" + request.getCollectionId()
+                    )
+                    .withCause(e);
+            responseObserver.onError(status.asException());
         }
     }
 }

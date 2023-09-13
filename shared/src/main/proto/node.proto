@@ -5,6 +5,7 @@ option java_package = "me.hashemalayan.nosql.shared";
 option java_outer_classname = "NodeProto";
 
 import "google/protobuf/timestamp.proto";
+import "customstruct.proto";
 
 package node;
 
@@ -13,6 +14,7 @@ service NodeService {
   rpc CreateCollection(CreateCollectionRequest) returns (CollectionMetaData);
   rpc GetCollections(GetCollectionsRequest) returns (GetCollectionsResponse);
   rpc GetCollectionDocuments(GetCollectionDocumentsRequest) returns (stream CollectionDocument);
+  rpc GetCollectionDocument(GetCollectionDocumentRequest) returns (CollectionDocument);
   rpc EditCollection(EditCollectionRequest) returns (EditCollectionResponse);
   rpc DeleteCollection(DeleteCollectionRequest) returns (DeleteCollectionResponse);
   rpc GetDocumentSample(GetDocumentSampleRequest) returns (GetDocumentSampleResponse);
@@ -24,13 +26,29 @@ service NodeService {
   rpc RemoveIndexFromCollectionProperty(RemoveIndexFromCollectionPropertyRequest) returns (RemoveIndexFromCollectionPropertyResponse);
   rpc GetCollectionMetaData(GetCollectionMetaDataRequest) returns (CollectionMetaData);
   rpc QueryDatabase(QueryDatabaseRequest) returns (stream QueryDatabaseResponse);
+  rpc GetPropertyType(GetCollectionPropertyTypeRequest) returns(GetCollectionPropertyTypeResponse);
 }
+
+message GetCollectionPropertyTypeRequest {
+  string collection_id = 1;
+  string property = 2;
+}
+
+enum CollectionPropertyType {
+  INTEGER = 0;
+  STRING = 1;
+}
+
+message GetCollectionPropertyTypeResponse {
+  CollectionPropertyType property_type = 1;
+}
+
 
 message QueryDatabaseRequest {
   string collection_id = 1;
   string property = 2;
   Operator operator = 3;
-  string value = 4;
+  CustomValue value = 4;
 }
 
 enum Operator {
@@ -40,11 +58,9 @@ enum Operator {
   LESS_THAN = 3;
   GREATER_THAN_OR_EQUALS = 4;
   LESS_THAN_OR_EQUALS = 5;
-  CONTAINS = 6;
-  STARTS_WITH = 7;
-  ENDS_WITH = 8;
-  IN = 9;
-  NOT_IN = 10;
+  STARTS_WITH = 6;
+  IN = 7;
+  NOT_IN = 8;
 }
 
 message QueryDatabaseResponse {
@@ -135,6 +151,11 @@ message EditCollectionResponse {
 
 message GetCollectionDocumentsRequest {
   string collection_id = 1;
+}
+
+message GetCollectionDocumentRequest {
+  string collection_id = 1;
+  string document_id = 2;
 }
 
 message DocumentMetaData {

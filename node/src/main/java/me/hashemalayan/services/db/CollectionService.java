@@ -99,6 +99,42 @@ public class CollectionService {
         }
     }
 
+    public CollectionDocument getDocument(String collectionId, String documentId)
+            throws CollectionDoesNotExistException,
+            IOException,
+            DocumentDoesNotExistException {
+
+        final var collectionPath = collectionsPath.resolve(collectionId);
+        final var collectionExistsOnDisk = Files.exists(collectionPath);
+        final var configIsLoaded = configService.collectionConfigurationIsLoaded(collectionId);
+
+        if (!collectionExistsOnDisk || !configIsLoaded)
+            throw new CollectionDoesNotExistException();
+
+        final var documentsPath = collectionPath.resolve("documents");
+        final var documentPath = documentsPath.resolve(documentId + ".json");
+
+        if(!Files.exists(documentPath))
+            throw new DocumentDoesNotExistException();
+
+        if (!Files.isRegularFile(documentPath))
+            throw new IOException();
+
+        final var documentJson = objectMapper.readTree(documentPath.toFile());
+
+        final var metaData = objectMapper.treeToValue(
+                documentJson.get("metaData"),
+                DocumentMetaData.class
+        );
+
+        final var dataString = objectMapper.writeValueAsString(documentJson.get("data"));
+
+        return CollectionDocument.newBuilder()
+                .setMetaData(metaData)
+                .setData(dataString)
+                .build();
+    }
+
     public CollectionDocument setDocument(
             String collectionId,
             String documentId,
@@ -118,7 +154,7 @@ public class CollectionService {
         final var documentsPath = collectionsPath.resolve(collectionId)
                 .resolve("documents");
 
-        if(!Files.exists(documentsPath))
+        if (!Files.exists(documentsPath))
             Files.createDirectories(documentsPath);
 
         final var documentPath = documentsPath

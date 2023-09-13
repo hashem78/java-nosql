@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option java_package = "me.hashemalayan.nosql.shared";
+
+message CustomValue {
+  oneof value {
+    string string_value = 1;
+    int32 int_value = 2;
+    double double_value = 3;
+    bool bool_value = 4;
+    CustomStruct struct_value = 5;
+    CustomList list_value = 6;
+    NullValue null_value = 7;
+  }
+}
+
+message CustomStruct {
+  map<string, CustomValue> fields = 1;
+}
+
+message CustomList {
+  repeated CustomValue values = 1;
+}
+
+enum NullValue {
+  NULL_VALUE = 0;
+}

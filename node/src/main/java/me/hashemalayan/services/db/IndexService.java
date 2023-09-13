@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.inject.Inject;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.factories.JsonDirectoryIteratorFactory;
+import me.hashemalayan.nosql.shared.Customstruct;
 import me.hashemalayan.nosql.shared.Operator;
 import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
 import me.hashemalayan.services.db.exceptions.IndexNotFoundException;
@@ -24,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -168,30 +170,34 @@ public class IndexService {
         );
         Files.deleteIfExists(indexFilePath);
     }
-
     public void runQuery(
             String collectionId,
             Operator operator,
             String property,
-            String value,
+            Customstruct.CustomValue value,
             Consumer<String> responseConsumer
-    ) throws IndexNotFoundException, JsonProcessingException, BTreeException, InvalidOperatorUsage, UnRecognizedOperatorException {
+    ) throws IndexNotFoundException,
+            JsonProcessingException,
+            BTreeException,
+            InvalidOperatorUsage,
+            UnRecognizedOperatorException {
         final var pair = new CollectionPropertyPair(collectionId, property);
 
         if (!indexMap.containsKey(pair))
             throw new IndexNotFoundException();
 
         final var index = indexMap.get(pair);
-        final var valueAsJson = objectMapper.readTree(value);
 
-        final var bTreeValue = new Value(objectMapper.writeValueAsBytes(valueAsJson));
+        final var valueBytes = switch (value.getValueCase()) {
+
+            case STRING_VALUE -> objectMapper.writeValueAsBytes(value.getStringValue());
+            case INT_VALUE -> objectMapper.writeValueAsBytes(value.getIntValue());
+            default -> objectMapper.writeValueAsBytes("");
+        };
+        final var bTreeValue = new Value(valueBytes);
         final var adapter = bTreeCallbackFactory.create(
                 (k, v) -> {
-                    try {
-                        responseConsumer.accept(objectMapper.writeValueAsString(v));
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    }
+                    responseConsumer.accept(v);
                     return true;
                 }
         );
@@ -204,14 +210,12 @@ public class IndexService {
             case LESS_THAN -> index.search(new IndexConditionLT(bTreeValue), adapter);
             case GREATER_THAN_OR_EQUALS -> index.search(new IndexConditionGE(bTreeValue), adapter);
             case LESS_THAN_OR_EQUALS -> index.search(new IndexConditionLE(bTreeValue), adapter);
-            case CONTAINS -> index.search(
-                    new LikeIndexQuery(new Value(objectMapper.writeValueAsBytes("%" + value)), "%"),
-                    adapter
-            );
-            case STARTS_WITH -> index.search(new LikeIndexQuery(bTreeValue, "%"), adapter);
-            case ENDS_WITH -> index.search(new LikeIndexQuery(new Value("%"), value), adapter);
-            case IN -> index.search(new IndexConditionIN(decodeAndMapValue(value)), adapter);
-            case NOT_IN -> index.search(new IndexConditionNIN(decodeAndMapValue(value)), adapter);
+            case STARTS_WITH -> {
+                final var noEndQuotes = Arrays.copyOfRange(valueBytes, 0, valueBytes.length - 1);
+                index.search(new LikeIndexQuery(new Value(noEndQuotes), "%"), adapter);
+            }
+            case IN -> index.search(new IndexConditionIN(decodeAndMapValue(value.getStringValue())), adapter);
+            case NOT_IN -> index.search(new IndexConditionNIN(decodeAndMapValue(value.getStringValue())), adapter);
             case UNRECOGNIZED -> throw new UnRecognizedOperatorException();
         }
     }

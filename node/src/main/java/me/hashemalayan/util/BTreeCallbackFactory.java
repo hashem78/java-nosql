@@ -2,6 +2,7 @@ package me.hashemalayan.util;
 
 import btree4j.BTreeCallback;
 import btree4j.Value;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -18,7 +19,7 @@ public class BTreeCallbackFactory {
         this.objectMapper = objectMapper;
     }
 
-    public BTreeCallback create(BiFunction<String, JsonNode, Boolean> func) {
+    public BTreeCallback create(BiFunction<String, String, Boolean> func) {
         return new BTreeCallback() {
             @Override
             public boolean indexInfo(Value value, long pointer) {
@@ -30,8 +31,7 @@ public class BTreeCallbackFactory {
                 try {
                     final var keyStr = objectMapper.readTree(bTreeKey.getData()).asText();
                     final var valueNode = objectMapper.readTree(bTreeValue);
-
-                    return func.apply(keyStr, valueNode);
+                    return func.apply(keyStr, objectMapper.writeValueAsString(valueNode));
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
