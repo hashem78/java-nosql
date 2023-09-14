@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import me.hashemalayan.NodeProperties;
+import me.hashemalayan.util.ExceptionHandlingInterceptor;
 
 import java.io.IOException;
 
@@ -32,6 +33,7 @@ public class LocalServicesManager {
         server = ServerBuilder.forPort(nodeProperties.getPort())
                 .addService(localNodeService)
                 .addService(loadBalancingService)
+                .intercept(new ExceptionHandlingInterceptor())
                 .build();
 
         server.start();

@@ -73,29 +73,8 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
                     )
             );
             responseObserver.onCompleted();
-        } catch (InvalidProtocolBufferException e) {
-            var status = Status.INTERNAL
-                    .withDescription("Internal server error")
-                    .withCause(e);
-            responseObserver.onError(status.asException());
-        } catch (CollectionAlreadyExistsException e) {
-            var status = Status.INTERNAL
-                    .withDescription("Collection " + request.getName() + " Already Exists!")
-                    .withCause(e);
-            responseObserver.onError(status.asException());
-        } catch (IOException e) {
-            logger.error("An IO Error occurred while creating collection " + request.getName());
-            var status = Status.INTERNAL
-                    .withDescription("An IO Error occurred while creating collection " + request.getName())
-                    .withCause(e);
-            responseObserver.onError(status.asException());
-            e.printStackTrace();
-        } catch (InvalidCollectionSchemaException e) {
-            logger.error("Invalid Collection Schema " + request.getName() + " " + request.getSchema());
-            var status = Status.INTERNAL
-                    .withDescription("Invalid Collection Schema " + e.getMessage())
-                    .withCause(e);
-            responseObserver.onError(status.asException());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -123,17 +102,8 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
                     responseObserver::onNext
             );
             responseObserver.onCompleted();
-        } catch (CollectionDoesNotExistException e) {
-            logger.error("User requested " + request.getCollectionId() + " but it does not exist");
-            var status = Status.INTERNAL
-                    .withDescription(request.getCollectionId() + "does not exist")
-                    .withCause(e);
-            responseObserver.onError(status.asException());
-        } catch (IOException e) {
-            var status = Status.INTERNAL
-                    .withDescription("An IO Error occurred while creating collection " + request.getCollectionId())
-                    .withCause(e);
-            responseObserver.onError(status.asException());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -149,18 +119,8 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             );
             responseObserver.onNext(EditCollectionResponse.newBuilder().build());
             responseObserver.onCompleted();
-        } catch (CollectionDoesNotExistException e) {
-            logger.error("User requested to edit" + request.getCollectionId() + " but it does not exist");
-            var status = Status.INTERNAL
-                    .withDescription(request.getCollectionId() + "does not exist")
-                    .withCause(e);
-            responseObserver.onError(status.asException());
-        } catch (IOException e) {
-            logger.error("An IO Error occurred while editing collection " + request.getCollectionId());
-            var status = Status.INTERNAL
-                    .withDescription("An IO Error occurred while editing collection " + request.getCollectionId())
-                    .withCause(e);
-            responseObserver.onError(status.asException());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -176,18 +136,8 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
                             .build()
             );
             responseObserver.onCompleted();
-        } catch (CollectionDoesNotExistException e) {
-            logger.error("User requested to delete" + request.getCollectionId() + " but it's already marked as deleted");
-            var status = Status.INTERNAL
-                    .withDescription(request.getCollectionId() + " does not exist")
-                    .withCause(e);
-            responseObserver.onError(status.asException());
-        } catch (IOException e) {
-            logger.error("An IO Error occurred while deleting collection " + request.getCollectionId());
-            var status = Status.INTERNAL
-                    .withDescription("An IO Error occurred while deleting collection " + request.getCollectionId())
-                    .withCause(e);
-            responseObserver.onError(status.asException());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -204,18 +154,8 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
                             .build()
             );
             responseObserver.onCompleted();
-        } catch (SampleMalformedException | JsonProcessingException e) {
-            logger.error("User requested a sample for" + request.getCollectionId() + " but it's malformed");
-            var status = Status.INTERNAL
-                    .withDescription("Sample for " + request.getCollectionId() + " is malformed")
-                    .withCause(e);
-            responseObserver.onError(status.asException());
-        } catch (CollectionDoesNotExistException e) {
-            logger.error("User requested to get a sample for" + request.getCollectionId() + " but it's not found");
-            var status = Status.INTERNAL
-                    .withDescription(request.getCollectionId() + " does not exist")
-                    .withCause(e);
-            responseObserver.onError(status.asException());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -236,32 +176,8 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
                             .build()
             );
             responseObserver.onCompleted();
-        } catch (DocumentSchemaValidationException e) {
-            logger.error(
-                    "Failed to validate document's schema " + request.getCollectionId()
-            );
-            var status = Status.INTERNAL
-                    .withDescription("Failed to validate schema")
-                    .withCause(e);
-            responseObserver.onError(status.asException());
-            e.printStackTrace();
-        } catch (CollectionDoesNotExistException e) {
-            logger.error(
-                    "User requested to edit/create a document on collection"
-                            + request.getCollectionId()
-                            + " but it's not found"
-            );
-            var status = Status.INTERNAL
-                    .withDescription(request.getCollectionId() + " does not exist")
-                    .withCause(e);
-            responseObserver.onError(status.asException());
-        } catch (IOException e) {
-            logger.error("An IO Error occurred while editing collection " + request.getCollectionId());
-            var status = Status.INTERNAL
-                    .withDescription("An IO Error occurred while editing collection " + request.getCollectionId())
-                    .withCause(e);
-            responseObserver.onError(status.asException());
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -275,36 +191,8 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
 
             responseObserver.onNext(DeleteCollectionDocumentResponse.newBuilder().build());
             responseObserver.onCompleted();
-        } catch (CollectionDoesNotExistException e) {
-            logger.error("User wants to delete "
-                    + request.getDocumentId()
-                    + " from collection" + request.getCollectionId()
-                    + " But the collection doesn't exist"
-            );
-            var status = Status.INTERNAL
-                    .withDescription("Collection" + request.getCollectionId() + " does not exist")
-                    .withCause(e);
-            responseObserver.onError(status.asException());
-        } catch (DocumentDoesNotExistException e) {
-            logger.error("User wants to delete "
-                    + request.getDocumentId()
-                    + " from collection" + request.getCollectionId()
-                    + " But the document doesn't exist"
-            );
-            var status = Status.INTERNAL
-                    .withDescription("Document "
-                            + request.getDocumentId()
-                            + "from collection" + request.getCollectionId()
-                            + " does not exist"
-                    )
-                    .withCause(e);
-            responseObserver.onError(status.asException());
-        } catch (IOException e) {
-            logger.error("An IO Error occurred while delete document " + request);
-            var status = Status.INTERNAL
-                    .withDescription("An IO Error occurred while delete document " + request.getDocumentId())
-                    .withCause(e);
-            responseObserver.onError(status.asException());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -344,18 +232,8 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             indexService.indexPropertyInCollection(request.getCollectionId(), request.getProperty());
             responseObserver.onNext(IndexCollectionPropertyResponse.newBuilder().build());
             responseObserver.onCompleted();
-        } catch (CollectionDoesNotExistException e) {
-            logger.error("User requested " + request.getCollectionId() + " but it does not exist");
-            var status = Status.INTERNAL
-                    .withDescription(request.getCollectionId() + "does not exist")
-                    .withCause(e);
-            responseObserver.onError(status.asException());
-        } catch (IOException | BTreeException e) {
-            logger.error("An IO Error occurred while indexing a collection " + request);
-            var status = Status.INTERNAL
-                    .withDescription("Internal Server error")
-                    .withCause(e);
-            responseObserver.onError(status.asException());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -388,29 +266,8 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             );
             responseObserver.onNext(RemoveIndexFromCollectionPropertyResponse.newBuilder().build());
             responseObserver.onCompleted();
-        } catch (IndexNotFoundException e) {
-            logger.error("User requested to remove an index on a non-indexed property " + request);
-            var status = Status.INTERNAL
-                    .withDescription("This property has no Index associated")
-                    .withCause(e);
-            responseObserver.onError(status.asException());
-        } catch (CollectionDoesNotExistException e) {
-            logger.error(
-                    "User wanted to delete index on property "
-                            + request.getProperty()
-                            + " from " + request.getCollectionId()
-                            + " but it does not exist"
-            );
-            var status = Status.INTERNAL
-                    .withDescription(request.getCollectionId() + "does not exist")
-                    .withCause(e);
-            responseObserver.onError(status.asException());
-        } catch (BTreeException | IOException e) {
-            logger.error("An IO Error occurred while removing an index from a collection " + request);
-            var status = Status.INTERNAL
-                    .withDescription("Internal Server error")
-                    .withCause(e);
-            responseObserver.onError(status.asException());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -456,41 +313,8 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
                     }
             );
             responseObserver.onCompleted();
-        } catch (IndexNotFoundException e) {
-            responseObserver.onError(
-                    Status.FAILED_PRECONDITION
-                            .withDescription(
-                                    "Property " + property + " is not indexed in "
-                                            + request.getCollectionId()
-                            )
-                            .asException()
-            );
-        } catch (UnRecognizedOperatorException e) {
-            responseObserver.onError(
-                    Status.INVALID_ARGUMENT
-                            .withDescription(
-                                    "Operator " + request.getOperator()
-                                            + " is not valid"
-                            )
-                            .asException()
-            );
-        } catch (InvalidOperatorUsage e) {
-            responseObserver.onError(
-                    Status.INTERNAL
-                            .withDescription(
-                                    "Invalid usage on operator IN/NIN, make sure you supply an array"
-                            )
-                            .asException()
-            );
-        } catch (JsonProcessingException | BTreeException e) {
-            logger.error("An IO Error occurred while querying " + request);
-
-            responseObserver.onError(
-                    Status.INTERNAL
-                            .withDescription("Internal Server error")
-                            .withCause(e).asException()
-            );
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -507,35 +331,8 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
                     )
             );
             responseObserver.onCompleted();
-        } catch (CollectionDoesNotExistException e) {
-            logger.error("User requested " + request.getCollectionId() + " but it does not exist");
-            var status = Status.INTERNAL
-                    .withDescription(request.getCollectionId() + "does not exist")
-                    .withCause(e);
-            responseObserver.onError(status.asException());
-        } catch (DocumentDoesNotExistException e) {
-            logger.error("User wants to get "
-                    + request.getDocumentId()
-                    + " from collection" + request.getCollectionId()
-                    + " But the document doesn't exist"
-            );
-            var status = Status.INTERNAL
-                    .withDescription("Document "
-                            + request.getDocumentId()
-                            + "from collection" + request.getCollectionId()
-                            + " does not exist"
-                    )
-                    .withCause(e);
-            responseObserver.onError(status.asException());
-        } catch (IOException e) {
-            logger.error("An IO Error occurred getting document " + request);
-
-            responseObserver.onError(
-                    Status.INTERNAL
-                            .withDescription("Internal Server error")
-                            .withCause(e).asException()
-            );
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -555,27 +352,8 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
                             .build()
             );
             responseObserver.onCompleted();
-        } catch (CollectionDoesNotExistException e) {
-            logger.error("User requested " + request.getCollectionId() + " but it does not exist");
-            var status = Status.INTERNAL
-                    .withDescription(request.getCollectionId() + "does not exist")
-                    .withCause(e);
-            responseObserver.onError(status.asException());
-        } catch (PropertyDoesNotExistException e) {
-            logger.error(
-                    "User requested property "
-                            + request.getProperty()
-                            + " from " + request.getCollectionId()
-                            + " but it does not exist"
-            );
-            var status = Status.INTERNAL
-                    .withDescription(
-                            "property "
-                                    + request.getProperty()
-                                    + " does not exist in" + request.getCollectionId()
-                    )
-                    .withCause(e);
-            responseObserver.onError(status.asException());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }
