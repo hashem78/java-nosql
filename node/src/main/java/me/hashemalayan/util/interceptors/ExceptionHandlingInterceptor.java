@@ -1,4 +1,4 @@
-package me.hashemalayan.util;
+package me.hashemalayan.util.interceptors;
 
 import btree4j.BTreeException;
 import com.fasterxml.jackson.core.JsonProcessingException;

@@ -23,6 +23,8 @@ import me.hashemalayan.services.grpc.LocalServicesManager;
 import me.hashemalayan.util.BTreeCallbackFactory;
 import me.hashemalayan.util.JsonSchemaDeserializer;
 import me.hashemalayan.util.JsonSchemaSerializer;
+import me.hashemalayan.util.interceptors.ExceptionHandlingInterceptor;
+import me.hashemalayan.util.interceptors.LoggingInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +47,8 @@ public class NodeModule extends AbstractModule {
         bind(ClientCounterService.class).asEagerSingleton();
         bind(IndexService.class).asEagerSingleton();
         bind(BTreeCallbackFactory.class).asEagerSingleton();
+        bind(ExceptionHandlingInterceptor.class).asEagerSingleton();
+        bind(LoggingInterceptor.class).asEagerSingleton();
 
         install(
                 new FactoryModuleBuilder()
