@@ -213,8 +213,8 @@ public class IndexService {
                 final var noEndQuotes = Arrays.copyOfRange(valueBytes, 0, valueBytes.length - 1);
                 index.search(new LikeIndexQuery(new Value(noEndQuotes), "%"), adapter);
             }
-            case IN -> index.search(new IndexConditionIN(decodeAndMapValue(value.getStringValue())), adapter);
-            case NOT_IN -> index.search(new IndexConditionNIN(decodeAndMapValue(value.getStringValue())), adapter);
+            case IN -> index.search(new IndexConditionIN(decodeAndMapValue(value)), adapter);
+            case NOT_IN -> index.search(new IndexConditionNIN(decodeAndMapValue(value)), adapter);
             case UNRECOGNIZED -> throw new UnRecognizedOperatorException();
         }
     }
@@ -232,20 +232,26 @@ public class IndexService {
         };
     }
 
-    private byte[] getCustomValueBytes(Customstruct.CustomValue value) throws JsonProcessingException {
+    private byte[] getCustomValueBytes(Customstruct.CustomValue value) {
 
-        return objectMapper.writeValueAsBytes(getCustomValueBytesHelper(value));
+        try {
+            return objectMapper.writeValueAsBytes(getCustomValueBytesHelper(value));
+        } catch (JsonProcessingException e) {
+            return new byte[]{};
+        }
 
     }
-    private Value[] decodeAndMapValue(String value) throws InvalidOperatorUsage, JsonProcessingException {
-        final var jsonNode = objectMapper.readTree(value);
-        if (!jsonNode.isArray())
+
+    private Value[] decodeAndMapValue(Customstruct.CustomValue value) throws InvalidOperatorUsage {
+
+        if (!value.hasListValue())
             throw new InvalidOperatorUsage();
-        final var valueList = new ArrayList<Value>();
-        final var arrayNode = (ArrayNode) jsonNode;
-        for (final var node : arrayNode) {
-            valueList.add(new Value(objectMapper.writeValueAsBytes(node)));
-        }
-        return valueList.toArray(Value[]::new);
+
+        return value.getListValue()
+                .getValuesList()
+                .stream()
+                .map(this::getCustomValueBytes)
+                .map(Value::new)
+                .toArray(Value[]::new);
     }
 }
