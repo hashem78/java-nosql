@@ -2,7 +2,7 @@
   <configuration default="false" name="BootStrapServer" type="Application" factoryName="Application">
     <option name="ALTERNATIVE_JRE_PATH" value="jbr-17" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
-    <option name="MAIN_CLASS_NAME" value="me.hashemalayan.Main" />
+    <option name="MAIN_CLASS_NAME" value="me.hashemalayan.BootstrapMain" />
     <module name="nosql.bootstrap-server.main" />
     <extension name="net.ashald.envfile">
       <option name="IS_ENABLED" value="true" />

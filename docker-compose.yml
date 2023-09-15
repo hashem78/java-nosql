@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  bootstrap-server:
+    build:
+      context: .
+      dockerfile: bootstrap-server/Dockerfile
+    network_mode: "host"
+    env_file:
+      - env/bootstrap.env
+    volumes:
+      - ./certs:/app/certs
+  node1:
+    build:
+      context: .
+      dockerfile: node/Dockerfile
+    network_mode: "host"
+    depends_on:
+      - bootstrap-server
+    env_file:
+      - env/node1.env
+    volumes:
+      - node1-data:/app/node1
+      - ./certs:/app/certs
+
+  node2:
+    build:
+      context: .
+      dockerfile: node/Dockerfile
+    network_mode: "host"
+    depends_on:
+      - bootstrap-server
+    env_file:
+      - env/node2.env
+    volumes:
+      - node2-data:/app/node2
+      - ./certs:/app/certs
+
+volumes:
+  node1-data:
+  node2-data:

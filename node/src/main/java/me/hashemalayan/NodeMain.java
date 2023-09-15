@@ -3,7 +3,7 @@ package me.hashemalayan;
 import com.google.inject.Guice;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
-public class Main {
+public class NodeMain {
     static {
         SLF4JBridgeHandler.removeHandlersForRootLogger();
         SLF4JBridgeHandler.install();

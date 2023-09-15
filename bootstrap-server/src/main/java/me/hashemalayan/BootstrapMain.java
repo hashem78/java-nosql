@@ -4,9 +4,8 @@ package me.hashemalayan;
 import io.grpc.ServerBuilder;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 
-public class Main {
+public class BootstrapMain {
     public static void main(String[] args) throws IOException, InterruptedException {
 
         final var properties = new BootstrapProperties();

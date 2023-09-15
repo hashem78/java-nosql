@@ -84,10 +84,9 @@ public class SignalingServer extends SignalingServiceGrpc.SignalingServiceImplBa
 
             loadBalancingServiceStubMap.put(request.getPort(), stub);
         } catch (IOException e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
-
-
     }
 
     @Override
@@ -114,6 +113,10 @@ public class SignalingServer extends SignalingServiceGrpc.SignalingServiceImplBa
                 responseObserver.onError(e);
                 return;
             }
+        }
+
+        if(loadResponses.isEmpty()) {
+            responseObserver.onCompleted();
         }
 
         // TODO: handle when there are no nodes in the mesh

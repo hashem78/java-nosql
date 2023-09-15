@@ -10,6 +10,7 @@ buildscript {
 plugins {
     id 'java'
     id 'io.freefair.lombok' version '8.3'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 group = 'me.hashemalayan'
@@ -24,6 +25,16 @@ allprojects {
 subprojects {
     apply plugin: 'java'
     apply plugin: 'io.freefair.lombok'
+    apply plugin: 'com.github.johnrengelman.shadow'
+
+    shadowJar {
+        archiveBaseName.set('app')
+        archiveClassifier.set('')
+        archiveVersion.set('')
+        mergeServiceFiles()
+    }
+
+    build.dependsOn shadowJar
     dependencies {
         testImplementation platform('org.junit:junit-bom:5.9.1')
         testImplementation 'org.junit.jupiter:junit-jupiter'

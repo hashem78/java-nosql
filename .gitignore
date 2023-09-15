@@ -43,3 +43,4 @@ bin/
 .env
 /env/
 /node[0-9]/
+/certs/
