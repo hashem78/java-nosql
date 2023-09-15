@@ -1,106 +1,27 @@
 package me.hashemalayan;
 
 
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.ServerBuilder;
-import io.grpc.stub.StreamObserver;
-import me.hashemalayan.nosql.shared.*;
-import me.hashemalayan.nosql.shared.LoadBalancingServiceGrpc.LoadBalancingServiceBlockingStub;
 
 import java.io.IOException;
-import java.util.*;
-
-class SignalingServerServiceImpl extends SignalingServiceGrpc.SignalingServiceImplBase {
-
-    final private Set<Integer> connectedNodePorts;
-    final private Map<Integer, StreamObserver<PortContainingMessage>> nodePortStreams;
-    final private Map<Integer, LoadBalancingServiceBlockingStub> loadBalancingServiceStubMap;
-
-    SignalingServerServiceImpl() {
-        this.nodePortStreams = Collections.synchronizedMap(new HashMap<>());
-        this.connectedNodePorts = Collections.synchronizedSet(new HashSet<>());
-        this.loadBalancingServiceStubMap = Collections.synchronizedMap(new HashMap<>());
-    }
-
-    @Override
-    public void joinMeshStream(
-            PortContainingMessage request,
-            StreamObserver<PortContainingMessage> responseObserver
-    ) {
-        System.out.println(request.getPort() + " joined");
-        // Broadcast to all previously connected nodes to let them know a new node just joined the mesh.
-        var nodePortsStreamIterator = nodePortStreams.entrySet().iterator();
-        while (nodePortsStreamIterator.hasNext()) {
-            var entry = nodePortsStreamIterator.next();
-            try {
-                entry.getValue().onNext(request);
-            } catch (Exception e) {
-
-                System.out.println("Failed to send port containing message to " + entry.getKey());
-                var disconnectedPort = entry.getKey();
-                connectedNodePorts.remove(disconnectedPort);
-                loadBalancingServiceStubMap.remove(disconnectedPort);
-                nodePortsStreamIterator.remove();
-            }
-        }
-
-        // Stream the currently connected nodes back to newly joined node
-        for (final var port : nodePortStreams.keySet()) {
-            responseObserver.onNext(
-                    PortContainingMessage.newBuilder()
-                            .setPort(port)
-                            .build()
-            );
-        }
-        connectedNodePorts.add(request.getPort());
-        nodePortStreams.put(request.getPort(), responseObserver);
-        loadBalancingServiceStubMap.put(
-                request.getPort(),
-                LoadBalancingServiceGrpc.newBlockingStub(
-                        ManagedChannelBuilder
-                                .forAddress("127.0.0.1", request.getPort())
-                                .usePlaintext()
-                                .build()
-                )
-        );
-    }
-
-    @Override
-    public void discoverLoad(
-            LoadDiscoveryRequest request,
-            StreamObserver<LoadDiscoveryResponse> responseObserver
-    ) {
-
-        var connectedNodePortIterator = connectedNodePorts.iterator();
-        var loadResponses = new ArrayList<LoadDiscoveryResponse>();
-        while (connectedNodePortIterator.hasNext()) {
-            var port = connectedNodePortIterator.next();
-            try {
-                var stub = loadBalancingServiceStubMap.get(port);
-                var loadDiscoveryResponse = stub.discoverLoad(request);
-                loadResponses.add(loadDiscoveryResponse);
-            } catch (Exception e) {
-                System.err.println("Error discovering load for port " + port + ": " + e.getMessage());
-                connectedNodePortIterator.remove();
-                nodePortStreams.remove(port);
-                loadBalancingServiceStubMap.remove(port);
-            }
-        }
-
-        // TODO: handle when there are no nodes in the mesh
-        var nodeWithLeastLoad = loadResponses.stream()
-                .min(Comparator.comparingInt(LoadDiscoveryResponse::getLoad));
-        nodeWithLeastLoad.ifPresent(responseObserver::onNext);
-
-        responseObserver.onCompleted();
-    }
-}
+import java.nio.file.Paths;
 
 public class Main {
     public static void main(String[] args) throws IOException, InterruptedException {
-        var server = ServerBuilder
-                .forPort(8000)
-                .addService(new SignalingServerServiceImpl())
+
+        final var properties = new BootstrapProperties();
+        final var serverBuilder = ServerBuilder.forPort(properties.getPort());
+
+        if (properties.isUseSSL()) {
+            System.out.println("Using SSL");
+            serverBuilder.useTransportSecurity(
+                    properties.getSslCertificatePath().toFile(),
+                    properties.getPrivateKeyPath().toFile()
+            );
+        }
+
+        final var server = serverBuilder
+                .addService(new SignalingServer(properties))
                 .build();
         server.start();
         server.awaitTermination();

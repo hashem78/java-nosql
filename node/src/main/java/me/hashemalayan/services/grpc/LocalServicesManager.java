@@ -6,6 +6,7 @@ import io.grpc.ServerBuilder;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.util.interceptors.ExceptionHandlingInterceptor;
 import me.hashemalayan.util.interceptors.LoggingInterceptor;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 
@@ -17,6 +18,7 @@ public class LocalServicesManager {
     private final LocalNodeService localNodeService;
     final private ExceptionHandlingInterceptor exceptionHandlingInterceptor;
     final private LoggingInterceptor loggingInterceptor;
+    private final Logger logger;
 
     @Inject
     public LocalServicesManager(
@@ -24,20 +26,31 @@ public class LocalServicesManager {
             LoadBalancingService loadBalancingService,
             LocalNodeService localNodeService,
             ExceptionHandlingInterceptor exceptionHandlingInterceptor,
-            LoggingInterceptor loggingInterceptor
-    ) {
+            LoggingInterceptor loggingInterceptor,
+            Logger logger) {
         this.nodeProperties = nodeProperties;
         this.loadBalancingService = loadBalancingService;
         this.localNodeService = localNodeService;
         this.exceptionHandlingInterceptor = exceptionHandlingInterceptor;
         this.loggingInterceptor = loggingInterceptor;
+        this.logger = logger;
     }
 
     public void init() throws IOException {
 
         assert server == null;
 
-        server = ServerBuilder.forPort(nodeProperties.getPort())
+        final var serverBuilder = ServerBuilder.forPort(nodeProperties.getPort());
+
+        if (nodeProperties.isUseSsl()) {
+            logger.info("Using SSL");
+            serverBuilder.useTransportSecurity(
+                    nodeProperties.getSslCertificatePath().toFile(),
+                    nodeProperties.getPrivateKeyPath().toFile()
+            );
+        }
+
+        server = serverBuilder
                 .addService(localNodeService)
                 .addService(loadBalancingService)
                 .intercept(exceptionHandlingInterceptor)
