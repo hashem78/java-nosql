@@ -24,9 +24,6 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
     private final DatabaseService databaseService;
     private final ClientCounterService clientCounterService;
     private final NodeProperties nodeProperties;
-
-    private final IndexService indexService;
-
     private final Logger logger;
 
     @Inject
@@ -34,13 +31,11 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             DatabaseService databaseService,
             ClientCounterService clientCounterService,
             NodeProperties nodeProperties,
-            IndexService indexService,
             Logger logger
     ) {
         this.databaseService = databaseService;
         this.clientCounterService = clientCounterService;
         this.nodeProperties = nodeProperties;
-        this.indexService = indexService;
         this.logger = logger;
     }
 
@@ -229,7 +224,7 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
     ) {
         try {
             logger.info("Indexing " + request.getProperty() + " in collection " + request.getCollectionId());
-            indexService.indexPropertyInCollection(request.getCollectionId(), request.getProperty());
+            databaseService.indexPropertyInCollection(request.getCollectionId(), request.getProperty());
             responseObserver.onNext(IndexCollectionPropertyResponse.newBuilder().build());
             responseObserver.onCompleted();
         } catch (Exception e) {
@@ -242,7 +237,7 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             IsPropertyIndexedRequest request,
             StreamObserver<IsPropertyIndexedResponse> responseObserver
     ) {
-        final var isPropertyIndexed = indexService.isPropertyIndexed(
+        final var isPropertyIndexed = databaseService.isPropertyIndexed(
                 request.getCollectionId(),
                 request.getProperty()
         );
@@ -260,7 +255,7 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             StreamObserver<RemoveIndexFromCollectionPropertyResponse> responseObserver
     ) {
         try {
-            indexService.removeIndexFromCollectionProperty(
+            databaseService.removeIndexFromCollectionProperty(
                     request.getCollectionId(),
                     request.getProperty()
             );
@@ -300,7 +295,7 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
         logger.info("Query Request: \n" + request);
 
         try {
-            indexService.runQuery(
+            databaseService.runQuery(
                     collectionId, operator,
                     property,
                     value,

@@ -1,10 +1,9 @@
 package me.hashemalayan.services.db;
 
+import btree4j.BTreeException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
-import me.hashemalayan.nosql.shared.CollectionDocument;
-import me.hashemalayan.nosql.shared.CollectionMetaData;
-import me.hashemalayan.nosql.shared.CollectionPropertyType;
+import me.hashemalayan.nosql.shared.*;
 import me.hashemalayan.services.db.exceptions.*;
 
 import java.io.IOException;
@@ -16,13 +15,15 @@ public class DatabaseService {
 
     private final CollectionService collectionService;
     private final SchemaService schemaService;
+    private final IndexService indexService;
 
     @Inject
     public DatabaseService(
             CollectionService collectionService,
-            SchemaService schemaService) {
+            SchemaService schemaService, IndexService indexService) {
         this.collectionService = collectionService;
         this.schemaService = schemaService;
+        this.indexService = indexService;
     }
 
     public CollectionMetaData createCollection(String collectionName, String schema)
@@ -91,5 +92,44 @@ public class DatabaseService {
             throws CollectionDoesNotExistException,
             PropertyDoesNotExistException {
         return schemaService.getPropertyType(collectionId, property);
+    }
+
+    public void indexPropertyInCollection(String collectionId, String property) throws
+            IOException,
+            BTreeException,
+            CollectionDoesNotExistException {
+        indexService.indexPropertyInCollection(collectionId, property);
+    }
+
+    public boolean isPropertyIndexed(String collectionId, String property) {
+        return indexService.isPropertyIndexed(collectionId, property);
+    }
+
+    public void removeIndexFromCollectionProperty(String collectionId, String property)
+            throws IndexNotFoundException,
+            BTreeException,
+            IOException, CollectionDoesNotExistException {
+        indexService.removeIndexFromCollectionProperty(collectionId, property);
+    }
+
+    public void runQuery(
+            String collectionId,
+            Operator operator,
+            String property,
+            Customstruct.CustomValue value,
+            Consumer<String> responseConsumer
+    ) throws IndexNotFoundException,
+            JsonProcessingException,
+            BTreeException,
+            InvalidOperatorUsage,
+            UnRecognizedOperatorException {
+
+        indexService.runQuery(
+                collectionId,
+                operator,
+                property,
+                value,
+                responseConsumer
+        );
     }
 }
