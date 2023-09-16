@@ -289,13 +289,11 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
                     collectionId, operator,
                     property,
                     value,
-                    result -> {
-                        responseObserver.onNext(
-                                QueryDatabaseResponse.newBuilder()
-                                        .setData(result)
-                                        .build()
-                        );
-                    }
+                    result -> responseObserver.onNext(
+                            QueryDatabaseResponse.newBuilder()
+                                    .setData(result)
+                                    .build()
+                    )
             );
             responseObserver.onCompleted();
         } catch (Exception e) {
