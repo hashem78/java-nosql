@@ -250,7 +250,6 @@ public class IndexService {
             Customstruct.CustomValue value,
             Consumer<String> responseConsumer
     ) throws IndexNotFoundException,
-            JsonProcessingException,
             BTreeException,
             InvalidOperatorUsage,
             UnRecognizedOperatorException {
