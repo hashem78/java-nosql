@@ -47,7 +47,11 @@ public class DatabaseService {
             String collectionId,
             String documentId,
             String documentJson
-    ) throws DocumentSchemaValidationException, CollectionDoesNotExistException, IOException {
+    ) throws DocumentSchemaValidationException,
+            CollectionDoesNotExistException,
+            IOException,
+            BTreeException,
+            IndexNotFoundException {
         return collectionService.setDocument(collectionId, documentId, documentJson);
     }
 

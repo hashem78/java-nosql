@@ -1,5 +1,7 @@
 package me.hashemalayan.services.db;
 
+import btree4j.BTreeException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Inject;
@@ -11,7 +13,6 @@ import me.hashemalayan.nosql.shared.CollectionDocument;
 import me.hashemalayan.nosql.shared.CollectionMetaData;
 import me.hashemalayan.nosql.shared.DocumentMetaData;
 import me.hashemalayan.services.db.exceptions.*;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,8 +25,8 @@ import java.util.function.Consumer;
 public class CollectionService {
 
     private final CollectionConfigurationService configService;
-
     private final SchemaService schemaService;
+    private final IndexService indexService;
     private final Path collectionsPath;
     private final NodeProperties nodeProperties;
     private final ObjectMapper objectMapper;
@@ -34,10 +35,12 @@ public class CollectionService {
     public CollectionService(
             CollectionConfigurationService configService,
             SchemaService schemaService,
+            IndexService indexService,
             NodeProperties nodeProperties,
             ObjectMapper objectMapper) {
         this.configService = configService;
         this.schemaService = schemaService;
+        this.indexService = indexService;
 
         collectionsPath = Paths.get(
                 nodeProperties.getName(),
@@ -114,7 +117,7 @@ public class CollectionService {
         final var documentsPath = collectionPath.resolve("documents");
         final var documentPath = documentsPath.resolve(documentId + ".json");
 
-        if(!Files.exists(documentPath))
+        if (!Files.exists(documentPath))
             throw new DocumentDoesNotExistException();
 
         if (!Files.isRegularFile(documentPath))
@@ -140,7 +143,10 @@ public class CollectionService {
             String documentId,
             String documentJson
     ) throws IOException,
-            CollectionDoesNotExistException, DocumentSchemaValidationException {
+            CollectionDoesNotExistException,
+            DocumentSchemaValidationException,
+            BTreeException,
+            IndexNotFoundException {
 
         String actualDocumentId = documentId;
 
@@ -160,11 +166,13 @@ public class CollectionService {
         final var documentPath = documentsPath
                 .resolve(actualDocumentId + ".json");
 
-        DocumentMetaData metaData = null;
+        DocumentMetaData metaData;
 
         final var timeStamp = Timestamps.fromMillis(System.currentTimeMillis());
+        JsonNode oldDataNode = null;
         if (Files.exists(documentPath)) {
             final var diskDocumentJson = objectMapper.readTree(documentPath.toFile());
+            oldDataNode = diskDocumentJson.get("data");
             metaData = objectMapper.treeToValue(
                             diskDocumentJson.get("metaData"),
                             DocumentMetaData.class
@@ -184,6 +192,7 @@ public class CollectionService {
         final var dataNode = objectMapper.readTree(documentJson);
         final var metaDataNode = objectMapper.readTree(JsonFormat.printer().print(metaData));
 
+
         final var documentNode = objectMapper.createObjectNode();
         documentNode.set("data", dataNode);
         documentNode.set("metaData", metaDataNode);
@@ -200,6 +209,27 @@ public class CollectionService {
                             .reduce(String::concat)
                             .orElse("")
             );
+        }
+
+        final var indexedPropertiesInCollection = indexService.getIndexedProperties(collectionId);
+        for (final var indexedPropertyInCollection : indexedPropertiesInCollection) {
+            final var dataNodeToBeAddedToIndex = dataNode.get(indexedPropertyInCollection);
+            if (oldDataNode == null) {
+                indexService.addToIndex(
+                        collectionId,
+                        actualDocumentId,
+                        indexedPropertyInCollection,
+                        objectMapper.writeValueAsBytes(dataNodeToBeAddedToIndex)
+                );
+            } else {
+                indexService.addToIndex(
+                        collectionId,
+                        actualDocumentId,
+                        indexedPropertyInCollection,
+                        objectMapper.writeValueAsBytes(oldDataNode.get(indexedPropertyInCollection)),
+                        objectMapper.writeValueAsBytes(dataNodeToBeAddedToIndex)
+                );
+            }
         }
 
         objectMapper.writerWithDefaultPrettyPrinter()

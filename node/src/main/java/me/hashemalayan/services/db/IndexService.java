@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -136,15 +137,85 @@ public class IndexService {
         );
     }
 
+    private void addToIndex(CollectionPropertyPair pair, String documentId, byte[] value)
+            throws BTreeException {
+
+        final var index = indexMap.get(pair);
+
+        index.addValue(
+                new Value(value),
+                new Value("\"" + documentId + "\"")
+        );
+        index.flush();
+    }
+
+
+    public void addToIndex(
+            String collectionId,
+            String documentId,
+            String property,
+            byte[] newKeyBytes)
+            throws IndexNotFoundException,
+            BTreeException {
+
+        final var pair = new CollectionPropertyPair(collectionId, property);
+        if (!indexMap.containsKey(pair)) {
+            throw new IndexNotFoundException();
+        }
+
+        addToIndex(pair, documentId, newKeyBytes);
+    }
+
+
+    /**
+     * @throws IllegalArgumentException if previousKeyBytes is null.
+     */
+    public void addToIndex(
+            String collectionId,
+            String documentId,
+            String property,
+            byte[] previousKeyBytes,
+            byte[] newKeyBytes)
+            throws IndexNotFoundException,
+            IllegalArgumentException,
+            BTreeException {
+
+        final var pair = new CollectionPropertyPair(collectionId, property);
+        if (!indexMap.containsKey(pair)) {
+            throw new IndexNotFoundException();
+        }
+        final var index = indexMap.get(pair);
+
+        if (previousKeyBytes == null) {
+            throw new IllegalArgumentException("previousKeyBytes should not be null");
+        }
+
+        final var bTreeValueForPreviousKey = new Value(previousKeyBytes);
+        final var previousValueInIndex = index.getValue(bTreeValueForPreviousKey);
+
+        // This means that the key is unique in the index.
+
+        if (previousValueInIndex == null) {
+            addToIndex(pair, documentId, newKeyBytes);
+            return;
+        }
+        index.removeValue(bTreeValueForPreviousKey);
+        addToIndex(pair, documentId, newKeyBytes);
+    }
+
     public boolean isPropertyIndexed(String collectionId, String property) {
 
+        return getIndexedProperties(collectionId).contains(property);
+    }
+
+    public List<String> getIndexedProperties(String collectionId) {
         final var metaDataOpt = configurationService.getCollectionMetaData(collectionId);
 
         if (metaDataOpt.isEmpty())
-            return false;
+            return new ArrayList<>();
 
         final var metaData = metaDataOpt.get();
-        return metaData.getIndexedPropertiesList().contains(property);
+        return metaData.getIndexedPropertiesList();
     }
 
     public void removeIndexFromCollectionProperty(String collectionId, String property)

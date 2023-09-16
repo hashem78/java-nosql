@@ -71,6 +71,7 @@ public class ExceptionHandlingInterceptor implements ServerInterceptor {
         } else if (e instanceof InvalidOperatorUsage) {
             return Status.INVALID_ARGUMENT.withDescription("Invalid operator usage");
         } else {
+            e.printStackTrace();
             return Status.UNKNOWN.withDescription("Unknown error occurred").withCause(e);
         }
     }
