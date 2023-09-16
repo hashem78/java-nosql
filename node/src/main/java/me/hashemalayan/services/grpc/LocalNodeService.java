@@ -1,23 +1,13 @@
 package me.hashemalayan.services.grpc;
 
-import btree4j.BTreeException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.util.JsonFormat;
 import io.grpc.Status;
-import io.grpc.StatusException;
 import io.grpc.stub.StreamObserver;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.*;
 import me.hashemalayan.services.ClientCounterService;
 import me.hashemalayan.services.db.DatabaseService;
-import me.hashemalayan.services.db.IndexService;
-import me.hashemalayan.services.db.exceptions.*;
 import org.slf4j.Logger;
-
-import java.io.IOException;
 
 public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
 
