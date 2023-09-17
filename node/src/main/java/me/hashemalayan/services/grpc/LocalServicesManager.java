@@ -18,6 +18,8 @@ public class LocalServicesManager {
     private final LocalNodeService localNodeService;
     final private ExceptionHandlingInterceptor exceptionHandlingInterceptor;
     final private LoggingInterceptor loggingInterceptor;
+    private final LocalReplicationService localReplicationService;
+
     private final Logger logger;
 
     @Inject
@@ -27,12 +29,14 @@ public class LocalServicesManager {
             LocalNodeService localNodeService,
             ExceptionHandlingInterceptor exceptionHandlingInterceptor,
             LoggingInterceptor loggingInterceptor,
+            LocalReplicationService localReplicationService,
             Logger logger) {
         this.nodeProperties = nodeProperties;
         this.loadBalancingService = loadBalancingService;
         this.localNodeService = localNodeService;
         this.exceptionHandlingInterceptor = exceptionHandlingInterceptor;
         this.loggingInterceptor = loggingInterceptor;
+        this.localReplicationService = localReplicationService;
         this.logger = logger;
     }
 
@@ -53,6 +57,7 @@ public class LocalServicesManager {
         server = serverBuilder
                 .addService(localNodeService)
                 .addService(loadBalancingService)
+                .addService(localReplicationService)
                 .intercept(exceptionHandlingInterceptor)
                 .intercept(loggingInterceptor)
                 .build();

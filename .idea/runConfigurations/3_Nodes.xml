@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="3 Nodes" type="CompoundRunConfigurationType">
+    <toRun name="BootStrapServer" type="Application" />
+    <toRun name="Node1" type="Application" />
+    <toRun name="Node2" type="Application" />
+    <toRun name="Node3" type="Application" />
+    <method v="2" />
+  </configuration>
+</component>

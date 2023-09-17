@@ -16,10 +16,7 @@ import me.hashemalayan.factories.JsonDirectoryIteratorFactory;
 import me.hashemalayan.factories.SignalingStreamMeshObserverFactory;
 import me.hashemalayan.services.ClientCounterService;
 import me.hashemalayan.services.db.*;
-import me.hashemalayan.services.grpc.LoadBalancingService;
-import me.hashemalayan.services.grpc.LocalNodeService;
-import me.hashemalayan.services.grpc.LocalServicesManager;
-import me.hashemalayan.services.grpc.RemoteNodesService;
+import me.hashemalayan.services.grpc.*;
 import me.hashemalayan.util.BTreeCallbackFactory;
 import me.hashemalayan.util.JsonSchemaDeserializer;
 import me.hashemalayan.util.JsonSchemaSerializer;
@@ -36,7 +33,6 @@ public class NodeModule extends AbstractModule {
         bind(NodeProperties.class).asEagerSingleton();
         bind(SchemaService.class).asEagerSingleton();
         bind(LocalServicesManager.class).asEagerSingleton();
-        bind(RemoteNodesService.class).asEagerSingleton();
         bind(DatabaseService.class).asEagerSingleton();
         bind(LoadBalancingService.class).asEagerSingleton();
         bind(LocalServicesManager.class).asEagerSingleton();
@@ -49,6 +45,8 @@ public class NodeModule extends AbstractModule {
         bind(BTreeCallbackFactory.class).asEagerSingleton();
         bind(ExceptionHandlingInterceptor.class).asEagerSingleton();
         bind(LoggingInterceptor.class).asEagerSingleton();
+        bind(LocalReplicationService.class).asEagerSingleton();
+        bind(RemoteReplicationService.class).asEagerSingleton();
 
         install(
                 new FactoryModuleBuilder()

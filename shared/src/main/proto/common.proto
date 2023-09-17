@@ -1,0 +1,12 @@
+syntax = "proto3";
+option java_package = "me.hashemalayan.nosql.shared";
+
+import "google/protobuf/timestamp.proto";
+
+message CollectionMetaData {
+  string id = 1;
+  string name = 2;
+  google.protobuf.Timestamp created_on = 3;
+  bool deleted = 4;
+  repeated string indexed_properties = 5;
+}

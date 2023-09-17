@@ -10,7 +10,7 @@ import com.google.protobuf.util.Timestamps;
 import com.networknt.schema.ValidationMessage;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.CollectionDocument;
-import me.hashemalayan.nosql.shared.CollectionMetaData;
+import me.hashemalayan.nosql.shared.Common.CollectionMetaData;
 import me.hashemalayan.nosql.shared.DocumentMetaData;
 import me.hashemalayan.services.db.exceptions.*;
 import java.io.IOException;
@@ -50,7 +50,7 @@ public class CollectionService {
         this.objectMapper = objectMapper;
     }
 
-    public CollectionMetaData createCollection(String collectionName, String schema)
+    public CollectionConfiguration createCollection(String collectionName, String schema)
             throws IOException,
             InvalidCollectionSchemaException,
             CollectionAlreadyExistsException {
@@ -291,5 +291,11 @@ public class CollectionService {
 
     public Optional<CollectionMetaData> getCollectionMetaData(String collectionId) {
         return configService.getCollectionMetaData(collectionId);
+    }
+
+    public void createCollection(CollectionMetaData metaData, String schema)
+            throws IOException,
+            CollectionAlreadyExistsException {
+        configService.createConfiguration(metaData, schema);
     }
 }

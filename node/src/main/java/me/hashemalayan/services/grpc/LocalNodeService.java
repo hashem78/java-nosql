@@ -5,6 +5,7 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.*;
+import me.hashemalayan.nosql.shared.Common.CollectionMetaData;
 import me.hashemalayan.services.ClientCounterService;
 import me.hashemalayan.services.db.DatabaseService;
 import org.slf4j.Logger;

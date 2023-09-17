@@ -4,7 +4,9 @@ import btree4j.BTreeException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
 import me.hashemalayan.nosql.shared.*;
+import me.hashemalayan.nosql.shared.Common.CollectionMetaData;
 import me.hashemalayan.services.db.exceptions.*;
+import me.hashemalayan.services.grpc.RemoteReplicationService;
 
 import java.io.IOException;
 import java.util.List;
@@ -16,21 +18,43 @@ public class DatabaseService {
     private final CollectionService collectionService;
     private final SchemaService schemaService;
     private final IndexService indexService;
+    private final RemoteReplicationService replicationService;
 
     @Inject
     public DatabaseService(
             CollectionService collectionService,
-            SchemaService schemaService, IndexService indexService) {
+            SchemaService schemaService, IndexService indexService,
+            RemoteReplicationService replicationService
+    ) {
         this.collectionService = collectionService;
         this.schemaService = schemaService;
         this.indexService = indexService;
+        this.replicationService = replicationService;
     }
 
     public CollectionMetaData createCollection(String collectionName, String schema)
             throws IOException,
             CollectionAlreadyExistsException,
             InvalidCollectionSchemaException {
-        return collectionService.createCollection(collectionName, schema);
+        final var configuration = collectionService.createCollection(collectionName, schema);
+        replicationService.broadcast(
+                ReplicationMessage.newBuilder()
+                        .setCreateCollectionReplicationMessage(
+                                CreateCollectionReplicationMessage.newBuilder()
+                                        .setMetaData(configuration.getMetaData())
+                                        .setSchema(schema)
+                                        .build()
+                        )
+                        .build()
+        );
+        return configuration.metaData;
+    }
+
+    public void createCollection(CollectionMetaData collectionMetaData, String schema)
+            throws IOException,
+            CollectionAlreadyExistsException {
+
+        collectionService.createCollection(collectionMetaData, schema);
     }
 
     public List<CollectionMetaData> getCollections() {

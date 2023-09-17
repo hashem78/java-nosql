@@ -1,5 +1,6 @@
 package me.hashemalayan.services.db;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.util.Timestamps;
@@ -8,7 +9,7 @@ import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
 import jakarta.inject.Inject;
 import me.hashemalayan.NodeProperties;
-import me.hashemalayan.nosql.shared.CollectionMetaData;
+import me.hashemalayan.nosql.shared.Common.CollectionMetaData;
 import me.hashemalayan.services.db.exceptions.CollectionAlreadyExistsException;
 import me.hashemalayan.services.db.exceptions.CollectionConfigurationNotFoundException;
 import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
@@ -103,7 +104,7 @@ public class CollectionConfigurationService {
                 .writeValue(filePath.toFile(), config);
     }
 
-    CollectionMetaData createMetaData(String collectionName, String schema)
+    CollectionConfiguration createMetaData(String collectionName, String schema)
             throws IOException,
             InvalidCollectionSchemaException,
             CollectionAlreadyExistsException {
@@ -149,7 +150,7 @@ public class CollectionConfigurationService {
 
         configurationMap.put(metaData.getId(), config);
 
-        return metaData;
+        return config;
     }
 
     public boolean isValidRootSchema(JsonNode schema) {
@@ -246,5 +247,25 @@ public class CollectionConfigurationService {
 
         final var configFilePath = collectionsPath.resolve(collectionId).resolve("config.json");
         save(configFilePath, configurationMap.get(collectionId));
+    }
+
+    public void createConfiguration(CollectionMetaData metaData, String schema) throws IOException,
+            CollectionAlreadyExistsException {
+
+        if (configurationMap.containsKey(metaData.getId())) {
+            throw new CollectionAlreadyExistsException();
+        }
+
+        final var jsonSchema = jsonSchemaFactory.getSchema(schema);
+        final var config = new CollectionConfiguration(metaData, jsonSchema);
+        final var collectionPath = collectionsPath.resolve(metaData.getId());
+
+        if (!Files.exists(collectionPath))
+            Files.createDirectories(collectionPath);
+
+        final var configFilePath = collectionPath.resolve("config.json");
+
+        save(configFilePath, config);
+        configurationMap.put(metaData.getId(), config);
     }
 }

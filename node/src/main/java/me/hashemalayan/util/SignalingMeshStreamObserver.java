@@ -3,28 +3,26 @@ package me.hashemalayan.util;
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
 import me.hashemalayan.nosql.shared.PortContainingMessage;
-import me.hashemalayan.services.grpc.RemoteNodesService;
-import org.slf4j.Logger;
+import me.hashemalayan.services.grpc.RemoteReplicationService;
+
+import java.io.IOException;
 
 public class SignalingMeshStreamObserver implements StreamObserver<PortContainingMessage> {
-
-    private final RemoteNodesService remoteNodesService;
-    private final Logger logger;
+    private final RemoteReplicationService remoteReplicationService;
 
     @Inject
     public SignalingMeshStreamObserver(
-            RemoteNodesService remoteNodesService,
-            Logger logger
-    ) {
-        this.remoteNodesService = remoteNodesService;
-        this.logger = logger;
+            RemoteReplicationService remoteReplicationService) {
+        this.remoteReplicationService = remoteReplicationService;
     }
 
     @Override
     public void onNext(PortContainingMessage message) {
-        logger.debug(message.getPort() + " is available");
-        remoteNodesService.addRemoteNode(message.getPort());
-        logger.debug("Its state is:" + remoteNodesService.getNodeState(message.getPort()));
+        try {
+            remoteReplicationService.addReplica(message.getPort());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
