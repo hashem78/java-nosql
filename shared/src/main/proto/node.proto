@@ -4,7 +4,6 @@ option java_multiple_files = true;
 option java_package = "me.hashemalayan.nosql.shared";
 option java_outer_classname = "NodeProto";
 
-import "google/protobuf/timestamp.proto";
 import "customstruct.proto";
 import "common.proto";
 
@@ -116,16 +115,6 @@ message DeleteCollectionDocumentRequest {
 message DeleteCollectionDocumentResponse{
 }
 
-message SetCollectionDocumentRequest {
-  string collection_id = 1;
-  string document_id = 2;
-  string document = 3;
-}
-
-message SetCollectionDocumentResponse {
-  CollectionDocument document = 1;
-}
-
 message GetDocumentSampleRequest{
   string collection_id = 1;
 }
@@ -158,19 +147,6 @@ message GetCollectionDocumentsRequest {
 message GetCollectionDocumentRequest {
   string collection_id = 1;
   string document_id = 2;
-}
-
-message DocumentMetaData {
-  string id = 1;
-  int32 affinity = 2;
-  google.protobuf.Timestamp created_on = 3;
-  google.protobuf.Timestamp last_edited_on = 4;
-  bool deleted = 5;
-}
-
-message CollectionDocument {
-  DocumentMetaData meta_data = 1;
-  string data = 2;
 }
 
 message CreateCollectionRequest {

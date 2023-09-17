@@ -9,10 +9,11 @@ import com.google.protobuf.util.JsonFormat;
 import com.google.protobuf.util.Timestamps;
 import com.networknt.schema.ValidationMessage;
 import me.hashemalayan.NodeProperties;
-import me.hashemalayan.nosql.shared.CollectionDocument;
+import me.hashemalayan.nosql.shared.Common.CollectionDocument;
 import me.hashemalayan.nosql.shared.Common.CollectionMetaData;
-import me.hashemalayan.nosql.shared.DocumentMetaData;
+import me.hashemalayan.nosql.shared.Common.DocumentMetaData;
 import me.hashemalayan.services.db.exceptions.*;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 
 public class CollectionService {
 
@@ -30,6 +32,7 @@ public class CollectionService {
     private final Path collectionsPath;
     private final NodeProperties nodeProperties;
     private final ObjectMapper objectMapper;
+    private final Logger logger;
 
     @Inject
     public CollectionService(
@@ -37,7 +40,8 @@ public class CollectionService {
             SchemaService schemaService,
             IndexService indexService,
             NodeProperties nodeProperties,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            Logger logger) {
         this.configService = configService;
         this.schemaService = schemaService;
         this.indexService = indexService;
@@ -48,6 +52,7 @@ public class CollectionService {
         );
         this.nodeProperties = nodeProperties;
         this.objectMapper = objectMapper;
+        this.logger = logger;
     }
 
     public CollectionConfiguration createCollection(String collectionName, String schema)
@@ -146,7 +151,8 @@ public class CollectionService {
             CollectionDoesNotExistException,
             DocumentSchemaValidationException,
             BTreeException,
-            IndexNotFoundException {
+            IndexNotFoundException,
+            WrongDocumentAffinityException {
 
         String actualDocumentId = documentId;
 
@@ -173,10 +179,20 @@ public class CollectionService {
         if (Files.exists(documentPath)) {
             final var diskDocumentJson = objectMapper.readTree(documentPath.toFile());
             oldDataNode = diskDocumentJson.get("data");
-            metaData = objectMapper.treeToValue(
-                            diskDocumentJson.get("metaData"),
-                            DocumentMetaData.class
-                    ).toBuilder()
+            final var oldMetaData = objectMapper.treeToValue(
+                    diskDocumentJson.get("metaData"),
+                    DocumentMetaData.class
+            );
+            logger.warning(
+                    "Document Affinity: "
+                            + oldMetaData.getAffinity()
+                            + ", my affinity: "
+                            + nodeProperties.getPort()
+            );
+            if (oldMetaData.getAffinity() != nodeProperties.getPort()) {
+                throw new WrongDocumentAffinityException(oldMetaData.getAffinity());
+            }
+            metaData = oldMetaData.toBuilder()
                     .setLastEditedOn(timeStamp)
                     .build();
         } else {

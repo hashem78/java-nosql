@@ -12,10 +12,9 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.TlsChannelCredentials;
 import me.hashemalayan.NodeProperties;
-import me.hashemalayan.nosql.shared.CreateCollectionReplicationMessage;
-import me.hashemalayan.nosql.shared.ReplicationMessage;
-import me.hashemalayan.nosql.shared.ReplicationResponse;
-import me.hashemalayan.nosql.shared.ReplicationServiceGrpc;
+import me.hashemalayan.nosql.shared.*;
+import me.hashemalayan.nosql.shared.Common.SetCollectionDocumentRequest;
+import me.hashemalayan.nosql.shared.Common.SetCollectionDocumentResponse;
 import me.hashemalayan.nosql.shared.ReplicationServiceGrpc.ReplicationServiceFutureStub;
 import org.slf4j.Logger;
 
@@ -67,16 +66,32 @@ public class RemoteReplicationService {
         logger.info("Added replica " + port);
     }
 
+    public SetCollectionDocumentResponse documentAffinityRedirection(
+            int redirectTo,
+            SetCollectionDocumentRequest request
+    ) {
+        try {
+            return stubMap.get(redirectTo).documentAffinityRedirection(request).get();
+        } catch (InterruptedException | ExecutionException e) {
+            logger.error("Failed to redirect " + request + " to " + redirectTo);
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public void broadcast(ReplicationMessage message) {
         logger.info("Broadcasting " + message);
-        switch (message.getMessageCase()){
+        switch (message.getMessageCase()) {
             case CREATE_COLLECTION_REPLICATION_MESSAGE ->
                     internalBroadcast(x -> x.createCollection(message.getCreateCollectionReplicationMessage()));
             case EDIT_COLLECTION_REPLICATION_MESSAGE ->
-                internalBroadcast(x -> x.editCollection(message.getEditCollectionReplicationMessage()));
+                    internalBroadcast(x -> x.editCollection(message.getEditCollectionReplicationMessage()));
             case DELETE_COLLECTION_REPLICATION_MESSAGE ->
-                internalBroadcast(x -> x.deleteCollection(message.getDeleteCollectionReplicationMessage()));
-            case MESSAGE_NOT_SET -> {}
+                    internalBroadcast(x -> x.deleteCollection(message.getDeleteCollectionReplicationMessage()));
+            case SET_COLLECTION_DOCUMENT_REPLICATION_MESSAGE ->
+                internalBroadcast(x -> x.setCollectionDocument(message.getSetCollectionDocumentReplicationMessage()));
+            case MESSAGE_NOT_SET -> {
+            }
         }
     }
 

@@ -10,6 +10,14 @@ service ReplicationService {
   rpc CreateCollection(CreateCollectionReplicationMessage) returns (ReplicationResponse);
   rpc EditCollection(EditCollectionReplicationMessage) returns (ReplicationResponse);
   rpc DeleteCollection(DeleteCollectionReplicationMessage) returns (ReplicationResponse);
+  rpc SetCollectionDocument(SetCollectionDocumentReplicationMessage) returns (ReplicationResponse);
+  rpc DocumentAffinityRedirection(SetCollectionDocumentRequest) returns (SetCollectionDocumentResponse);
+}
+
+message SetCollectionDocumentReplicationMessage {
+  string collection_id = 1;
+  string document_id = 2;
+  string document = 3;
 }
 
 message DeleteCollectionReplicationMessage {
@@ -31,6 +39,7 @@ message ReplicationMessage {
     CreateCollectionReplicationMessage create_collection_replication_message = 1;
     EditCollectionReplicationMessage edit_collection_replication_message = 2;
     DeleteCollectionReplicationMessage delete_collection_replication_message = 3;
+    SetCollectionDocumentReplicationMessage set_collection_document_replication_message = 4;
   }
 }
 

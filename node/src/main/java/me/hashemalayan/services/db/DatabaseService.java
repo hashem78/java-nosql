@@ -4,6 +4,7 @@ import btree4j.BTreeException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
 import me.hashemalayan.nosql.shared.*;
+import me.hashemalayan.nosql.shared.Common.CollectionDocument;
 import me.hashemalayan.nosql.shared.Common.CollectionMetaData;
 import me.hashemalayan.services.db.exceptions.*;
 import me.hashemalayan.services.grpc.RemoteReplicationService;
@@ -12,6 +13,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 
 public class DatabaseService {
 
@@ -19,17 +21,19 @@ public class DatabaseService {
     private final SchemaService schemaService;
     private final IndexService indexService;
     private final RemoteReplicationService replicationService;
+    private final Logger logger;
 
     @Inject
     public DatabaseService(
             CollectionService collectionService,
             SchemaService schemaService, IndexService indexService,
-            RemoteReplicationService replicationService
-    ) {
+            RemoteReplicationService replicationService,
+            Logger logger) {
         this.collectionService = collectionService;
         this.schemaService = schemaService;
         this.indexService = indexService;
         this.replicationService = replicationService;
+        this.logger = logger;
     }
 
     public CollectionMetaData createCollectionAndBroadcast(String collectionName, String schema)
@@ -67,6 +71,31 @@ public class DatabaseService {
         collectionService.getDocuments(collectionId, onDocumentLoaded);
     }
 
+    public CollectionDocument setDocumentAndBroadcast(
+            String collectionId,
+            String documentId,
+            String documentJson
+    ) throws DocumentSchemaValidationException,
+            CollectionDoesNotExistException,
+            IOException,
+            BTreeException,
+            IndexNotFoundException,
+            AffineNodeIsDownException {
+        final var document = internalSetDocument(collectionId, documentId, documentJson);
+        replicationService.broadcast(
+                ReplicationMessage.newBuilder()
+                        .setSetCollectionDocumentReplicationMessage(
+                                SetCollectionDocumentReplicationMessage.newBuilder()
+                                        .setCollectionId(collectionId)
+                                        .setDocumentId(documentId)
+                                        .setDocument(documentJson)
+                                        .build()
+                        )
+                        .build()
+        );
+        return document;
+    }
+
     public CollectionDocument setDocument(
             String collectionId,
             String documentId,
@@ -75,8 +104,36 @@ public class DatabaseService {
             CollectionDoesNotExistException,
             IOException,
             BTreeException,
-            IndexNotFoundException {
-        return collectionService.setDocument(collectionId, documentId, documentJson);
+            IndexNotFoundException,
+            AffineNodeIsDownException {
+        return internalSetDocument(collectionId, documentId, documentJson);
+    }
+
+    private CollectionDocument internalSetDocument(String collectionId, String documentId, String documentJson)
+            throws IOException,
+            CollectionDoesNotExistException,
+            DocumentSchemaValidationException,
+            BTreeException,
+            IndexNotFoundException,
+            AffineNodeIsDownException {
+
+        try {
+            return collectionService.setDocument(collectionId, documentId, documentJson);
+        } catch (WrongDocumentAffinityException e) {
+            logger.warning("Redirecting ");
+            final var response = replicationService.documentAffinityRedirection(
+                    e.getCorrectAffinity(),
+                    Common.SetCollectionDocumentRequest.newBuilder()
+                            .setCollectionId(collectionId)
+                            .setDocumentId(documentId)
+                            .setDocument(documentJson)
+                            .build()
+            );
+            if (response == null) {
+                throw new AffineNodeIsDownException();
+            }
+            return response.getDocument();
+        }
     }
 
     public void editCollectionAndBroadcast(

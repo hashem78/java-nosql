@@ -5,7 +5,10 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.*;
+import me.hashemalayan.nosql.shared.Common.CollectionDocument;
 import me.hashemalayan.nosql.shared.Common.CollectionMetaData;
+import me.hashemalayan.nosql.shared.Common.SetCollectionDocumentRequest;
+import me.hashemalayan.nosql.shared.Common.SetCollectionDocumentResponse;
 import me.hashemalayan.services.ClientCounterService;
 import me.hashemalayan.services.db.DatabaseService;
 import org.slf4j.Logger;
@@ -151,7 +154,7 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             StreamObserver<SetCollectionDocumentResponse> responseObserver
     ) {
         try {
-            final var document = databaseService.setDocument(
+            final var document = databaseService.setDocumentAndBroadcast(
                     request.getCollectionId(),
                     request.getDocumentId(),
                     request.getDocument()

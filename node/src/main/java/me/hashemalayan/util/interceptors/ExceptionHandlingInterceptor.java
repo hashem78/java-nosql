@@ -70,6 +70,8 @@ public class ExceptionHandlingInterceptor implements ServerInterceptor {
             return Status.INVALID_ARGUMENT.withDescription("Unrecognized operator");
         } else if (e instanceof InvalidOperatorUsage) {
             return Status.INVALID_ARGUMENT.withDescription("Invalid operator usage");
+        } else if (e instanceof AffineNodeIsDownException) {
+            return Status.UNAVAILABLE.withDescription("Affine node for the document is down");
         } else {
             e.printStackTrace();
             return Status.UNKNOWN.withDescription("Unknown error occurred").withCause(e);
