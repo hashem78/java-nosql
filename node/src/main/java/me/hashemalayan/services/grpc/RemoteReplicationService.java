@@ -74,6 +74,8 @@ public class RemoteReplicationService {
                     internalBroadcast(x -> x.createCollection(message.getCreateCollectionReplicationMessage()));
             case EDIT_COLLECTION_REPLICATION_MESSAGE ->
                 internalBroadcast(x -> x.editCollection(message.getEditCollectionReplicationMessage()));
+            case DELETE_COLLECTION_REPLICATION_MESSAGE ->
+                internalBroadcast(x -> x.deleteCollection(message.getDeleteCollectionReplicationMessage()));
             case MESSAGE_NOT_SET -> {}
         }
     }

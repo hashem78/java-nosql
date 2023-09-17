@@ -9,6 +9,11 @@ import "common.proto";
 service ReplicationService {
   rpc CreateCollection(CreateCollectionReplicationMessage) returns (ReplicationResponse);
   rpc EditCollection(EditCollectionReplicationMessage) returns (ReplicationResponse);
+  rpc DeleteCollection(DeleteCollectionReplicationMessage) returns (ReplicationResponse);
+}
+
+message DeleteCollectionReplicationMessage {
+  string collection_id = 1;
 }
 
 message EditCollectionReplicationMessage{
@@ -25,6 +30,7 @@ message ReplicationMessage {
   oneof message {
     CreateCollectionReplicationMessage create_collection_replication_message = 1;
     EditCollectionReplicationMessage edit_collection_replication_message = 2;
+    DeleteCollectionReplicationMessage delete_collection_replication_message = 3;
   }
 }
 

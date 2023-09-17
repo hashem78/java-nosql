@@ -105,6 +105,19 @@ public class DatabaseService {
         collectionService.editCollection(collectionId, collectionName);
     }
 
+    public void deleteCollectionAndBroadcast(String collectionId) throws CollectionDoesNotExistException, IOException {
+        collectionService.deleteCollection(collectionId);
+        replicationService.broadcast(
+                ReplicationMessage.newBuilder()
+                        .setDeleteCollectionReplicationMessage(
+                                DeleteCollectionReplicationMessage.newBuilder()
+                                        .setCollectionId(collectionId)
+                                        .build()
+                        )
+                        .build()
+        );
+    }
+
     public void deleteCollection(String collectionId) throws CollectionDoesNotExistException, IOException {
         collectionService.deleteCollection(collectionId);
     }
