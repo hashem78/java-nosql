@@ -53,7 +53,7 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
     ) {
         try {
             responseObserver.onNext(
-                    databaseService.createCollection(
+                    databaseService.createCollectionAndBroadcast(
                             request.getName(),
                             request.getSchema()
                     )
@@ -99,7 +99,7 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             StreamObserver<EditCollectionResponse> responseObserver
     ) {
         try {
-            databaseService.editCollection(
+            databaseService.editCollectionAndBroadcast(
                     request.getCollectionId(),
                     request.getCollectionName()
             );

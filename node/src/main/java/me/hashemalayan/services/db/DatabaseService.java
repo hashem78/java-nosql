@@ -32,7 +32,7 @@ public class DatabaseService {
         this.replicationService = replicationService;
     }
 
-    public CollectionMetaData createCollection(String collectionName, String schema)
+    public CollectionMetaData createCollectionAndBroadcast(String collectionName, String schema)
             throws IOException,
             CollectionAlreadyExistsException,
             InvalidCollectionSchemaException {
@@ -77,6 +77,24 @@ public class DatabaseService {
             BTreeException,
             IndexNotFoundException {
         return collectionService.setDocument(collectionId, documentId, documentJson);
+    }
+
+    public void editCollectionAndBroadcast(
+            String collectionId,
+            String collectionName
+    ) throws CollectionDoesNotExistException,
+            IOException {
+        collectionService.editCollection(collectionId, collectionName);
+        replicationService.broadcast(
+                ReplicationMessage.newBuilder()
+                        .setEditCollectionReplicationMessage(
+                                EditCollectionReplicationMessage.newBuilder()
+                                        .setCollectionId(collectionId)
+                                        .setCollectionName(collectionName)
+                                        .build()
+                        )
+                        .build()
+        );
     }
 
     public void editCollection(

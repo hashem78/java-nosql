@@ -8,6 +8,12 @@ import "common.proto";
 
 service ReplicationService {
   rpc CreateCollection(CreateCollectionReplicationMessage) returns (ReplicationResponse);
+  rpc EditCollection(EditCollectionReplicationMessage) returns (ReplicationResponse);
+}
+
+message EditCollectionReplicationMessage{
+  string collection_id = 1;
+  string collection_name = 2;
 }
 
 message CreateCollectionReplicationMessage {
@@ -18,6 +24,7 @@ message CreateCollectionReplicationMessage {
 message ReplicationMessage {
   oneof message {
     CreateCollectionReplicationMessage create_collection_replication_message = 1;
+    EditCollectionReplicationMessage edit_collection_replication_message = 2;
   }
 }
 
