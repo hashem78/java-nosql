@@ -83,6 +83,8 @@ public class RemoteReplicationService {
                     internalBroadcast(x -> x.deleteCollection(message.getDeleteCollectionReplicationMessage()));
             case SET_DOCUMENT_REPLICATION_MESSAGE ->
                     internalBroadcast(x -> x.setCollectionDocument(message.getSetDocumentReplicationMessage()));
+            case DELETE_DOCUMENT_REPLICATION_MESSAGE ->
+                    internalBroadcast(x -> x.deleteCollectionDocument(message.getDeleteDocumentReplicationMessage()));
             case MESSAGE_NOT_SET -> {
             }
         }

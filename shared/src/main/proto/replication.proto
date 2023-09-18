@@ -12,8 +12,13 @@ service ReplicationService {
   rpc DeleteCollection(DeleteCollectionReplicationMessage) returns (ReplicationResponse);
   rpc SetCollectionDocument(SetDocumentReplicationMessage) returns (ReplicationResponse);
   rpc CollectionDocumentRedirection(SetCollectionDocumentRequest) returns (CollectionDocument);
+  rpc DeleteCollectionDocument(DeleteDocumentReplicationMessage) returns (ReplicationResponse);
 }
 
+message DeleteDocumentReplicationMessage{
+  string collection_id = 1;
+  string document_id = 2;
+}
 message SetDocumentReplicationMessage{
   string collection_id = 1;
   CollectionDocument document = 2;
@@ -39,6 +44,7 @@ message ReplicationMessage {
     EditCollectionReplicationMessage edit_collection_replication_message = 2;
     DeleteCollectionReplicationMessage delete_collection_replication_message = 3;
     SetDocumentReplicationMessage set_document_replication_message = 4;
+    DeleteDocumentReplicationMessage delete_document_replication_message = 5;
   }
 }
 

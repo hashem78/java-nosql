@@ -152,6 +152,23 @@ public class DatabaseService {
         return schemaService.getSample(collectionId);
     }
 
+    public void deleteDocumentAndBroadcast(String collectionId, String documentId) throws
+            CollectionDoesNotExistException,
+            DocumentDoesNotExistException,
+            IOException {
+        collectionService.deleteDocument(collectionId, documentId);
+        replicationService.broadcast(
+                ReplicationMessage.newBuilder()
+                        .setDeleteDocumentReplicationMessage(
+                                DeleteDocumentReplicationMessage.newBuilder()
+                                        .setCollectionId(collectionId)
+                                        .setDocumentId(documentId)
+                                        .build()
+                        )
+                        .build()
+        );
+    }
+
     public void deleteDocument(String collectionId, String documentId) throws
             CollectionDoesNotExistException,
             DocumentDoesNotExistException,

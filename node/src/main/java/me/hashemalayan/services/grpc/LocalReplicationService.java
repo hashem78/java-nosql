@@ -99,4 +99,21 @@ public class LocalReplicationService extends ReplicationServiceGrpc.ReplicationS
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public void deleteCollectionDocument(
+            DeleteDocumentReplicationMessage request,
+            StreamObserver<ReplicationResponse> responseObserver
+    ) {
+        try {
+            databaseService.deleteDocument(
+                    request.getCollectionId(),
+                    request.getDocumentId()
+            );
+            responseObserver.onNext(ReplicationResponse.newBuilder().build());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

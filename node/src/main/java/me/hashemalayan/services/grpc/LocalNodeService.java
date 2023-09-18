@@ -188,7 +188,7 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             StreamObserver<DeleteCollectionDocumentResponse> responseObserver
     ) {
         try {
-            databaseService.deleteDocument(request.getCollectionId(), request.getDocumentId());
+            databaseService.deleteDocumentAndBroadcast(request.getCollectionId(), request.getDocumentId());
 
             responseObserver.onNext(DeleteCollectionDocumentResponse.newBuilder().build());
             responseObserver.onCompleted();
