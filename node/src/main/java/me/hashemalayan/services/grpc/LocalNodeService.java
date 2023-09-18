@@ -261,7 +261,7 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             StreamObserver<RemoveIndexFromCollectionPropertyResponse> responseObserver
     ) {
         try {
-            databaseService.removeIndexFromCollectionProperty(
+            databaseService.removeIndexFromCollectionPropertyAndBroadcast(
                     request.getCollectionId(),
                     request.getProperty()
             );

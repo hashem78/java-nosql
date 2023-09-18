@@ -221,6 +221,23 @@ public class DatabaseService {
         return indexService.isPropertyIndexed(collectionId, property);
     }
 
+    public void removeIndexFromCollectionPropertyAndBroadcast(String collectionId, String property)
+            throws IndexNotFoundException,
+            BTreeException,
+            IOException, CollectionDoesNotExistException {
+        indexService.removeIndexFromCollectionProperty(collectionId, property);
+        replicationService.broadcast(
+                ReplicationMessage.newBuilder()
+                        .setRemoveIndexReplicationMessage(
+                                RemoveIndexReplicationMessage.newBuilder()
+                                        .setCollectionId(collectionId)
+                                        .setProperty(property)
+                                        .build()
+                        )
+                        .build()
+        );
+    }
+
     public void removeIndexFromCollectionProperty(String collectionId, String property)
             throws IndexNotFoundException,
             BTreeException,

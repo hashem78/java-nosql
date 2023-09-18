@@ -133,4 +133,21 @@ public class LocalReplicationService extends ReplicationServiceGrpc.ReplicationS
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public void removeIndexFromCollectionProperty(
+            RemoveIndexReplicationMessage request,
+            StreamObserver<ReplicationResponse> responseObserver
+    ) {
+        try {
+            databaseService.removeIndexFromCollectionProperty(
+                    request.getCollectionId(),
+                    request.getProperty()
+            );
+            responseObserver.onNext(ReplicationResponse.newBuilder().build());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

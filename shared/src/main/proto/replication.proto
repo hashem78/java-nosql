@@ -14,6 +14,12 @@ service ReplicationService {
   rpc CollectionDocumentRedirection(SetCollectionDocumentRequest) returns (CollectionDocument);
   rpc DeleteCollectionDocument(DeleteDocumentReplicationMessage) returns (ReplicationResponse);
   rpc IndexCollectionProperty(IndexCollectionPropertyReplicationMessage) returns(ReplicationResponse);
+  rpc RemoveIndexFromCollectionProperty(RemoveIndexReplicationMessage) returns(ReplicationResponse);
+}
+
+message RemoveIndexReplicationMessage{
+  string collection_id = 1;
+  string property = 2;
 }
 
 message IndexCollectionPropertyReplicationMessage{
@@ -52,6 +58,7 @@ message ReplicationMessage {
     SetDocumentReplicationMessage set_document_replication_message = 4;
     DeleteDocumentReplicationMessage delete_document_replication_message = 5;
     IndexCollectionPropertyReplicationMessage index_collection_property_replication_message = 6;
+    RemoveIndexReplicationMessage remove_index_replication_message = 7;
   }
 }
 

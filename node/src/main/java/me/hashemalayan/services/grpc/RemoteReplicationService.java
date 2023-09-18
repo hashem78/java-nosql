@@ -87,6 +87,8 @@ public class RemoteReplicationService {
                     internalBroadcast(x -> x.deleteCollectionDocument(message.getDeleteDocumentReplicationMessage()));
             case INDEX_COLLECTION_PROPERTY_REPLICATION_MESSAGE ->
                     internalBroadcast(x -> x.indexCollectionProperty(message.getIndexCollectionPropertyReplicationMessage()));
+            case REMOVE_INDEX_REPLICATION_MESSAGE ->
+                internalBroadcast(x -> x.removeIndexFromCollectionProperty(message.getRemoveIndexReplicationMessage()));
             case MESSAGE_NOT_SET -> {
             }
         }
