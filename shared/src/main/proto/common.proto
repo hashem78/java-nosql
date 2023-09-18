@@ -10,3 +10,26 @@ message CollectionMetaData {
   bool deleted = 4;
   repeated string indexed_properties = 5;
 }
+
+message SetCollectionDocumentRequest {
+  string collection_id = 1;
+  string document_id = 2;
+  string document = 3;
+}
+
+message DocumentMetaData {
+  string id = 1;
+  int32 affinity = 2;
+  google.protobuf.Timestamp created_on = 3;
+  google.protobuf.Timestamp last_edited_on = 4;
+  bool deleted = 5;
+}
+
+message CollectionDocument {
+  DocumentMetaData meta_data = 1;
+  string data = 2;
+}
+
+message SetCollectionDocumentResponse {
+  CollectionDocument document = 1;
+}

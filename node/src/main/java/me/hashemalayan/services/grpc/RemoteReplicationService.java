@@ -6,25 +6,21 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
-import com.google.protobuf.GeneratedMessageV3;
 import io.grpc.Grpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.TlsChannelCredentials;
 import me.hashemalayan.NodeProperties;
-import me.hashemalayan.nosql.shared.CreateCollectionReplicationMessage;
-import me.hashemalayan.nosql.shared.ReplicationMessage;
-import me.hashemalayan.nosql.shared.ReplicationResponse;
-import me.hashemalayan.nosql.shared.ReplicationServiceGrpc;
+import me.hashemalayan.nosql.shared.*;
+import me.hashemalayan.nosql.shared.Common.CollectionDocument;
+import me.hashemalayan.nosql.shared.Common.SetCollectionDocumentRequest;
 import me.hashemalayan.nosql.shared.ReplicationServiceGrpc.ReplicationServiceFutureStub;
 import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class RemoteReplicationService {
     private final NodeProperties nodeProperties;
@@ -67,16 +63,28 @@ public class RemoteReplicationService {
         logger.info("Added replica " + port);
     }
 
+    public CollectionDocument redirect(int nodeToRedirectTo, SetCollectionDocumentRequest request) {
+        try {
+            logger.warn("Redirecting SetCollectionDocumentRequest to " + nodeToRedirectTo);
+            return stubMap.get(nodeToRedirectTo).collectionDocumentRedirection(request).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void broadcast(ReplicationMessage message) {
         logger.info("Broadcasting " + message);
-        switch (message.getMessageCase()){
+        switch (message.getMessageCase()) {
             case CREATE_COLLECTION_REPLICATION_MESSAGE ->
                     internalBroadcast(x -> x.createCollection(message.getCreateCollectionReplicationMessage()));
             case EDIT_COLLECTION_REPLICATION_MESSAGE ->
-                internalBroadcast(x -> x.editCollection(message.getEditCollectionReplicationMessage()));
+                    internalBroadcast(x -> x.editCollection(message.getEditCollectionReplicationMessage()));
             case DELETE_COLLECTION_REPLICATION_MESSAGE ->
-                internalBroadcast(x -> x.deleteCollection(message.getDeleteCollectionReplicationMessage()));
-            case MESSAGE_NOT_SET -> {}
+                    internalBroadcast(x -> x.deleteCollection(message.getDeleteCollectionReplicationMessage()));
+            case SET_DOCUMENT_REPLICATION_MESSAGE ->
+                    internalBroadcast(x -> x.setCollectionDocument(message.getSetDocumentReplicationMessage()));
+            case MESSAGE_NOT_SET -> {
+            }
         }
     }
 

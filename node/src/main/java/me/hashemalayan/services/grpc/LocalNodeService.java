@@ -5,14 +5,20 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.*;
+import me.hashemalayan.nosql.shared.Common.CollectionDocument;
 import me.hashemalayan.nosql.shared.Common.CollectionMetaData;
+import me.hashemalayan.nosql.shared.Common.SetCollectionDocumentRequest;
+import me.hashemalayan.nosql.shared.Common.SetCollectionDocumentResponse;
 import me.hashemalayan.services.ClientCounterService;
 import me.hashemalayan.services.db.DatabaseService;
+import me.hashemalayan.services.db.exceptions.AffinityMismatchException;
 import org.slf4j.Logger;
 
 public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
 
     private final DatabaseService databaseService;
+
+    private final RemoteReplicationService replicationService;
     private final ClientCounterService clientCounterService;
     private final NodeProperties nodeProperties;
     private final Logger logger;
@@ -20,11 +26,13 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
     @Inject
     public LocalNodeService(
             DatabaseService databaseService,
+            RemoteReplicationService replicationService,
             ClientCounterService clientCounterService,
             NodeProperties nodeProperties,
             Logger logger
     ) {
         this.databaseService = databaseService;
+        this.replicationService = replicationService;
         this.clientCounterService = clientCounterService;
         this.nodeProperties = nodeProperties;
         this.logger = logger;
@@ -159,6 +167,13 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             responseObserver.onNext(
                     SetCollectionDocumentResponse.newBuilder()
                             .setDocument(document)
+                            .build()
+            );
+            responseObserver.onCompleted();
+        } catch (AffinityMismatchException e) {
+            responseObserver.onNext(
+                    SetCollectionDocumentResponse.newBuilder()
+                            .setDocument(replicationService.redirect(e.getExpectedAffinity(), request))
                             .build()
             );
             responseObserver.onCompleted();

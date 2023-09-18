@@ -4,6 +4,7 @@ import btree4j.BTreeException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
 import me.hashemalayan.nosql.shared.*;
+import me.hashemalayan.nosql.shared.Common.CollectionDocument;
 import me.hashemalayan.nosql.shared.Common.CollectionMetaData;
 import me.hashemalayan.services.db.exceptions.*;
 import me.hashemalayan.services.grpc.RemoteReplicationService;
@@ -75,8 +76,30 @@ public class DatabaseService {
             CollectionDoesNotExistException,
             IOException,
             BTreeException,
-            IndexNotFoundException {
-        return collectionService.setDocument(collectionId, documentId, documentJson);
+            IndexNotFoundException,
+            AffinityMismatchException {
+
+        final var document = collectionService.setDocument(collectionId, documentId, documentJson);
+        replicationService.broadcast(
+                ReplicationMessage.newBuilder()
+                        .setSetDocumentReplicationMessage(
+                                SetDocumentReplicationMessage.newBuilder()
+                                        .setCollectionId(collectionId)
+                                        .setDocument(document)
+                                        .build()
+                        )
+                        .build()
+        );
+        return document;
+    }
+
+    public void setDocument(String collectionId, CollectionDocument document)
+            throws BTreeException,
+            DocumentSchemaValidationException,
+            CollectionDoesNotExistException,
+            IndexNotFoundException,
+            IOException {
+        collectionService.setDocument(collectionId, document);
     }
 
     public void editCollectionAndBroadcast(

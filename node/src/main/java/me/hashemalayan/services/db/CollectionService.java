@@ -9,10 +9,11 @@ import com.google.protobuf.util.JsonFormat;
 import com.google.protobuf.util.Timestamps;
 import com.networknt.schema.ValidationMessage;
 import me.hashemalayan.NodeProperties;
-import me.hashemalayan.nosql.shared.CollectionDocument;
+import me.hashemalayan.nosql.shared.Common.CollectionDocument;
 import me.hashemalayan.nosql.shared.Common.CollectionMetaData;
-import me.hashemalayan.nosql.shared.DocumentMetaData;
+import me.hashemalayan.nosql.shared.Common.DocumentMetaData;
 import me.hashemalayan.services.db.exceptions.*;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -146,7 +147,8 @@ public class CollectionService {
             CollectionDoesNotExistException,
             DocumentSchemaValidationException,
             BTreeException,
-            IndexNotFoundException {
+            IndexNotFoundException,
+            AffinityMismatchException {
 
         String actualDocumentId = documentId;
 
@@ -189,6 +191,9 @@ public class CollectionService {
                     .build();
         }
 
+        if(metaData.getAffinity() != nodeProperties.getPort())
+            throw new AffinityMismatchException(metaData.getAffinity());
+
         final var dataNode = objectMapper.readTree(documentJson);
         final var metaDataNode = objectMapper.readTree(JsonFormat.printer().print(metaData));
 
@@ -197,40 +202,9 @@ public class CollectionService {
         documentNode.set("data", dataNode);
         documentNode.set("metaData", metaDataNode);
 
-        final var report = schemaService.validateDocument(
-                collectionId,
-                documentNode
-        );
 
-        if (!report.isEmpty()) {
-            throw new DocumentSchemaValidationException(
-                    report.stream()
-                            .map(ValidationMessage::getMessage)
-                            .reduce(String::concat)
-                            .orElse("")
-            );
-        }
-
-        final var indexedPropertiesInCollection = indexService.getIndexedProperties(collectionId);
-        for (final var indexedPropertyInCollection : indexedPropertiesInCollection) {
-            final var dataNodeToBeAddedToIndex = dataNode.get(indexedPropertyInCollection);
-            if (oldDataNode == null) {
-                indexService.addToIndex(
-                        collectionId,
-                        actualDocumentId,
-                        indexedPropertyInCollection,
-                        objectMapper.writeValueAsBytes(dataNodeToBeAddedToIndex)
-                );
-            } else {
-                indexService.addToIndex(
-                        collectionId,
-                        actualDocumentId,
-                        indexedPropertyInCollection,
-                        objectMapper.writeValueAsBytes(oldDataNode.get(indexedPropertyInCollection)),
-                        objectMapper.writeValueAsBytes(dataNodeToBeAddedToIndex)
-                );
-            }
-        }
+        validateDocument(collectionId, documentNode);
+        indexDocument(collectionId, actualDocumentId, documentPath, documentNode, oldDataNode);
 
         objectMapper.writerWithDefaultPrettyPrinter()
                 .writeValue(
@@ -246,6 +220,96 @@ public class CollectionService {
                                 .writeValueAsString(dataNode)
                 )
                 .build();
+    }
+
+    public void setDocument(String collectionId, CollectionDocument document)
+            throws CollectionDoesNotExistException,
+            IOException,
+            DocumentSchemaValidationException,
+            BTreeException,
+            IndexNotFoundException {
+
+        final var documentId = document.getMetaData().getId();
+
+        if (!Files.exists(collectionsPath.resolve(collectionId))) {
+            throw new CollectionDoesNotExistException();
+        }
+
+        final var documentsPath = collectionsPath.resolve(collectionId)
+                .resolve("documents");
+
+        if (!Files.exists(documentsPath))
+            Files.createDirectories(documentsPath);
+
+        final var documentPath = documentsPath
+                .resolve(documentId + ".json");
+
+        JsonNode oldDataNode = null;
+        if (Files.exists(documentPath)) {
+            final var diskDocumentJson = objectMapper.readTree(documentPath.toFile());
+            oldDataNode = diskDocumentJson.get("data");
+        }
+
+        final var documentNode = objectMapper.createObjectNode();
+        final var metaDataNode = objectMapper.readTree(JsonFormat.printer().print(document.getMetaData()));
+        final var dataNode = objectMapper.readTree(document.getData());
+
+        documentNode.set("data", dataNode);
+        documentNode.set("metaData", metaDataNode);
+
+        validateDocument(collectionId, documentNode);
+        indexDocument(collectionId, documentId, documentPath, documentNode, oldDataNode);
+        objectMapper.writerWithDefaultPrettyPrinter()
+                .writeValue(
+                        documentPath.toFile(),
+                        documentNode
+                );
+    }
+
+    private void validateDocument(String collectionId, JsonNode documentNode) throws DocumentSchemaValidationException {
+        final var report = schemaService.validateDocument(
+                collectionId,
+                documentNode
+        );
+
+        if (!report.isEmpty()) {
+            throw new DocumentSchemaValidationException(
+                    report.stream()
+                            .map(ValidationMessage::getMessage)
+                            .reduce(String::concat)
+                            .orElse("")
+            );
+        }
+    }
+
+    private void indexDocument(
+            String collectionId,
+            String documentId,
+            Path documentPath,
+            ObjectNode documentNode,
+            JsonNode oldDataNode
+    ) throws IndexNotFoundException, BTreeException, IOException {
+        final var dataNode = documentNode.get("data");
+        final var indexedPropertiesInCollection = indexService.getIndexedProperties(collectionId);
+        for (final var indexedPropertyInCollection : indexedPropertiesInCollection) {
+            final var dataNodeToBeAddedToIndex = dataNode.get(indexedPropertyInCollection);
+            if (oldDataNode == null) {
+                indexService.addToIndex(
+                        collectionId,
+                        documentId,
+                        indexedPropertyInCollection,
+                        objectMapper.writeValueAsBytes(dataNodeToBeAddedToIndex)
+                );
+            } else {
+                indexService.addToIndex(
+                        collectionId,
+                        documentId,
+                        indexedPropertyInCollection,
+                        objectMapper.writeValueAsBytes(oldDataNode.get(indexedPropertyInCollection)),
+                        objectMapper.writeValueAsBytes(dataNodeToBeAddedToIndex)
+                );
+            }
+        }
     }
 
     public void editCollection(String collectionId, String collectionName)
