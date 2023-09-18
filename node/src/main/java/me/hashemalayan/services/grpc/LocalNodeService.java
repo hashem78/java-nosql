@@ -230,7 +230,7 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
     ) {
         try {
             logger.info("Indexing " + request.getProperty() + " in collection " + request.getCollectionId());
-            databaseService.indexPropertyInCollection(request.getCollectionId(), request.getProperty());
+            databaseService.indexPropertyInCollectionAndBroadcast(request.getCollectionId(), request.getProperty());
             responseObserver.onNext(IndexCollectionPropertyResponse.newBuilder().build());
             responseObserver.onCompleted();
         } catch (Exception e) {

@@ -116,4 +116,21 @@ public class LocalReplicationService extends ReplicationServiceGrpc.ReplicationS
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public void indexCollectionProperty(
+            IndexCollectionPropertyReplicationMessage request,
+            StreamObserver<ReplicationResponse> responseObserver
+    ) {
+        try {
+            databaseService.indexPropertyInCollection(
+                    request.getCollectionId(),
+                    request.getProperty()
+            );
+            responseObserver.onNext(ReplicationResponse.newBuilder().build());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

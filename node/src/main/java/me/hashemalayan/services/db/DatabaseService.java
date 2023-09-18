@@ -193,6 +193,23 @@ public class DatabaseService {
         return schemaService.getPropertyType(collectionId, property);
     }
 
+    public void indexPropertyInCollectionAndBroadcast(String collectionId, String property) throws
+            IOException,
+            BTreeException,
+            CollectionDoesNotExistException {
+        indexService.indexPropertyInCollection(collectionId, property);
+        replicationService.broadcast(
+                ReplicationMessage.newBuilder()
+                        .setIndexCollectionPropertyReplicationMessage(
+                                IndexCollectionPropertyReplicationMessage.newBuilder()
+                                        .setCollectionId(collectionId)
+                                        .setProperty(property)
+                                        .build()
+                        )
+                        .build()
+        );
+    }
+
     public void indexPropertyInCollection(String collectionId, String property) throws
             IOException,
             BTreeException,
