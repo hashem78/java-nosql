@@ -1,5 +1,6 @@
 package me.hashemalayan;
 
+import com.google.inject.Inject;
 import lombok.Getter;
 
 import java.nio.file.Path;
@@ -15,4 +16,9 @@ public class NodeProperties {
     private final Path sslCertificatePath = Paths.get(System.getenv("SSL_CERT_PATH"));
     private final Path privateKeyPath = Paths.get(System.getenv("PVT_KEY_PATH"));
     private final Path certificateAuthorityPath = Paths.get(System.getenv("CA_PATH"));
+
+    @Inject
+    public NodeProperties() {
+
+    }
 }

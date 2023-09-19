@@ -12,6 +12,7 @@ import me.hashemalayan.nosql.shared.CollectionPropertyType;
 import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
 import me.hashemalayan.services.db.exceptions.PropertyDoesNotExistException;
 import me.hashemalayan.services.db.exceptions.SampleMalformedException;
+import me.hashemalayan.services.db.interfaces.CollectionConfigurationService;
 import org.slf4j.Logger;
 
 import java.io.IOException;

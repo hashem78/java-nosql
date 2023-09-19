@@ -13,6 +13,7 @@ import me.hashemalayan.nosql.shared.Common.CollectionDocument;
 import me.hashemalayan.nosql.shared.Common.CollectionMetaData;
 import me.hashemalayan.nosql.shared.Common.DocumentMetaData;
 import me.hashemalayan.services.db.exceptions.*;
+import me.hashemalayan.services.db.interfaces.CollectionConfigurationService;
 
 import java.io.IOException;
 import java.nio.file.Files;

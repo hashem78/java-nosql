@@ -15,6 +15,7 @@ import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
 import me.hashemalayan.services.db.exceptions.IndexNotFoundException;
 import me.hashemalayan.services.db.exceptions.InvalidOperatorUsage;
 import me.hashemalayan.services.db.exceptions.UnRecognizedOperatorException;
+import me.hashemalayan.services.db.interfaces.CollectionConfigurationService;
 import me.hashemalayan.util.BTreeCallbackFactory;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;

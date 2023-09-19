@@ -2,17 +2,18 @@ package me.hashemalayan.services.db;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Inject;
 import com.google.protobuf.util.Timestamps;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
-import jakarta.inject.Inject;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.Common.CollectionMetaData;
 import me.hashemalayan.services.db.exceptions.CollectionAlreadyExistsException;
 import me.hashemalayan.services.db.exceptions.CollectionConfigurationNotFoundException;
 import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
 import me.hashemalayan.services.db.exceptions.InvalidCollectionSchemaException;
+import me.hashemalayan.services.db.interfaces.CollectionConfigurationService;
 import me.hashemalayan.util.Constants;
 import org.slf4j.Logger;
 
@@ -25,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class CollectionConfigurationService {
+public class BasicCollectionConfigurationService implements CollectionConfigurationService {
 
     private final NodeProperties nodeProperties;
     private final Logger logger;
@@ -37,7 +38,7 @@ public class CollectionConfigurationService {
     private final JsonSchema metaSchema;
 
     @Inject
-    public CollectionConfigurationService(
+    public BasicCollectionConfigurationService(
             NodeProperties nodeProperties,
             Logger logger,
             ObjectMapper objectMapper,
@@ -54,6 +55,7 @@ public class CollectionConfigurationService {
         metaSchema = jsonSchemaFactory.getSchema(Constants.Draft7MetaScheme);
     }
 
+    @Override
     public void load() throws IOException {
 
         logger.info("Loading configurations for all collections");
@@ -97,13 +99,15 @@ public class CollectionConfigurationService {
         }
     }
 
-    private void save(Path filePath, CollectionConfiguration config) throws IOException {
+    @Override
+    public void save(Path filePath, CollectionConfiguration config) throws IOException {
 
         objectMapper.writerWithDefaultPrettyPrinter()
                 .writeValue(filePath.toFile(), config);
     }
 
-    CollectionConfiguration createMetaData(String collectionName, String schema)
+    @Override
+    public CollectionConfiguration createMetaData(String collectionName, String schema)
             throws IOException,
             InvalidCollectionSchemaException,
             CollectionAlreadyExistsException {
@@ -152,6 +156,7 @@ public class CollectionConfigurationService {
         return config;
     }
 
+    @Override
     public boolean isValidRootSchema(JsonNode schema) {
 
         if (schema.has("type")) {
@@ -170,7 +175,8 @@ public class CollectionConfigurationService {
         return false;
     }
 
-    Optional<CollectionMetaData> getCollectionMetaData(String collectionId) {
+    @Override
+    public Optional<CollectionMetaData> getCollectionMetaData(String collectionId) {
 
         if (!configurationMap.containsKey(collectionId))
             return Optional.empty();
@@ -178,7 +184,8 @@ public class CollectionConfigurationService {
         return Optional.of(configurationMap.get(collectionId).getMetaData());
     }
 
-    Optional<JsonSchema> getCollectionSchema(String collectionId) {
+    @Override
+    public Optional<JsonSchema> getCollectionSchema(String collectionId) {
 
         if (!configurationMap.containsKey(collectionId))
             return Optional.empty();
@@ -186,7 +193,8 @@ public class CollectionConfigurationService {
         return Optional.of(configurationMap.get(collectionId).getSchema());
     }
 
-    List<CollectionMetaData> getAllCollectionsMetaData() {
+    @Override
+    public List<CollectionMetaData> getAllCollectionsMetaData() {
 
         return configurationMap.values()
                 .stream()
@@ -195,16 +203,19 @@ public class CollectionConfigurationService {
                 .collect(Collectors.toList());
     }
 
-    boolean collectionConfigurationIsLoaded(String collectionId) {
+    @Override
+    public boolean collectionConfigurationIsLoaded(String collectionId) {
         return configurationMap.containsKey(collectionId);
     }
 
-    private Set<String> validateAgainstMetaSchema(JsonNode schema) {
+    @Override
+    public Set<String> validateAgainstMetaSchema(JsonNode schema) {
         return metaSchema.validate(schema).stream()
                 .map(ValidationMessage::getMessage)
                 .collect(Collectors.toSet());
     }
 
+    @Override
     public void editCollection(String collectionId, String collectionName)
             throws CollectionDoesNotExistException,
             IOException {
@@ -224,12 +235,14 @@ public class CollectionConfigurationService {
         save(configFilePath, configurationMap.get(collectionId));
     }
 
+    @Override
     public void deleteCollection(String collectionId)
             throws CollectionDoesNotExistException,
             IOException {
         editCollectionMetaData(collectionId, (metadata) -> metadata.setDeleted(true));
     }
 
+    @Override
     public void editCollectionMetaData(
             String collectionId,
             Function<CollectionMetaData.Builder, CollectionMetaData.Builder> editor
@@ -248,6 +261,7 @@ public class CollectionConfigurationService {
         save(configFilePath, configurationMap.get(collectionId));
     }
 
+    @Override
     public void createConfiguration(CollectionMetaData metaData, String schema) throws IOException,
             CollectionAlreadyExistsException {
 

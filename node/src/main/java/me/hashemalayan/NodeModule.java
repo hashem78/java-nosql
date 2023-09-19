@@ -18,6 +18,7 @@ import me.hashemalayan.factories.SignalingStreamMeshObserverFactory;
 import me.hashemalayan.services.ClientCounterService;
 import me.hashemalayan.services.db.*;
 import me.hashemalayan.services.db.interfaces.AbstractDatabaseService;
+import me.hashemalayan.services.db.interfaces.CollectionConfigurationService;
 import me.hashemalayan.services.grpc.*;
 import me.hashemalayan.util.BTreeCallbackFactory;
 import me.hashemalayan.util.JsonSchemaDeserializer;
@@ -32,6 +33,13 @@ public class NodeModule extends AbstractModule {
 
     @Override
     protected void configure() {
+
+        binder().requireAtInjectOnConstructors();
+        binder().requireExactBindingAnnotations();
+        binder().requireExplicitBindings();
+
+        bind(NodeEntryPoint.class).asEagerSingleton();
+        bind(RemoteSignalingService.class).asEagerSingleton();
         bind(NodeProperties.class).asEagerSingleton();
         bind(SchemaService.class).asEagerSingleton();
         bind(LocalServicesManager.class).asEagerSingleton();
@@ -46,7 +54,7 @@ public class NodeModule extends AbstractModule {
         bind(LoadBalancingService.class).asEagerSingleton();
         bind(LocalServicesManager.class).asEagerSingleton();
         bind(LocalNodeService.class).asEagerSingleton();
-        bind(CollectionConfigurationService.class).asEagerSingleton();
+        bind(CollectionConfigurationService.class).to(BasicCollectionConfigurationService.class).asEagerSingleton();
         bind(CollectionService.class).asEagerSingleton();
         bind(SampleFromSchemaService.class).asEagerSingleton();
         bind(ClientCounterService.class).asEagerSingleton();

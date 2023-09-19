@@ -2,6 +2,7 @@ package me.hashemalayan.util.interceptors;
 
 import btree4j.BTreeException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.grpc.ForwardingServerCall.SimpleForwardingServerCall;
 import io.grpc.*;
@@ -10,6 +11,11 @@ import me.hashemalayan.services.db.exceptions.*;
 import java.io.IOException;
 
 public class ExceptionHandlingInterceptor implements ServerInterceptor {
+
+    @Inject
+    public ExceptionHandlingInterceptor() {
+
+    }
 
     @Override
     public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
