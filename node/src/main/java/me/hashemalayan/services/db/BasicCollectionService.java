@@ -210,7 +210,7 @@ public class BasicCollectionService implements CollectionService {
 
 
         validateDocument(collectionId, documentNode);
-        indexDocument(collectionId, actualDocumentId, documentPath, documentNode, oldDataNode);
+        indexDocument(collectionId, actualDocumentId, documentNode, oldDataNode);
 
         objectMapper.writerWithDefaultPrettyPrinter()
                 .writeValue(
@@ -264,7 +264,7 @@ public class BasicCollectionService implements CollectionService {
         documentNode.set("metaData", metaDataNode);
 
         validateDocument(collectionId, documentNode);
-        indexDocument(collectionId, documentId, documentPath, documentNode, oldDataNode);
+        indexDocument(collectionId, documentId, documentNode, oldDataNode);
         objectMapper.writerWithDefaultPrettyPrinter()
                 .writeValue(
                         documentPath.toFile(),
@@ -291,7 +291,6 @@ public class BasicCollectionService implements CollectionService {
     private void indexDocument(
             String collectionId,
             String documentId,
-            Path documentPath,
             ObjectNode documentNode,
             JsonNode oldDataNode
     ) throws IndexNotFoundException, BTreeException, IOException {
