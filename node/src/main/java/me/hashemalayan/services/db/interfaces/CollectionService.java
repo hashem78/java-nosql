@@ -3,8 +3,8 @@ package me.hashemalayan.services.db.interfaces;
 import btree4j.BTreeException;
 import me.hashemalayan.nosql.shared.Common.CollectionDocument;
 import me.hashemalayan.nosql.shared.Common.CollectionMetaData;
-import me.hashemalayan.services.db.models.CollectionConfiguration;
 import me.hashemalayan.services.db.exceptions.*;
+import me.hashemalayan.services.db.models.CollectionConfiguration;
 
 import java.io.IOException;
 import java.util.List;

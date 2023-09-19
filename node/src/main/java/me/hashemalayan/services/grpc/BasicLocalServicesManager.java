@@ -4,32 +4,35 @@ import com.google.inject.Inject;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import me.hashemalayan.NodeProperties;
+import me.hashemalayan.nosql.shared.LoadBalancingServiceGrpc.LoadBalancingServiceImplBase;
+import me.hashemalayan.nosql.shared.NodeServiceGrpc.NodeServiceImplBase;
+import me.hashemalayan.nosql.shared.ReplicationServiceGrpc.ReplicationServiceImplBase;
+import me.hashemalayan.services.grpc.interfaces.LocalServicesManager;
 import me.hashemalayan.util.interceptors.ExceptionHandlingInterceptor;
 import me.hashemalayan.util.interceptors.LoggingInterceptor;
 import org.slf4j.Logger;
 
 import java.io.IOException;
 
-public class LocalServicesManager {
+public class BasicLocalServicesManager implements LocalServicesManager {
 
     private Server server;
     private final NodeProperties nodeProperties;
-    private final LoadBalancingService loadBalancingService;
-    private final LocalNodeService localNodeService;
+    private final LoadBalancingServiceImplBase loadBalancingService;
+    private final NodeServiceImplBase localNodeService;
     final private ExceptionHandlingInterceptor exceptionHandlingInterceptor;
     final private LoggingInterceptor loggingInterceptor;
-    private final LocalReplicationService localReplicationService;
-
+    private final ReplicationServiceImplBase localReplicationService;
     private final Logger logger;
 
     @Inject
-    public LocalServicesManager(
+    public BasicLocalServicesManager(
             NodeProperties nodeProperties,
-            LoadBalancingService loadBalancingService,
-            LocalNodeService localNodeService,
+            LoadBalancingServiceImplBase loadBalancingService,
+            NodeServiceImplBase localNodeService,
             ExceptionHandlingInterceptor exceptionHandlingInterceptor,
             LoggingInterceptor loggingInterceptor,
-            LocalReplicationService localReplicationService,
+            ReplicationServiceImplBase localReplicationService,
             Logger logger) {
         this.nodeProperties = nodeProperties;
         this.loadBalancingService = loadBalancingService;
@@ -40,6 +43,7 @@ public class LocalServicesManager {
         this.logger = logger;
     }
 
+    @Override
     public void init() throws IOException {
 
         assert server == null;
@@ -65,10 +69,12 @@ public class LocalServicesManager {
         server.start();
     }
 
+    @Override
     public void awaitTermination() throws InterruptedException {
         server.awaitTermination();
     }
 
+    @Override
     public void cleanup() {
 
         if (server != null && !server.isShutdown()) {

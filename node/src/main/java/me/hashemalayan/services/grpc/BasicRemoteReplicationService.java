@@ -17,6 +17,7 @@ import me.hashemalayan.nosql.shared.ReplicationMessage;
 import me.hashemalayan.nosql.shared.ReplicationResponse;
 import me.hashemalayan.nosql.shared.ReplicationServiceGrpc;
 import me.hashemalayan.nosql.shared.ReplicationServiceGrpc.ReplicationServiceFutureStub;
+import me.hashemalayan.services.grpc.interfaces.RemoteReplicationService;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -24,13 +25,13 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
-public class RemoteReplicationService {
+public class BasicRemoteReplicationService implements RemoteReplicationService {
     private final NodeProperties nodeProperties;
     private final Logger logger;
     private final BiMap<Integer, ReplicationServiceFutureStub> stubMap;
 
     @Inject
-    public RemoteReplicationService(
+    public BasicRemoteReplicationService(
             NodeProperties nodeProperties,
             Logger logger
     ) {
@@ -39,6 +40,7 @@ public class RemoteReplicationService {
         stubMap = Maps.synchronizedBiMap(HashBiMap.create());
     }
 
+    @Override
     public void addReplica(int port) throws IOException {
 
 
@@ -65,6 +67,7 @@ public class RemoteReplicationService {
         logger.info("Added replica " + port);
     }
 
+    @Override
     public CollectionDocument redirect(int nodeToRedirectTo, SetCollectionDocumentRequest request) {
         try {
             logger.warn("Redirecting SetCollectionDocumentRequest to " + nodeToRedirectTo);
@@ -74,6 +77,7 @@ public class RemoteReplicationService {
         }
     }
 
+    @Override
     public void broadcast(ReplicationMessage message) {
         logger.info("Broadcasting " + message);
         switch (message.getMessageCase()) {

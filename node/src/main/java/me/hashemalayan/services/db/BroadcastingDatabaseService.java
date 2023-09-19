@@ -8,7 +8,7 @@ import me.hashemalayan.services.db.interfaces.AbstractDatabaseService;
 import me.hashemalayan.services.db.interfaces.CollectionService;
 import me.hashemalayan.services.db.interfaces.IndexService;
 import me.hashemalayan.services.db.interfaces.SchemaService;
-import me.hashemalayan.services.grpc.RemoteReplicationService;
+import me.hashemalayan.services.grpc.interfaces.RemoteReplicationService;
 
 import java.io.IOException;
 

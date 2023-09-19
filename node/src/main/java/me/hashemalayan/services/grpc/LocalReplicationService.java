@@ -5,6 +5,7 @@ import com.google.inject.name.Named;
 import io.grpc.stub.StreamObserver;
 import me.hashemalayan.nosql.shared.*;
 import me.hashemalayan.services.db.interfaces.AbstractDatabaseService;
+import me.hashemalayan.services.grpc.interfaces.RemoteReplicationService;
 
 import static me.hashemalayan.nosql.shared.Common.CollectionDocument;
 import static me.hashemalayan.nosql.shared.Common.SetCollectionDocumentRequest;

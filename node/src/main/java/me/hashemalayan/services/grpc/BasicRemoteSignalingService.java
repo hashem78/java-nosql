@@ -9,18 +9,19 @@ import me.hashemalayan.NodeProperties;
 import me.hashemalayan.factories.SignalingStreamMeshObserverFactory;
 import me.hashemalayan.nosql.shared.PortContainingMessage;
 import me.hashemalayan.nosql.shared.SignalingServiceGrpc;
+import me.hashemalayan.services.grpc.interfaces.RemoteSignalingService;
 
 import java.io.IOException;
 
 
-public class RemoteSignalingService {
+public class BasicRemoteSignalingService implements RemoteSignalingService {
 
     private final NodeProperties nodeProperties;
     private final SignalingStreamMeshObserverFactory signalingStreamMeshObserverFactory;
     private SignalingServiceGrpc.SignalingServiceStub stub;
 
     @Inject
-    public RemoteSignalingService(
+    public BasicRemoteSignalingService(
             NodeProperties nodeProperties,
             SignalingStreamMeshObserverFactory signalingStreamMeshObserverFactory
     ) {

@@ -4,8 +4,8 @@ import btree4j.BTreeException;
 import com.google.inject.Inject;
 import me.hashemalayan.services.db.interfaces.IndexService;
 import me.hashemalayan.services.db.interfaces.SchemaService;
-import me.hashemalayan.services.grpc.LocalServicesManager;
-import me.hashemalayan.services.grpc.RemoteSignalingService;
+import me.hashemalayan.services.grpc.interfaces.LocalServicesManager;
+import me.hashemalayan.services.grpc.interfaces.RemoteSignalingService;
 import org.slf4j.Logger;
 
 import java.io.IOException;

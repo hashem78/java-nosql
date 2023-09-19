@@ -13,6 +13,7 @@ import me.hashemalayan.nosql.shared.Common.SetCollectionDocumentResponse;
 import me.hashemalayan.services.ClientCounterService;
 import me.hashemalayan.services.db.exceptions.AffinityMismatchException;
 import me.hashemalayan.services.db.interfaces.AbstractDatabaseService;
+import me.hashemalayan.services.grpc.interfaces.RemoteReplicationService;
 import org.slf4j.Logger;
 
 public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {

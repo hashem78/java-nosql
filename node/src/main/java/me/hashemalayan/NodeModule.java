@@ -15,10 +15,17 @@ import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 import me.hashemalayan.factories.JsonDirectoryIteratorFactory;
 import me.hashemalayan.factories.SignalingStreamMeshObserverFactory;
+import me.hashemalayan.nosql.shared.LoadBalancingServiceGrpc.LoadBalancingServiceImplBase;
+import me.hashemalayan.nosql.shared.NodeServiceGrpc.NodeServiceImplBase;
+import me.hashemalayan.nosql.shared.ReplicationServiceGrpc.ReplicationServiceImplBase;
+import me.hashemalayan.services.BasicClientCounterService;
 import me.hashemalayan.services.ClientCounterService;
 import me.hashemalayan.services.db.*;
 import me.hashemalayan.services.db.interfaces.*;
 import me.hashemalayan.services.grpc.*;
+import me.hashemalayan.services.grpc.interfaces.LocalServicesManager;
+import me.hashemalayan.services.grpc.interfaces.RemoteReplicationService;
+import me.hashemalayan.services.grpc.interfaces.RemoteSignalingService;
 import me.hashemalayan.util.BTreeCallbackFactory;
 import me.hashemalayan.util.JsonSchemaDeserializer;
 import me.hashemalayan.util.JsonSchemaSerializer;
@@ -38,17 +45,19 @@ public class NodeModule extends AbstractModule {
         binder().requireExplicitBindings();
 
         bind(NodeEntryPoint.class).asEagerSingleton();
-        bind(RemoteSignalingService.class).asEagerSingleton();
         bind(NodeProperties.class).asEagerSingleton();
-        bind(LocalServicesManager.class).asEagerSingleton();
-        bind(LoadBalancingService.class).asEagerSingleton();
-        bind(LocalNodeService.class).asEagerSingleton();
-        bind(ClientCounterService.class).asEagerSingleton();
         bind(BTreeCallbackFactory.class).asEagerSingleton();
         bind(ExceptionHandlingInterceptor.class).asEagerSingleton();
         bind(LoggingInterceptor.class).asEagerSingleton();
-        bind(LocalReplicationService.class).asEagerSingleton();
-        bind(RemoteReplicationService.class).asEagerSingleton();
+
+        bind(RemoteReplicationService.class).to(BasicRemoteReplicationService.class).asEagerSingleton();
+        bind(RemoteSignalingService.class).to(BasicRemoteSignalingService.class).asEagerSingleton();
+        bind(LocalServicesManager.class).to(BasicLocalServicesManager.class).asEagerSingleton();
+        bind(ClientCounterService.class).to(BasicClientCounterService.class).asEagerSingleton();
+
+        bind(NodeServiceImplBase.class).to(LocalNodeService.class).asEagerSingleton();
+        bind(LoadBalancingServiceImplBase.class).to(LoadBalancingService.class).asEagerSingleton();
+        bind(ReplicationServiceImplBase.class).to(LocalReplicationService.class).asEagerSingleton();
 
         bind(CollectionConfigurationService.class).to(BasicCollectionConfigurationService.class).asEagerSingleton();
         bind(CollectionService.class).to(BasicCollectionService.class).asEagerSingleton();

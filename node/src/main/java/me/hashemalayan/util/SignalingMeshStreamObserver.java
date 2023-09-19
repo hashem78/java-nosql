@@ -3,7 +3,7 @@ package me.hashemalayan.util;
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
 import me.hashemalayan.nosql.shared.PortContainingMessage;
-import me.hashemalayan.services.grpc.RemoteReplicationService;
+import me.hashemalayan.services.grpc.interfaces.RemoteReplicationService;
 
 import java.io.IOException;
 
