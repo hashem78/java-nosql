@@ -11,7 +11,6 @@ import me.hashemalayan.services.db.CollectionService;
 import me.hashemalayan.services.db.IndexService;
 import me.hashemalayan.services.db.SchemaService;
 import me.hashemalayan.services.db.exceptions.*;
-import me.hashemalayan.services.grpc.RemoteReplicationService;
 
 import java.io.IOException;
 import java.util.List;

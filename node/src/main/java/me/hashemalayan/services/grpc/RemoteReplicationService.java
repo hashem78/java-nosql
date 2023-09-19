@@ -11,9 +11,11 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.TlsChannelCredentials;
 import me.hashemalayan.NodeProperties;
-import me.hashemalayan.nosql.shared.*;
 import me.hashemalayan.nosql.shared.Common.CollectionDocument;
 import me.hashemalayan.nosql.shared.Common.SetCollectionDocumentRequest;
+import me.hashemalayan.nosql.shared.ReplicationMessage;
+import me.hashemalayan.nosql.shared.ReplicationResponse;
+import me.hashemalayan.nosql.shared.ReplicationServiceGrpc;
 import me.hashemalayan.nosql.shared.ReplicationServiceGrpc.ReplicationServiceFutureStub;
 import org.slf4j.Logger;
 

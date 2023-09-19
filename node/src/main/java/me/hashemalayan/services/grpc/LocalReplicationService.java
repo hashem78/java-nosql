@@ -6,7 +6,8 @@ import io.grpc.stub.StreamObserver;
 import me.hashemalayan.nosql.shared.*;
 import me.hashemalayan.services.db.interfaces.AbstractDatabaseService;
 
-import static me.hashemalayan.nosql.shared.Common.*;
+import static me.hashemalayan.nosql.shared.Common.CollectionDocument;
+import static me.hashemalayan.nosql.shared.Common.SetCollectionDocumentRequest;
 
 public class LocalReplicationService extends ReplicationServiceGrpc.ReplicationServiceImplBase {
 

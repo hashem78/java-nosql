@@ -11,7 +11,6 @@ import me.hashemalayan.nosql.shared.Common.CollectionMetaData;
 import me.hashemalayan.nosql.shared.Common.SetCollectionDocumentRequest;
 import me.hashemalayan.nosql.shared.Common.SetCollectionDocumentResponse;
 import me.hashemalayan.services.ClientCounterService;
-import me.hashemalayan.services.db.DatabaseService;
 import me.hashemalayan.services.db.exceptions.AffinityMismatchException;
 import me.hashemalayan.services.db.interfaces.AbstractDatabaseService;
 import org.slf4j.Logger;
