@@ -9,10 +9,19 @@ package bootstrap;
 service SignalingService {
   rpc JoinMeshStream(PortContainingMessage) returns (stream PortContainingMessage);
   rpc DiscoverLoad(LoadDiscoveryRequest) returns (LoadDiscoveryResponse);
+  rpc GetAvailableNodes(GetAvailableNodesRequest) returns (GetAvailableNodesResponse);
 }
 
 service LoadBalancingService {
   rpc DiscoverLoad(LoadDiscoveryRequest) returns (LoadDiscoveryResponse);
+}
+
+message GetAvailableNodesRequest {
+
+}
+
+message GetAvailableNodesResponse{
+  repeated int32 nodePorts = 1;
 }
 
 message PortContainingMessage {

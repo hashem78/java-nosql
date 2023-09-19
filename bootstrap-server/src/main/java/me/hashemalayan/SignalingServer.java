@@ -125,4 +125,17 @@ public class SignalingServer extends SignalingServiceGrpc.SignalingServiceImplBa
 
         responseObserver.onCompleted();
     }
+
+    @Override
+    public void getAvailableNodes(
+            GetAvailableNodesRequest request,
+            StreamObserver<GetAvailableNodesResponse> responseObserver
+    ) {
+        responseObserver.onNext(
+                GetAvailableNodesResponse.newBuilder()
+                        .addAllNodePorts(connectedNodePorts)
+                .build()
+        );
+        responseObserver.onCompleted();
+    }
 }
