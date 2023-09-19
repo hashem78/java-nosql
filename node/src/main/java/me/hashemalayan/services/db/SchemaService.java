@@ -55,7 +55,7 @@ public class SchemaService {
         }
     }
 
-    String getSample(String collectionId)
+    public String getSample(String collectionId)
             throws CollectionDoesNotExistException,
             SampleMalformedException,
             JsonProcessingException {

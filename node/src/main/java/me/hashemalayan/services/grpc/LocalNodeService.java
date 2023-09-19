@@ -1,6 +1,7 @@
 package me.hashemalayan.services.grpc;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import me.hashemalayan.NodeProperties;
@@ -12,12 +13,12 @@ import me.hashemalayan.nosql.shared.Common.SetCollectionDocumentResponse;
 import me.hashemalayan.services.ClientCounterService;
 import me.hashemalayan.services.db.DatabaseService;
 import me.hashemalayan.services.db.exceptions.AffinityMismatchException;
+import me.hashemalayan.services.db.interfaces.AbstractDatabaseService;
 import org.slf4j.Logger;
 
 public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
 
-    private final DatabaseService databaseService;
-
+    private final AbstractDatabaseService databaseService;
     private final RemoteReplicationService replicationService;
     private final ClientCounterService clientCounterService;
     private final NodeProperties nodeProperties;
@@ -25,7 +26,7 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
 
     @Inject
     public LocalNodeService(
-            DatabaseService databaseService,
+            @Named("BroadcastingDbService") AbstractDatabaseService databaseService,
             RemoteReplicationService replicationService,
             ClientCounterService clientCounterService,
             NodeProperties nodeProperties,
@@ -61,7 +62,7 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
     ) {
         try {
             responseObserver.onNext(
-                    databaseService.createCollectionAndBroadcast(
+                    databaseService.createCollection(
                             request.getName(),
                             request.getSchema()
                     )
@@ -107,7 +108,7 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             StreamObserver<EditCollectionResponse> responseObserver
     ) {
         try {
-            databaseService.editCollectionAndBroadcast(
+            databaseService.editCollection(
                     request.getCollectionId(),
                     request.getCollectionName()
             );
@@ -124,7 +125,7 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             StreamObserver<DeleteCollectionResponse> responseObserver
     ) {
         try {
-            databaseService.deleteCollectionAndBroadcast(request.getCollectionId());
+            databaseService.deleteCollection(request.getCollectionId());
             responseObserver.onNext(
                     DeleteCollectionResponse.newBuilder()
                             .build()
@@ -188,7 +189,7 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             StreamObserver<DeleteCollectionDocumentResponse> responseObserver
     ) {
         try {
-            databaseService.deleteDocumentAndBroadcast(request.getCollectionId(), request.getDocumentId());
+            databaseService.deleteDocument(request.getCollectionId(), request.getDocumentId());
 
             responseObserver.onNext(DeleteCollectionDocumentResponse.newBuilder().build());
             responseObserver.onCompleted();
@@ -230,7 +231,7 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
     ) {
         try {
             logger.info("Indexing " + request.getProperty() + " in collection " + request.getCollectionId());
-            databaseService.indexPropertyInCollectionAndBroadcast(request.getCollectionId(), request.getProperty());
+            databaseService.indexPropertyInCollection(request.getCollectionId(), request.getProperty());
             responseObserver.onNext(IndexCollectionPropertyResponse.newBuilder().build());
             responseObserver.onCompleted();
         } catch (Exception e) {
@@ -261,7 +262,7 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             StreamObserver<RemoveIndexFromCollectionPropertyResponse> responseObserver
     ) {
         try {
-            databaseService.removeIndexFromCollectionPropertyAndBroadcast(
+            databaseService.removeIndexFromCollectionProperty(
                     request.getCollectionId(),
                     request.getProperty()
             );

@@ -7,6 +7,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
+import com.google.inject.name.Names;
 import com.hubspot.jackson.datatype.protobuf.ProtobufJacksonConfig;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.networknt.schema.JsonSchema;
@@ -16,6 +17,7 @@ import me.hashemalayan.factories.JsonDirectoryIteratorFactory;
 import me.hashemalayan.factories.SignalingStreamMeshObserverFactory;
 import me.hashemalayan.services.ClientCounterService;
 import me.hashemalayan.services.db.*;
+import me.hashemalayan.services.db.interfaces.AbstractDatabaseService;
 import me.hashemalayan.services.grpc.*;
 import me.hashemalayan.util.BTreeCallbackFactory;
 import me.hashemalayan.util.JsonSchemaDeserializer;
@@ -33,7 +35,14 @@ public class NodeModule extends AbstractModule {
         bind(NodeProperties.class).asEagerSingleton();
         bind(SchemaService.class).asEagerSingleton();
         bind(LocalServicesManager.class).asEagerSingleton();
-        bind(DatabaseService.class).asEagerSingleton();
+        bind(AbstractDatabaseService.class)
+                .annotatedWith(Names.named("BroadcastingDbService"))
+                .to(BroadcastingDatabaseService.class)
+                .asEagerSingleton();
+        bind(AbstractDatabaseService.class)
+                .annotatedWith(Names.named("BasicDbService"))
+                .to(DatabaseService.class)
+                .asEagerSingleton();
         bind(LoadBalancingService.class).asEagerSingleton();
         bind(LocalServicesManager.class).asEagerSingleton();
         bind(LocalNodeService.class).asEagerSingleton();

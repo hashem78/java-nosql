@@ -1,26 +1,25 @@
 package me.hashemalayan.services.grpc;
 
-import btree4j.BTreeException;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import io.grpc.stub.StreamObserver;
 import me.hashemalayan.nosql.shared.*;
-import me.hashemalayan.services.db.DatabaseService;
-import me.hashemalayan.services.db.exceptions.AffinityMismatchException;
-import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
-import me.hashemalayan.services.db.exceptions.DocumentSchemaValidationException;
-import me.hashemalayan.services.db.exceptions.IndexNotFoundException;
-
-import java.io.IOException;
+import me.hashemalayan.services.db.interfaces.AbstractDatabaseService;
 
 import static me.hashemalayan.nosql.shared.Common.*;
 
 public class LocalReplicationService extends ReplicationServiceGrpc.ReplicationServiceImplBase {
 
-    private final DatabaseService databaseService;
+    private final AbstractDatabaseService databaseService;
+
+    private final RemoteReplicationService replicationService;
 
     @Inject
-    public LocalReplicationService(DatabaseService databaseService) {
+    public LocalReplicationService(
+            @Named("BasicDbService") AbstractDatabaseService databaseService,
+            RemoteReplicationService replicationService) {
         this.databaseService = databaseService;
+        this.replicationService = replicationService;
     }
 
     @Override
@@ -71,7 +70,7 @@ public class LocalReplicationService extends ReplicationServiceGrpc.ReplicationS
             StreamObserver<ReplicationResponse> responseObserver
     ) {
         try {
-             databaseService.setDocument(
+            databaseService.setDocument(
                     request.getCollectionId(),
                     request.getDocument()
             );
@@ -93,6 +92,18 @@ public class LocalReplicationService extends ReplicationServiceGrpc.ReplicationS
                     request.getDocumentId(),
                     request.getDocument()
             );
+
+            replicationService.broadcast(
+                    ReplicationMessage.newBuilder()
+                            .setSetDocumentReplicationMessage(
+                                    SetDocumentReplicationMessage.newBuilder()
+                                            .setCollectionId(request.getCollectionId())
+                                            .setDocument(document)
+                                            .build()
+                            )
+                            .build()
+            );
+
             responseObserver.onNext(document);
             responseObserver.onCompleted();
         } catch (Exception e) {
