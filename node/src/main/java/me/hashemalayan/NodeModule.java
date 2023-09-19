@@ -42,7 +42,6 @@ public class NodeModule extends AbstractModule {
         bind(NodeProperties.class).asEagerSingleton();
         bind(LocalServicesManager.class).asEagerSingleton();
         bind(LoadBalancingService.class).asEagerSingleton();
-        bind(LocalServicesManager.class).asEagerSingleton();
         bind(LocalNodeService.class).asEagerSingleton();
         bind(ClientCounterService.class).asEagerSingleton();
         bind(BTreeCallbackFactory.class).asEagerSingleton();
