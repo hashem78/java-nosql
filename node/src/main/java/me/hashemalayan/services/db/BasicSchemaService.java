@@ -13,6 +13,8 @@ import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
 import me.hashemalayan.services.db.exceptions.PropertyDoesNotExistException;
 import me.hashemalayan.services.db.exceptions.SampleMalformedException;
 import me.hashemalayan.services.db.interfaces.CollectionConfigurationService;
+import me.hashemalayan.services.db.interfaces.SampleFromSchemaService;
+import me.hashemalayan.services.db.interfaces.SchemaService;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -20,7 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Set;
 
-public class SchemaService {
+public class BasicSchemaService implements SchemaService {
 
     private final CollectionConfigurationService configurationService;
     private final SampleFromSchemaService sampleFromSchemaService;
@@ -31,10 +33,11 @@ public class SchemaService {
     private final JsonSchemaFactory jsonSchemaFactory;
 
     @Inject
-    public SchemaService(
+    public BasicSchemaService(
             CollectionConfigurationService configurationService,
             SampleFromSchemaService sampleFromSchemaService,
-            ObjectMapper objectMapper, NodeProperties nodeProperties,
+            ObjectMapper objectMapper,
+            NodeProperties nodeProperties,
             Logger logger,
             JsonDirectoryIteratorFactory jsonDirectoryIteratorFactory,
             JsonSchemaFactory jsonSchemaFactory) {
@@ -47,6 +50,7 @@ public class SchemaService {
         this.jsonSchemaFactory = jsonSchemaFactory;
     }
 
+    @Override
     public void load() {
 
         try {
@@ -56,6 +60,7 @@ public class SchemaService {
         }
     }
 
+    @Override
     public String getSample(String collectionId)
             throws CollectionDoesNotExistException,
             SampleMalformedException,
@@ -73,7 +78,7 @@ public class SchemaService {
         return objectMapper.writeValueAsString(sample);
     }
 
-
+    @Override
     public Set<ValidationMessage> validateDocument(String collectionName, JsonNode jsonNode) {
 
         final var schema = configurationService

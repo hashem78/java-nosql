@@ -5,6 +5,9 @@ import com.google.inject.Inject;
 import me.hashemalayan.nosql.shared.*;
 import me.hashemalayan.services.db.exceptions.*;
 import me.hashemalayan.services.db.interfaces.AbstractDatabaseService;
+import me.hashemalayan.services.db.interfaces.CollectionService;
+import me.hashemalayan.services.db.interfaces.IndexService;
+import me.hashemalayan.services.db.interfaces.SchemaService;
 import me.hashemalayan.services.grpc.RemoteReplicationService;
 
 import java.io.IOException;

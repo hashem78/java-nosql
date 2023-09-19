@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 class SampleFromSchemaServiceTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
-    final SampleFromSchemaService service = new SampleFromSchemaService(objectMapper);
+    final BasicSampleFromSchemaService service = new BasicSampleFromSchemaService(objectMapper);
 
     @Test
     void build() {

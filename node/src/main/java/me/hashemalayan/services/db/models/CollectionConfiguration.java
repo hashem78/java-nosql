@@ -1,4 +1,4 @@
-package me.hashemalayan.services.db;
+package me.hashemalayan.services.db.models;
 
 import com.networknt.schema.JsonSchema;
 import lombok.AllArgsConstructor;

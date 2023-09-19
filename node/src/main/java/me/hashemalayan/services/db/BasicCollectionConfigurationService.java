@@ -14,6 +14,7 @@ import me.hashemalayan.services.db.exceptions.CollectionConfigurationNotFoundExc
 import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
 import me.hashemalayan.services.db.exceptions.InvalidCollectionSchemaException;
 import me.hashemalayan.services.db.interfaces.CollectionConfigurationService;
+import me.hashemalayan.services.db.models.CollectionConfiguration;
 import me.hashemalayan.util.Constants;
 import org.slf4j.Logger;
 
@@ -114,7 +115,7 @@ public class BasicCollectionConfigurationService implements CollectionConfigurat
 
         for (final var config : configurationMap.values()) {
             final var name = config.getMetaData().getName();
-            if (collectionName.equals(name) && !config.metaData.getDeleted()) {
+            if (collectionName.equals(name) && !config.getMetaData().getDeleted()) {
                 throw new CollectionAlreadyExistsException();
             }
         }
@@ -223,7 +224,7 @@ public class BasicCollectionConfigurationService implements CollectionConfigurat
         if (!configurationMap.containsKey(collectionId))
             throw new CollectionDoesNotExistException();
 
-        final var currentMetaData = configurationMap.get(collectionId).metaData;
+        final var currentMetaData = configurationMap.get(collectionId).getMetaData();
 
         configurationMap.get(collectionId).setMetaData(
                 currentMetaData.toBuilder()
@@ -251,7 +252,7 @@ public class BasicCollectionConfigurationService implements CollectionConfigurat
         if (!configurationMap.containsKey(collectionId))
             throw new CollectionDoesNotExistException();
 
-        final var currentMetaData = configurationMap.get(collectionId).metaData;
+        final var currentMetaData = configurationMap.get(collectionId).getMetaData();
         final var builder = currentMetaData.toBuilder();
         final var newMetaData = editor.apply(builder).build();
 

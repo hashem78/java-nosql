@@ -17,8 +17,7 @@ import me.hashemalayan.factories.JsonDirectoryIteratorFactory;
 import me.hashemalayan.factories.SignalingStreamMeshObserverFactory;
 import me.hashemalayan.services.ClientCounterService;
 import me.hashemalayan.services.db.*;
-import me.hashemalayan.services.db.interfaces.AbstractDatabaseService;
-import me.hashemalayan.services.db.interfaces.CollectionConfigurationService;
+import me.hashemalayan.services.db.interfaces.*;
 import me.hashemalayan.services.grpc.*;
 import me.hashemalayan.util.BTreeCallbackFactory;
 import me.hashemalayan.util.JsonSchemaDeserializer;
@@ -41,29 +40,32 @@ public class NodeModule extends AbstractModule {
         bind(NodeEntryPoint.class).asEagerSingleton();
         bind(RemoteSignalingService.class).asEagerSingleton();
         bind(NodeProperties.class).asEagerSingleton();
-        bind(SchemaService.class).asEagerSingleton();
         bind(LocalServicesManager.class).asEagerSingleton();
-        bind(AbstractDatabaseService.class)
-                .annotatedWith(Names.named("BroadcastingDbService"))
-                .to(BroadcastingDatabaseService.class)
-                .asEagerSingleton();
-        bind(AbstractDatabaseService.class)
-                .annotatedWith(Names.named("BasicDbService"))
-                .to(DatabaseService.class)
-                .asEagerSingleton();
         bind(LoadBalancingService.class).asEagerSingleton();
         bind(LocalServicesManager.class).asEagerSingleton();
         bind(LocalNodeService.class).asEagerSingleton();
-        bind(CollectionConfigurationService.class).to(BasicCollectionConfigurationService.class).asEagerSingleton();
-        bind(CollectionService.class).asEagerSingleton();
-        bind(SampleFromSchemaService.class).asEagerSingleton();
         bind(ClientCounterService.class).asEagerSingleton();
-        bind(IndexService.class).asEagerSingleton();
         bind(BTreeCallbackFactory.class).asEagerSingleton();
         bind(ExceptionHandlingInterceptor.class).asEagerSingleton();
         bind(LoggingInterceptor.class).asEagerSingleton();
         bind(LocalReplicationService.class).asEagerSingleton();
         bind(RemoteReplicationService.class).asEagerSingleton();
+
+        bind(CollectionConfigurationService.class).to(BasicCollectionConfigurationService.class).asEagerSingleton();
+        bind(CollectionService.class).to(BasicCollectionService.class).asEagerSingleton();
+        bind(IndexService.class).to(BasicIndexService.class).asEagerSingleton();
+        bind(SampleFromSchemaService.class).to(BasicSampleFromSchemaService.class).asEagerSingleton();
+        bind(SchemaService.class).to(BasicSchemaService.class).asEagerSingleton();
+
+        bind(AbstractDatabaseService.class)
+                .annotatedWith(Names.named("BroadcastingDbService"))
+                .to(BroadcastingDatabaseService.class)
+                .asEagerSingleton();
+
+        bind(AbstractDatabaseService.class)
+                .annotatedWith(Names.named("BasicDbService"))
+                .to(BasicDatabaseService.class)
+                .asEagerSingleton();
 
         install(
                 new FactoryModuleBuilder()

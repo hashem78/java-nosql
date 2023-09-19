@@ -2,11 +2,14 @@ package me.hashemalayan.services.db;
 
 import com.google.inject.Inject;
 import me.hashemalayan.services.db.interfaces.AbstractDatabaseService;
+import me.hashemalayan.services.db.interfaces.CollectionService;
+import me.hashemalayan.services.db.interfaces.IndexService;
+import me.hashemalayan.services.db.interfaces.SchemaService;
 
-public class DatabaseService extends AbstractDatabaseService {
+public class BasicDatabaseService extends AbstractDatabaseService {
 
     @Inject
-    public DatabaseService(
+    public BasicDatabaseService(
             CollectionService collectionService,
             SchemaService schemaService,
             IndexService indexService

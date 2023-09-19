@@ -3,7 +3,7 @@ package me.hashemalayan.services.db.interfaces;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
 import me.hashemalayan.nosql.shared.Common;
-import me.hashemalayan.services.db.CollectionConfiguration;
+import me.hashemalayan.services.db.models.CollectionConfiguration;
 import me.hashemalayan.services.db.exceptions.CollectionAlreadyExistsException;
 import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
 import me.hashemalayan.services.db.exceptions.InvalidCollectionSchemaException;

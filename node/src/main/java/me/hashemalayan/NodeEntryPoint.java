@@ -2,8 +2,8 @@ package me.hashemalayan;
 
 import btree4j.BTreeException;
 import com.google.inject.Inject;
-import me.hashemalayan.services.db.IndexService;
-import me.hashemalayan.services.db.SchemaService;
+import me.hashemalayan.services.db.interfaces.IndexService;
+import me.hashemalayan.services.db.interfaces.SchemaService;
 import me.hashemalayan.services.grpc.LocalServicesManager;
 import me.hashemalayan.services.grpc.RemoteSignalingService;
 import org.slf4j.Logger;
@@ -17,11 +17,9 @@ public class NodeEntryPoint {
 
     final private LocalServicesManager nodeManager;
     final private RemoteSignalingService remoteSignalingService;
-
     final private SchemaService schemaService;
-
-    final private NodeProperties nodeProperties;
     final private IndexService indexService;
+    final private NodeProperties nodeProperties;
 
     final private Logger logger;
     @Inject
@@ -29,14 +27,14 @@ public class NodeEntryPoint {
             LocalServicesManager nodeManager,
             RemoteSignalingService remoteSignalingService,
             SchemaService schemaService,
-            NodeProperties nodeProperties,
             IndexService indexService,
+            NodeProperties nodeProperties,
             Logger logger) {
         this.nodeManager = nodeManager;
         this.remoteSignalingService = remoteSignalingService;
         this.schemaService = schemaService;
-        this.nodeProperties = nodeProperties;
         this.indexService = indexService;
+        this.nodeProperties = nodeProperties;
         this.logger = logger;
     }
 

@@ -55,6 +55,7 @@ public class ExceptionHandlingInterceptor implements ServerInterceptor {
         } else if (e instanceof IOException) {
             if (e instanceof JsonProcessingException)
                 return Status.INTERNAL.withDescription("Json Processing Error occurred").withCause(e);
+            e.printStackTrace();
             return Status.INTERNAL.withDescription("IO Error occurred").withCause(e);
         } else if (e instanceof BTreeException) {
             return Status.INTERNAL.withDescription("A Database Error occurred").withCause(e);

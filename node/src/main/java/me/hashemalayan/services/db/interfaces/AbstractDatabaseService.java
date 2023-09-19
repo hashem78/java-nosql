@@ -7,9 +7,6 @@ import me.hashemalayan.nosql.shared.Common.CollectionDocument;
 import me.hashemalayan.nosql.shared.Common.CollectionMetaData;
 import me.hashemalayan.nosql.shared.Customstruct.CustomValue;
 import me.hashemalayan.nosql.shared.Operator;
-import me.hashemalayan.services.db.CollectionService;
-import me.hashemalayan.services.db.IndexService;
-import me.hashemalayan.services.db.SchemaService;
 import me.hashemalayan.services.db.exceptions.*;
 
 import java.io.IOException;

@@ -14,6 +14,10 @@ import me.hashemalayan.nosql.shared.Common.CollectionMetaData;
 import me.hashemalayan.nosql.shared.Common.DocumentMetaData;
 import me.hashemalayan.services.db.exceptions.*;
 import me.hashemalayan.services.db.interfaces.CollectionConfigurationService;
+import me.hashemalayan.services.db.interfaces.CollectionService;
+import me.hashemalayan.services.db.interfaces.IndexService;
+import me.hashemalayan.services.db.interfaces.SchemaService;
+import me.hashemalayan.services.db.models.CollectionConfiguration;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,7 +28,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-public class CollectionService {
+public class BasicCollectionService implements CollectionService {
 
     private final CollectionConfigurationService configService;
     private final SchemaService schemaService;
@@ -34,7 +38,7 @@ public class CollectionService {
     private final ObjectMapper objectMapper;
 
     @Inject
-    public CollectionService(
+    public BasicCollectionService(
             CollectionConfigurationService configService,
             SchemaService schemaService,
             IndexService indexService,
@@ -52,6 +56,7 @@ public class CollectionService {
         this.objectMapper = objectMapper;
     }
 
+    @Override
     public CollectionConfiguration createCollection(String collectionName, String schema)
             throws IOException,
             InvalidCollectionSchemaException,

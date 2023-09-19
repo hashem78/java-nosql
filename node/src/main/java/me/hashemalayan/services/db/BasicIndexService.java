@@ -16,6 +16,8 @@ import me.hashemalayan.services.db.exceptions.IndexNotFoundException;
 import me.hashemalayan.services.db.exceptions.InvalidOperatorUsage;
 import me.hashemalayan.services.db.exceptions.UnRecognizedOperatorException;
 import me.hashemalayan.services.db.interfaces.CollectionConfigurationService;
+import me.hashemalayan.services.db.interfaces.IndexService;
+import me.hashemalayan.services.db.models.CollectionPropertyPair;
 import me.hashemalayan.util.BTreeCallbackFactory;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
@@ -33,11 +35,7 @@ import java.util.function.Consumer;
 
 import static btree4j.indexer.BasicIndexQuery.*;
 
-record CollectionPropertyPair(String collectionId, String propertyName) {
-
-}
-
-public class IndexService {
+public class BasicIndexService implements IndexService {
 
     private final JsonDirectoryIteratorFactory jsonDirectoryIteratorFactory;
 
@@ -53,7 +51,7 @@ public class IndexService {
     private final Map<CollectionPropertyPair, BTreeIndexDup> indexMap;
 
     @Inject
-    public IndexService(
+    public BasicIndexService(
             JsonDirectoryIteratorFactory jsonDirectoryIteratorFactory,
             BTreeCallbackFactory bTreeCallbackFactory,
             CollectionConfigurationService configurationService,
@@ -167,10 +165,6 @@ public class IndexService {
         addToIndex(pair, documentId, newKeyBytes);
     }
 
-
-    /**
-     * @throws IllegalArgumentException if previousKeyBytes is null.
-     */
     public void addToIndex(
             String collectionId,
             String documentId,
