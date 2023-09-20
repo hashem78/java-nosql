@@ -71,7 +71,7 @@ public class BasicRemoteReplicationService implements RemoteReplicationService {
     public CollectionDocument redirect(int nodeToRedirectTo, SetCollectionDocumentRequest request) {
         try {
             logger.warn("Redirecting SetCollectionDocumentRequest to " + nodeToRedirectTo);
-            return stubMap.get(nodeToRedirectTo).collectionDocumentRedirection(request).get();
+            return stubMap.get(nodeToRedirectTo).collectionDocumentRedirection(request).get().getDocument();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }

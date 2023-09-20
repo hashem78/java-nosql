@@ -30,6 +30,13 @@ message CollectionDocument {
   string data = 2;
 }
 
+message RetrySetCollectionResponse {
+
+}
+
 message SetCollectionDocumentResponse {
-  CollectionDocument document = 1;
+  oneof response{
+    CollectionDocument document = 1;
+    RetrySetCollectionResponse retry_set_collection = 2;
+  }
 }

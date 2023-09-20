@@ -11,7 +11,7 @@ service ReplicationService {
   rpc EditCollection(EditCollectionReplicationMessage) returns (ReplicationResponse);
   rpc DeleteCollection(DeleteCollectionReplicationMessage) returns (ReplicationResponse);
   rpc SetCollectionDocument(SetDocumentReplicationMessage) returns (ReplicationResponse);
-  rpc CollectionDocumentRedirection(SetCollectionDocumentRequest) returns (CollectionDocument);
+  rpc CollectionDocumentRedirection(SetCollectionDocumentRequest) returns (SetCollectionDocumentResponse);
   rpc DeleteCollectionDocument(DeleteDocumentReplicationMessage) returns (ReplicationResponse);
   rpc IndexCollectionProperty(IndexCollectionPropertyReplicationMessage) returns(ReplicationResponse);
   rpc RemoveIndexFromCollectionProperty(RemoveIndexReplicationMessage) returns(ReplicationResponse);

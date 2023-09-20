@@ -10,6 +10,7 @@ import me.hashemalayan.nosql.shared.Operator;
 import me.hashemalayan.services.db.exceptions.*;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -65,7 +66,8 @@ public abstract class AbstractDatabaseService {
             IOException,
             BTreeException,
             IndexNotFoundException,
-            AffinityMismatchException {
+            AffinityMismatchException,
+            ParseException, DocumentOptimisticLockException {
 
         return collectionService.setDocument(collectionId, documentId, documentJson);
     }
@@ -75,7 +77,9 @@ public abstract class AbstractDatabaseService {
             DocumentSchemaValidationException,
             CollectionDoesNotExistException,
             IndexNotFoundException,
-            IOException {
+            IOException,
+            DocumentOptimisticLockException,
+            ParseException {
         collectionService.setDocument(collectionId, document);
     }
 

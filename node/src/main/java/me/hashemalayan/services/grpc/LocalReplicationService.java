@@ -4,6 +4,8 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.grpc.stub.StreamObserver;
 import me.hashemalayan.nosql.shared.*;
+import me.hashemalayan.nosql.shared.Common.SetCollectionDocumentResponse;
+import me.hashemalayan.services.db.exceptions.DocumentOptimisticLockException;
 import me.hashemalayan.services.db.interfaces.AbstractDatabaseService;
 import me.hashemalayan.services.grpc.interfaces.RemoteReplicationService;
 
@@ -86,7 +88,7 @@ public class LocalReplicationService extends ReplicationServiceGrpc.ReplicationS
     @Override
     public void collectionDocumentRedirection(
             SetCollectionDocumentRequest request,
-            StreamObserver<CollectionDocument> responseObserver
+            StreamObserver<SetCollectionDocumentResponse> responseObserver
     ) {
         try {
             final var document = databaseService.setDocument(
@@ -106,7 +108,18 @@ public class LocalReplicationService extends ReplicationServiceGrpc.ReplicationS
                             .build()
             );
 
-            responseObserver.onNext(document);
+            responseObserver.onNext(
+                    SetCollectionDocumentResponse.newBuilder()
+                    .setDocument(document)
+                    .build()
+            );
+            responseObserver.onCompleted();
+        } catch (DocumentOptimisticLockException e) {
+            responseObserver.onNext(
+                    SetCollectionDocumentResponse.newBuilder()
+                            .setRetrySetCollection(Common.RetrySetCollectionResponse.newBuilder().build())
+                            .build()
+            );
             responseObserver.onCompleted();
         } catch (Exception e) {
             throw new RuntimeException(e);

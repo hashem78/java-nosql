@@ -12,9 +12,12 @@ import me.hashemalayan.nosql.shared.Common.SetCollectionDocumentRequest;
 import me.hashemalayan.nosql.shared.Common.SetCollectionDocumentResponse;
 import me.hashemalayan.services.ClientCounterService;
 import me.hashemalayan.services.db.exceptions.AffinityMismatchException;
+import me.hashemalayan.services.db.exceptions.DocumentOptimisticLockException;
 import me.hashemalayan.services.db.interfaces.AbstractDatabaseService;
 import me.hashemalayan.services.grpc.interfaces.RemoteReplicationService;
 import org.slf4j.Logger;
+
+import static me.hashemalayan.nosql.shared.Common.*;
 
 public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
 
@@ -175,6 +178,13 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             responseObserver.onNext(
                     SetCollectionDocumentResponse.newBuilder()
                             .setDocument(replicationService.redirect(e.getExpectedAffinity(), request))
+                            .build()
+            );
+            responseObserver.onCompleted();
+        } catch (DocumentOptimisticLockException e) {
+            responseObserver.onNext(
+                    SetCollectionDocumentResponse.newBuilder()
+                            .setRetrySetCollection(RetrySetCollectionResponse.newBuilder().build())
                             .build()
             );
             responseObserver.onCompleted();

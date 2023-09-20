@@ -11,6 +11,7 @@ import me.hashemalayan.services.db.interfaces.SchemaService;
 import me.hashemalayan.services.grpc.interfaces.RemoteReplicationService;
 
 import java.io.IOException;
+import java.text.ParseException;
 
 public class BroadcastingDatabaseService extends AbstractDatabaseService {
     private final RemoteReplicationService replicationService;
@@ -53,7 +54,9 @@ public class BroadcastingDatabaseService extends AbstractDatabaseService {
             IOException,
             BTreeException,
             IndexNotFoundException,
-            AffinityMismatchException {
+            AffinityMismatchException,
+            ParseException,
+            DocumentOptimisticLockException {
 
         final var document = super.setDocument(collectionId, documentId, documentJson);
         replicationService.broadcast(

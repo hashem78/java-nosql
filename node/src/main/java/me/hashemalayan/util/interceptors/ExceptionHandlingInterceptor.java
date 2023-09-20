@@ -9,6 +9,7 @@ import io.grpc.*;
 import me.hashemalayan.services.db.exceptions.*;
 
 import java.io.IOException;
+import java.text.ParseException;
 
 public class ExceptionHandlingInterceptor implements ServerInterceptor {
 
@@ -77,6 +78,8 @@ public class ExceptionHandlingInterceptor implements ServerInterceptor {
             return Status.INVALID_ARGUMENT.withDescription("Unrecognized operator");
         } else if (e instanceof InvalidOperatorUsage) {
             return Status.INVALID_ARGUMENT.withDescription("Invalid operator usage");
+        } else if (e instanceof ParseException) {
+            return Status.ABORTED.withDescription("Failed to parse timestamp").withCause(e);
         } else {
             e.printStackTrace();
             return Status.UNKNOWN.withDescription("Unknown error occurred").withCause(e);

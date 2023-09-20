@@ -7,6 +7,7 @@ import me.hashemalayan.services.db.exceptions.*;
 import me.hashemalayan.services.db.models.CollectionConfiguration;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -36,14 +37,14 @@ public interface CollectionService {
             DocumentSchemaValidationException,
             BTreeException,
             IndexNotFoundException,
-            AffinityMismatchException;
+            AffinityMismatchException, ParseException, DocumentOptimisticLockException;
 
     void setDocument(String collectionId, CollectionDocument document)
             throws CollectionDoesNotExistException,
             IOException,
             DocumentSchemaValidationException,
             BTreeException,
-            IndexNotFoundException;
+            IndexNotFoundException, DocumentOptimisticLockException, ParseException;
 
     void editCollection(String collectionId, String collectionName)
             throws CollectionDoesNotExistException,

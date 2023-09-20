@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.ParseException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -154,7 +155,9 @@ public class BasicCollectionService implements CollectionService {
             DocumentSchemaValidationException,
             BTreeException,
             IndexNotFoundException,
-            AffinityMismatchException {
+            AffinityMismatchException,
+            ParseException,
+            DocumentOptimisticLockException {
 
         String actualDocumentId = documentId;
 
@@ -174,22 +177,24 @@ public class BasicCollectionService implements CollectionService {
         final var documentPath = documentsPath
                 .resolve(actualDocumentId + ".json");
 
-        DocumentMetaData metaData;
+        DocumentMetaData newMetaData;
 
         final var timeStamp = Timestamps.fromMillis(System.currentTimeMillis());
+        DocumentMetaData oldMetaData = null;
         JsonNode oldDataNode = null;
         if (Files.exists(documentPath)) {
             final var diskDocumentJson = objectMapper.readTree(documentPath.toFile());
             oldDataNode = diskDocumentJson.get("data");
-            metaData = objectMapper.treeToValue(
-                            diskDocumentJson.get("metaData"),
-                            DocumentMetaData.class
-                    ).toBuilder()
+            oldMetaData = objectMapper.treeToValue(
+                    diskDocumentJson.get("metaData"),
+                    DocumentMetaData.class
+            );
+            newMetaData = oldMetaData.toBuilder()
                     .setLastEditedOn(timeStamp)
                     .build();
         } else {
 
-            metaData = DocumentMetaData.newBuilder()
+            newMetaData = DocumentMetaData.newBuilder()
                     .setAffinity(nodeProperties.getPort())
                     .setId(actualDocumentId)
                     .setCreatedOn(timeStamp)
@@ -197,11 +202,11 @@ public class BasicCollectionService implements CollectionService {
                     .build();
         }
 
-        if(metaData.getAffinity() != nodeProperties.getPort())
-            throw new AffinityMismatchException(metaData.getAffinity());
+        if (newMetaData.getAffinity() != nodeProperties.getPort())
+            throw new AffinityMismatchException(newMetaData.getAffinity());
 
         final var dataNode = objectMapper.readTree(documentJson);
-        final var metaDataNode = objectMapper.readTree(JsonFormat.printer().print(metaData));
+        final var metaDataNode = objectMapper.readTree(JsonFormat.printer().print(newMetaData));
 
 
         final var documentNode = objectMapper.createObjectNode();
@@ -212,6 +217,11 @@ public class BasicCollectionService implements CollectionService {
         validateDocument(collectionId, documentNode);
         indexDocument(collectionId, actualDocumentId, documentNode, oldDataNode);
 
+        // Re-read the document from disk and check if it's been changed before
+        // this change has finished
+        if (oldMetaData != null)
+            guardDocument(documentPath, oldMetaData);
+
         objectMapper.writerWithDefaultPrettyPrinter()
                 .writeValue(
                         documentPath.toFile(),
@@ -220,7 +230,7 @@ public class BasicCollectionService implements CollectionService {
 
         return CollectionDocument
                 .newBuilder()
-                .setMetaData(metaData)
+                .setMetaData(newMetaData)
                 .setData(
                         objectMapper.writerWithDefaultPrettyPrinter()
                                 .writeValueAsString(dataNode)
@@ -228,12 +238,26 @@ public class BasicCollectionService implements CollectionService {
                 .build();
     }
 
+    private void guardDocument(Path documentPath, DocumentMetaData metaData)
+            throws DocumentOptimisticLockException,
+            IOException,
+            ParseException {
+        final var diskDocumentJson = objectMapper.readTree(documentPath.toFile());
+        final var diskLastEditedOn = Timestamps.parse(
+                diskDocumentJson.get("metaData").get("lastEditedOn").textValue()
+        );
+        int comparisonResult = Timestamps.compare(diskLastEditedOn, metaData.getLastEditedOn());
+        if (comparisonResult != 0) {
+            throw new DocumentOptimisticLockException();
+        }
+    }
+
     public void setDocument(String collectionId, CollectionDocument document)
             throws CollectionDoesNotExistException,
             IOException,
             DocumentSchemaValidationException,
             BTreeException,
-            IndexNotFoundException {
+            IndexNotFoundException, DocumentOptimisticLockException, ParseException {
 
         final var documentId = document.getMetaData().getId();
 
@@ -251,8 +275,13 @@ public class BasicCollectionService implements CollectionService {
                 .resolve(documentId + ".json");
 
         JsonNode oldDataNode = null;
+        DocumentMetaData oldMetaData = null;
         if (Files.exists(documentPath)) {
             final var diskDocumentJson = objectMapper.readTree(documentPath.toFile());
+            oldMetaData = objectMapper.treeToValue(
+                    diskDocumentJson.get("metaData"),
+                    DocumentMetaData.class
+            );
             oldDataNode = diskDocumentJson.get("data");
         }
 
@@ -265,6 +294,12 @@ public class BasicCollectionService implements CollectionService {
 
         validateDocument(collectionId, documentNode);
         indexDocument(collectionId, documentId, documentNode, oldDataNode);
+
+        // Re-read the document from disk and check if it's been changed before
+        // this change has finished
+        if (oldMetaData != null)
+            guardDocument(documentPath, oldMetaData);
+
         objectMapper.writerWithDefaultPrettyPrinter()
                 .writeValue(
                         documentPath.toFile(),
