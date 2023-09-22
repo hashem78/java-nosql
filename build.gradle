@@ -11,6 +11,14 @@ plugins {
     id 'java'
     id 'io.freefair.lombok' version '8.3'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'com.diffplug.spotless' version '6.21.0'
+}
+
+spotless {
+    java {
+        googleJavaFormat() // Use Google Java Format
+        removeUnusedImports()
+    }
 }
 
 group = 'me.hashemalayan'
