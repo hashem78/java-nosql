@@ -10,6 +10,7 @@ import me.hashemalayan.services.db.exceptions.UnRecognizedOperatorException;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public interface IndexService {
@@ -56,6 +57,16 @@ public interface IndexService {
             String property,
             Customstruct.CustomValue value,
             Consumer<String> responseConsumer
+    ) throws IndexNotFoundException,
+            BTreeException,
+            InvalidOperatorUsage,
+            UnRecognizedOperatorException;
+
+    List<String> runQuery(
+            String collectionId,
+            Operator operator,
+            String property,
+            Customstruct.CustomValue value
     ) throws IndexNotFoundException,
             BTreeException,
             InvalidOperatorUsage,

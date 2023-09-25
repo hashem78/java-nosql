@@ -1,8 +1,10 @@
 package me.hashemalayan.services.db;
 
+import btree4j.BTreeCallback;
 import btree4j.BTreeException;
 import btree4j.BTreeIndexDup;
 import btree4j.Value;
+import btree4j.indexer.BasicIndexQuery;
 import btree4j.indexer.LikeIndexQuery;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,14 +28,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import static btree4j.indexer.BasicIndexQuery.*;
+import static me.hashemalayan.nosql.shared.Customstruct.*;
 
 public class BasicIndexService implements IndexService {
 
@@ -242,7 +242,7 @@ public class BasicIndexService implements IndexService {
             String collectionId,
             Operator operator,
             String property,
-            Customstruct.CustomValue value,
+            CustomValue value,
             Consumer<String> responseConsumer
     ) throws IndexNotFoundException,
             BTreeException,
@@ -264,6 +264,47 @@ public class BasicIndexService implements IndexService {
                 }
         );
 
+        performQuery(operator, value, index, valueBytes, bTreeValue, adapter);
+    }
+
+    public List<String> runQuery(
+            String collectionId,
+            Operator operator,
+            String property,
+            CustomValue value
+    ) throws IndexNotFoundException,
+            BTreeException,
+            InvalidOperatorUsage,
+            UnRecognizedOperatorException {
+        final var results = new ArrayList<String>();
+        final var pair = new CollectionPropertyPair(collectionId, property);
+
+        if (!indexMap.containsKey(pair))
+            throw new IndexNotFoundException();
+
+        final var index = indexMap.get(pair);
+
+        final var valueBytes = getCustomValueBytes(value);
+        final var bTreeValue = new Value(valueBytes);
+        final var adapter = bTreeCallbackFactory.create(
+                (k, v) -> {
+                    results.add(v);
+                    return true;
+                }
+        );
+        performQuery(operator, value, index, valueBytes, bTreeValue, adapter);
+
+        return results;
+    }
+
+    private void performQuery(
+            Operator operator,
+            CustomValue value,
+            BTreeIndexDup index,
+            byte[] valueBytes,
+            Value bTreeValue,
+            BTreeCallback adapter
+    ) throws BTreeException, InvalidOperatorUsage, UnRecognizedOperatorException {
         switch (operator) {
 
             case EQUALS -> index.search(new IndexConditionEQ(bTreeValue), adapter);
@@ -282,7 +323,7 @@ public class BasicIndexService implements IndexService {
         }
     }
 
-    private Object getCustomValueBytesHelper(Customstruct.CustomValue value) {
+    private Object getCustomValueBytesHelper(CustomValue value) {
         return switch (value.getValueCase()) {
 
             case STRING_VALUE -> value.getStringValue();
@@ -295,7 +336,7 @@ public class BasicIndexService implements IndexService {
         };
     }
 
-    private byte[] getCustomValueBytes(Customstruct.CustomValue value) {
+    private byte[] getCustomValueBytes(CustomValue value) {
 
         try {
             return objectMapper.writeValueAsBytes(getCustomValueBytesHelper(value));
@@ -305,7 +346,7 @@ public class BasicIndexService implements IndexService {
 
     }
 
-    private Value[] decodeAndMapValue(Customstruct.CustomValue value) throws InvalidOperatorUsage {
+    private Value[] decodeAndMapValue(CustomValue value) throws InvalidOperatorUsage {
 
         if (!value.hasListValue())
             throw new InvalidOperatorUsage();
