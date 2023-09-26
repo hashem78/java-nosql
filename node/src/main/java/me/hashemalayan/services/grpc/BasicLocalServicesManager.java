@@ -7,6 +7,7 @@ import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.LoadBalancingServiceGrpc.LoadBalancingServiceImplBase;
 import me.hashemalayan.nosql.shared.NodeServiceGrpc.NodeServiceImplBase;
 import me.hashemalayan.nosql.shared.ReplicationServiceGrpc.ReplicationServiceImplBase;
+import me.hashemalayan.services.grpc.interfaces.LocalAuthService;
 import me.hashemalayan.services.grpc.interfaces.LocalServicesManager;
 import me.hashemalayan.util.interceptors.ExceptionHandlingInterceptor;
 import me.hashemalayan.util.interceptors.LoggingInterceptor;
@@ -23,6 +24,8 @@ public class BasicLocalServicesManager implements LocalServicesManager {
     final private ExceptionHandlingInterceptor exceptionHandlingInterceptor;
     final private LoggingInterceptor loggingInterceptor;
     private final ReplicationServiceImplBase localReplicationService;
+    private final LocalAuthService localAuthService;
+
     private final Logger logger;
 
     @Inject
@@ -33,6 +36,7 @@ public class BasicLocalServicesManager implements LocalServicesManager {
             ExceptionHandlingInterceptor exceptionHandlingInterceptor,
             LoggingInterceptor loggingInterceptor,
             ReplicationServiceImplBase localReplicationService,
+            LocalAuthService localAuthService,
             Logger logger) {
         this.nodeProperties = nodeProperties;
         this.loadBalancingService = loadBalancingService;
@@ -40,6 +44,7 @@ public class BasicLocalServicesManager implements LocalServicesManager {
         this.exceptionHandlingInterceptor = exceptionHandlingInterceptor;
         this.loggingInterceptor = loggingInterceptor;
         this.localReplicationService = localReplicationService;
+        this.localAuthService = localAuthService;
         this.logger = logger;
     }
 
@@ -62,6 +67,7 @@ public class BasicLocalServicesManager implements LocalServicesManager {
                 .addService(localNodeService)
                 .addService(loadBalancingService)
                 .addService(localReplicationService)
+                .addService(localAuthService)
                 .intercept(exceptionHandlingInterceptor)
                 .intercept(loggingInterceptor)
                 .build();

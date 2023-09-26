@@ -20,9 +20,11 @@ import me.hashemalayan.nosql.shared.NodeServiceGrpc.NodeServiceImplBase;
 import me.hashemalayan.nosql.shared.ReplicationServiceGrpc.ReplicationServiceImplBase;
 import me.hashemalayan.services.BasicClientCounterService;
 import me.hashemalayan.services.ClientCounterService;
+import me.hashemalayan.services.auth.AuthContext;
 import me.hashemalayan.services.db.*;
 import me.hashemalayan.services.db.interfaces.*;
 import me.hashemalayan.services.grpc.*;
+import me.hashemalayan.services.grpc.interfaces.LocalAuthService;
 import me.hashemalayan.services.grpc.interfaces.LocalServicesManager;
 import me.hashemalayan.services.grpc.interfaces.RemoteReplicationService;
 import me.hashemalayan.services.grpc.interfaces.RemoteSignalingService;
@@ -58,6 +60,8 @@ public class NodeModule extends AbstractModule {
         bind(NodeServiceImplBase.class).to(LocalNodeService.class).asEagerSingleton();
         bind(LoadBalancingServiceImplBase.class).to(LoadBalancingService.class).asEagerSingleton();
         bind(ReplicationServiceImplBase.class).to(LocalReplicationService.class).asEagerSingleton();
+        bind(LocalAuthService.class).asEagerSingleton();
+        bind(AuthContext.class).asEagerSingleton();
 
         bind(CollectionConfigurationService.class).to(BasicCollectionConfigurationService.class).asEagerSingleton();
         bind(CollectionService.class).to(BasicCollectionService.class).asEagerSingleton();

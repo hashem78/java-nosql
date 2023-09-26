@@ -1,18 +1,29 @@
 package me.hashemalayan;
 
-import btree4j.BTreeException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
+import com.google.protobuf.util.Timestamps;
+import me.hashemalayan.nosql.shared.Common;
+import me.hashemalayan.nosql.shared.Common.CollectionDocument;
 import me.hashemalayan.services.db.exceptions.UncheckedBTreeException;
+import me.hashemalayan.services.db.interfaces.CollectionService;
 import me.hashemalayan.services.db.interfaces.IndexService;
 import me.hashemalayan.services.db.interfaces.SchemaService;
 import me.hashemalayan.services.grpc.interfaces.LocalServicesManager;
 import me.hashemalayan.services.grpc.interfaces.RemoteSignalingService;
+import me.hashemalayan.util.Constants;
 import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import static me.hashemalayan.nosql.shared.Common.CollectionMetaData;
 
 public class NodeEntryPoint {
 
@@ -20,22 +31,27 @@ public class NodeEntryPoint {
     final private RemoteSignalingService remoteSignalingService;
     final private SchemaService schemaService;
     final private IndexService indexService;
+    final private CollectionService collectionService;
     final private NodeProperties nodeProperties;
-
+    final private ObjectMapper objectMapper;
     final private Logger logger;
+
     @Inject
     public NodeEntryPoint(
             LocalServicesManager nodeManager,
             RemoteSignalingService remoteSignalingService,
             SchemaService schemaService,
             IndexService indexService,
+            CollectionService collectionService,
             NodeProperties nodeProperties,
-            Logger logger) {
+            ObjectMapper objectMapper, Logger logger) {
         this.nodeManager = nodeManager;
         this.remoteSignalingService = remoteSignalingService;
         this.schemaService = schemaService;
         this.indexService = indexService;
+        this.collectionService = collectionService;
         this.nodeProperties = nodeProperties;
+        this.objectMapper = objectMapper;
         this.logger = logger;
     }
 
@@ -53,8 +69,60 @@ public class NodeEntryPoint {
             schemaService.validateAll();
             logger.info("Loading indexes");
             indexService.load();
+            logger.info("Initializing Auth");
+            initializeAuth();
             nodeManager.awaitTermination();
         } catch (IOException | InterruptedException | UncheckedBTreeException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    void initializeAuth() {
+        final var authMetaData = collectionService.getCollectionMetaData("auth");
+        if (authMetaData.isPresent()) return;
+
+        try {
+            final var createdOn = Timestamps.fromMillis(0);
+
+            collectionService.createCollection(
+                    CollectionMetaData.newBuilder()
+                            .setId("auth")
+                            .setName("auth")
+                            .setDeleted(false)
+                            .addAllIndexedProperties(new ArrayList<>())
+                            .setCreatedOn(createdOn)
+                            .build(),
+                    Constants.authSchema
+            );
+            final var userId = "admin";
+            final var documentId = "admin";
+            final var userJsonNode = objectMapper.createObjectNode();
+
+            userJsonNode.put("userId", userId);
+            userJsonNode.put("email", "admin@db.com");
+            userJsonNode.put("password", "123456");
+
+            collectionService.setDocument(
+                    "auth",
+                    CollectionDocument
+                            .newBuilder()
+                            .setMetaData(
+                                    Common.DocumentMetaData.newBuilder()
+                                            .setCreatedOn(createdOn)
+                                            .setLastEditedOn(createdOn)
+                                            .setAffinity(8001)
+                                            .setId(documentId)
+                                            .setDeleted(false)
+                                            .build()
+                            )
+                            .setData(objectMapper.writeValueAsString(userJsonNode))
+                            .build()
+            );
+
+            indexService.indexPropertyInCollection("auth", "name");
+            indexService.indexPropertyInCollection("auth", "email");
+            indexService.indexPropertyInCollection("auth", "password");
+        } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
     }
@@ -84,6 +152,7 @@ public class NodeEntryPoint {
             createDirectory(rootPath);
         }
     }
+
     private void createDirectory(Path path) {
         try {
             Files.createDirectories(path);

@@ -173,4 +173,13 @@ public abstract class AbstractDatabaseService {
     ) {
         indexService.runQuery(collectionId, operator, property, value, responseConsumer);
     }
+
+    public List<String> runQuery(
+            String collectionId,
+            Operator operator,
+            String property,
+            CustomValue value
+    ) {
+        return indexService.runQuery(collectionId, operator, property, value);
+    }
 }

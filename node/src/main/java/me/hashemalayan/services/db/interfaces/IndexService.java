@@ -8,6 +8,8 @@ import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static me.hashemalayan.nosql.shared.Customstruct.*;
+
 public interface IndexService {
     /**
      * @throws UncheckedIOException in case of I/O issues.
@@ -66,7 +68,7 @@ public interface IndexService {
             String collectionId,
             Operator operator,
             String property,
-            Customstruct.CustomValue value,
+            CustomValue value,
             Consumer<String> responseConsumer);
 
     /**

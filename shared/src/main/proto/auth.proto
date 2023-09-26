@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "me.hashemalayan.nosql.shared";
+option java_outer_classname = "AuthProto";
+
+package auth;
+
+service AuthService {
+  rpc RegisterUser(UserRegistrationRequest) returns (User);
+}
+
+message UserRegistrationRequest{
+  string email = 1;
+  string password = 2;
+}
+
+message User {
+  string user_id = 1;
+  string email = 2;
+}

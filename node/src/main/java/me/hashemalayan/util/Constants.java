@@ -175,4 +175,20 @@ public class Constants {
                 "default": true
             }
             """;
+    public static String authSchema = """
+            {
+              "type": "object",
+              "properties": {
+                "userId": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                },
+                "password": {
+                  "type": "string"
+                }
+              }
+            }
+            """;
 }
