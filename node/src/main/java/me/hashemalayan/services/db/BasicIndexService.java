@@ -4,19 +4,14 @@ import btree4j.BTreeCallback;
 import btree4j.BTreeException;
 import btree4j.BTreeIndexDup;
 import btree4j.Value;
-import btree4j.indexer.BasicIndexQuery;
 import btree4j.indexer.LikeIndexQuery;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.factories.JsonDirectoryIteratorFactory;
-import me.hashemalayan.nosql.shared.Customstruct;
 import me.hashemalayan.nosql.shared.Operator;
-import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
-import me.hashemalayan.services.db.exceptions.IndexNotFoundException;
-import me.hashemalayan.services.db.exceptions.InvalidOperatorUsage;
-import me.hashemalayan.services.db.exceptions.UnRecognizedOperatorException;
+import me.hashemalayan.services.db.exceptions.*;
 import me.hashemalayan.services.db.interfaces.CollectionConfigurationService;
 import me.hashemalayan.services.db.interfaces.IndexService;
 import me.hashemalayan.services.db.models.CollectionPropertyPair;
@@ -25,6 +20,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -68,7 +64,7 @@ public class BasicIndexService implements IndexService {
         indexMap = new ConcurrentHashMap<>();
     }
 
-    public void load() throws IOException, BTreeException {
+    public void load() {
 
         try (final var collectionPathStream = Files.newDirectoryStream(collectionsPath)) {
             for (final var collectionPath : collectionPathStream) {
@@ -86,66 +82,77 @@ public class BasicIndexService implements IndexService {
                     }
                 }
             }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } catch (BTreeException e) {
+            throw new UncheckedBTreeException(e);
         }
     }
 
-    public void indexPropertyInCollection(String collectionId, String property) throws
-            IOException,
-            BTreeException,
-            CollectionDoesNotExistException {
+    public void indexPropertyInCollection(String collectionId, String property) {
 
-        final var collectionPath = collectionsPath.resolve(collectionId);
-        final var collectionIndexesPath = collectionsPath.resolve(collectionId).resolve("indexes");
-        final var indexFilePath = collectionIndexesPath.resolve(property);
+        try {
+            final var collectionPath = collectionsPath.resolve(collectionId);
+            final var collectionIndexesPath = collectionsPath.resolve(collectionId).resolve("indexes");
+            final var indexFilePath = collectionIndexesPath.resolve(property);
 
-        if (!Files.exists(collectionPath))
-            throw new CollectionDoesNotExistException();
+            if (!Files.exists(collectionPath))
+                throw new CollectionDoesNotExistException();
 
-        if (!Files.exists(collectionIndexesPath))
-            Files.createDirectories(collectionIndexesPath);
+            if (!Files.exists(collectionIndexesPath))
+                Files.createDirectories(collectionIndexesPath);
 
-        final var bTreeIndex = new BTreeIndexDup(indexFilePath.toFile());
-        bTreeIndex.init(false);
+            final var bTreeIndex = new BTreeIndexDup(indexFilePath.toFile());
+            bTreeIndex.init(false);
 
-        final var documentsPath = collectionPath.resolve("documents");
+            final var documentsPath = collectionPath.resolve("documents");
 
-        final var documentsIterator = jsonDirectoryIteratorFactory.create(documentsPath);
-        while (documentsIterator.hasNext()) {
-            final var iteratorResult = documentsIterator.next();
-            final var documentPath = collectionPath.resolve(iteratorResult.documentName());
-            logger.debug("Indexing " + documentPath);
-            final var documentNode = iteratorResult.jsonNode();
-            if (!documentNode.has("data")) continue;
-            final var dataNode = documentNode.get("data");
-            if (!dataNode.has(property)) continue;
-            final var valueOfProperty = dataNode.get(property);
+            final var documentsIterator = jsonDirectoryIteratorFactory.create(documentsPath);
+            while (documentsIterator.hasNext()) {
+                final var iteratorResult = documentsIterator.next();
+                final var documentPath = collectionPath.resolve(iteratorResult.documentName());
+                logger.debug("Indexing " + documentPath);
+                final var documentNode = iteratorResult.jsonNode();
+                if (!documentNode.has("data")) continue;
+                final var dataNode = documentNode.get("data");
+                if (!dataNode.has(property)) continue;
+                final var valueOfProperty = dataNode.get(property);
 
-            bTreeIndex.addValue(
-                    new Value(objectMapper.writeValueAsBytes(valueOfProperty)),
-                    new Value("\"" + FilenameUtils.removeExtension(iteratorResult.documentName()) + "\"")
+                bTreeIndex.addValue(
+                        new Value(objectMapper.writeValueAsBytes(valueOfProperty)),
+                        new Value("\"" + FilenameUtils.removeExtension(iteratorResult.documentName()) + "\"")
+                );
+            }
+            bTreeIndex.flush();
+            indexMap.put(
+                    new CollectionPropertyPair(collectionId, property),
+                    bTreeIndex
             );
+            configurationService.editCollectionMetaData(
+                    collectionId,
+                    (metaData) -> metaData.addIndexedProperties(property)
+            );
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } catch (BTreeException e) {
+            throw new UncheckedBTreeException(e);
         }
-        bTreeIndex.flush();
-        indexMap.put(
-                new CollectionPropertyPair(collectionId, property),
-                bTreeIndex
-        );
-        configurationService.editCollectionMetaData(
-                collectionId,
-                (metaData) -> metaData.addIndexedProperties(property)
-        );
     }
 
     private void addToIndex(CollectionPropertyPair pair, String documentId, byte[] value)
-            throws BTreeException {
+            throws UncheckedBTreeException {
 
         final var index = indexMap.get(pair);
 
-        index.addValue(
-                new Value(value),
-                new Value("\"" + documentId + "\"")
-        );
-        index.flush();
+        try {
+            index.addValue(
+                    new Value(value),
+                    new Value("\"" + documentId + "\"")
+            );
+            index.flush();
+        } catch (BTreeException e) {
+            throw new UncheckedBTreeException(e);
+        }
     }
 
 
@@ -153,9 +160,7 @@ public class BasicIndexService implements IndexService {
             String collectionId,
             String documentId,
             String property,
-            byte[] newKeyBytes)
-            throws IndexNotFoundException,
-            BTreeException {
+            byte[] newKeyBytes) {
 
         final var pair = new CollectionPropertyPair(collectionId, property);
         if (!indexMap.containsKey(pair)) {
@@ -170,10 +175,8 @@ public class BasicIndexService implements IndexService {
             String documentId,
             String property,
             byte[] previousKeyBytes,
-            byte[] newKeyBytes)
-            throws IndexNotFoundException,
-            IllegalArgumentException,
-            BTreeException {
+            byte[] newKeyBytes
+    ) {
 
         final var pair = new CollectionPropertyPair(collectionId, property);
         if (!indexMap.containsKey(pair)) {
@@ -186,16 +189,21 @@ public class BasicIndexService implements IndexService {
         }
 
         final var bTreeValueForPreviousKey = new Value(previousKeyBytes);
-        final var previousValueInIndex = index.getValue(bTreeValueForPreviousKey);
+        final Value previousValueInIndex;
+        try {
+            previousValueInIndex = index.getValue(bTreeValueForPreviousKey);
+            // This means that the key is unique in the index.
 
-        // This means that the key is unique in the index.
+            if (previousValueInIndex == null) {
+                addToIndex(pair, documentId, newKeyBytes);
+                return;
+            }
 
-        if (previousValueInIndex == null) {
+            index.removeValue(bTreeValueForPreviousKey);
             addToIndex(pair, documentId, newKeyBytes);
-            return;
+        } catch (BTreeException e) {
+            throw new UncheckedBTreeException(e);
         }
-        index.removeValue(bTreeValueForPreviousKey);
-        addToIndex(pair, documentId, newKeyBytes);
     }
 
     public boolean isPropertyIndexed(String collectionId, String property) {
@@ -213,10 +221,7 @@ public class BasicIndexService implements IndexService {
         return metaData.getIndexedPropertiesList();
     }
 
-    public void removeIndexFromCollectionProperty(String collectionId, String property)
-            throws IndexNotFoundException,
-            BTreeException,
-            IOException, CollectionDoesNotExistException {
+    public void removeIndexFromCollectionProperty(String collectionId, String property) {
 
         final var pair = new CollectionPropertyPair(collectionId, property);
         if (!indexMap.containsKey(pair))
@@ -226,16 +231,22 @@ public class BasicIndexService implements IndexService {
         final var indexFilePath = collectionIndexesPath.resolve(property);
 
         final var index = indexMap.get(pair);
-        index.close();
-        indexMap.remove(pair);
-        configurationService.editCollectionMetaData(
-                collectionId, x -> {
-                    final var props = new ArrayList<>(x.getIndexedPropertiesList());
-                    props.remove(property);
-                    return x.clearIndexedProperties().addAllIndexedProperties(props);
-                }
-        );
-        Files.deleteIfExists(indexFilePath);
+        try {
+            index.close();
+            indexMap.remove(pair);
+            configurationService.editCollectionMetaData(
+                    collectionId, x -> {
+                        final var props = new ArrayList<>(x.getIndexedPropertiesList());
+                        props.remove(property);
+                        return x.clearIndexedProperties().addAllIndexedProperties(props);
+                    }
+            );
+            Files.deleteIfExists(indexFilePath);
+        } catch (BTreeException e) {
+            throw new UncheckedBTreeException(e);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     public void runQuery(
@@ -244,10 +255,7 @@ public class BasicIndexService implements IndexService {
             String property,
             CustomValue value,
             Consumer<String> responseConsumer
-    ) throws IndexNotFoundException,
-            BTreeException,
-            InvalidOperatorUsage,
-            UnRecognizedOperatorException {
+    ) {
 
         final var adapter = bTreeCallbackFactory.create(
                 (k, v) -> {
@@ -269,10 +277,7 @@ public class BasicIndexService implements IndexService {
             Operator operator,
             String property,
             CustomValue value
-    ) throws IndexNotFoundException,
-            BTreeException,
-            InvalidOperatorUsage,
-            UnRecognizedOperatorException {
+    ) {
         final var results = new ArrayList<String>();
 
         final var adapter = bTreeCallbackFactory.create(
@@ -297,10 +302,7 @@ public class BasicIndexService implements IndexService {
             CustomValue value,
             CollectionPropertyPair pair,
             BTreeCallback adapter
-    ) throws BTreeException,
-            InvalidOperatorUsage,
-            UnRecognizedOperatorException,
-            IndexNotFoundException {
+    ) {
 
 
         if (!indexMap.containsKey(pair))
@@ -310,21 +312,25 @@ public class BasicIndexService implements IndexService {
 
         final var valueBytes = getCustomValueBytes(value);
         final var bTreeValue = new Value(valueBytes);
-        switch (operator) {
+        try {
+            switch (operator) {
 
-            case EQUALS -> index.search(new IndexConditionEQ(bTreeValue), adapter);
-            case NOT_EQUALS -> index.search(new IndexConditionNE(bTreeValue), adapter);
-            case GREATER_THAN -> index.search(new IndexConditionGT(bTreeValue), adapter);
-            case LESS_THAN -> index.search(new IndexConditionLT(bTreeValue), adapter);
-            case GREATER_THAN_OR_EQUALS -> index.search(new IndexConditionGE(bTreeValue), adapter);
-            case LESS_THAN_OR_EQUALS -> index.search(new IndexConditionLE(bTreeValue), adapter);
-            case STARTS_WITH -> {
-                final var noEndQuotes = Arrays.copyOfRange(valueBytes, 0, valueBytes.length - 1);
-                index.search(new LikeIndexQuery(new Value(noEndQuotes), "%"), adapter);
+                case EQUALS -> index.search(new IndexConditionEQ(bTreeValue), adapter);
+                case NOT_EQUALS -> index.search(new IndexConditionNE(bTreeValue), adapter);
+                case GREATER_THAN -> index.search(new IndexConditionGT(bTreeValue), adapter);
+                case LESS_THAN -> index.search(new IndexConditionLT(bTreeValue), adapter);
+                case GREATER_THAN_OR_EQUALS -> index.search(new IndexConditionGE(bTreeValue), adapter);
+                case LESS_THAN_OR_EQUALS -> index.search(new IndexConditionLE(bTreeValue), adapter);
+                case STARTS_WITH -> {
+                    final var noEndQuotes = Arrays.copyOfRange(valueBytes, 0, valueBytes.length - 1);
+                    index.search(new LikeIndexQuery(new Value(noEndQuotes), "%"), adapter);
+                }
+                case IN -> index.search(new IndexConditionIN(decodeAndMapValue(value)), adapter);
+                case NOT_IN -> index.search(new IndexConditionNIN(decodeAndMapValue(value)), adapter);
+                case UNRECOGNIZED -> throw new UnRecognizedOperatorException();
             }
-            case IN -> index.search(new IndexConditionIN(decodeAndMapValue(value)), adapter);
-            case NOT_IN -> index.search(new IndexConditionNIN(decodeAndMapValue(value)), adapter);
-            case UNRECOGNIZED -> throw new UnRecognizedOperatorException();
+        } catch (BTreeException e) {
+            throw new UncheckedBTreeException(e);
         }
     }
 
@@ -351,7 +357,7 @@ public class BasicIndexService implements IndexService {
 
     }
 
-    private Value[] decodeAndMapValue(CustomValue value) throws InvalidOperatorUsage {
+    private Value[] decodeAndMapValue(CustomValue value) {
 
         if (!value.hasListValue())
             throw new InvalidOperatorUsage();

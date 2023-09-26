@@ -1,4 +1,4 @@
 package me.hashemalayan.services.db.exceptions;
 
-public class PropertyDoesNotExistException extends Exception {
+public class PropertyDoesNotExistException extends RuntimeException {
 }

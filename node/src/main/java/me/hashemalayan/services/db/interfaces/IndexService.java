@@ -1,74 +1,83 @@
 package me.hashemalayan.services.db.interfaces;
 
-import btree4j.BTreeException;
 import me.hashemalayan.nosql.shared.Customstruct;
 import me.hashemalayan.nosql.shared.Operator;
-import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
-import me.hashemalayan.services.db.exceptions.IndexNotFoundException;
-import me.hashemalayan.services.db.exceptions.InvalidOperatorUsage;
-import me.hashemalayan.services.db.exceptions.UnRecognizedOperatorException;
+import me.hashemalayan.services.db.exceptions.*;
 
-import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 
 public interface IndexService {
-    void load() throws IOException, BTreeException;
+    /**
+     * @throws UncheckedIOException in case of I/O issues.
+     * @throws UncheckedBTreeException if there's an error with the BTree.
+     */
+    void load();
 
-    void indexPropertyInCollection(String collectionId, String property)
-            throws IOException,
-            BTreeException,
-            CollectionDoesNotExistException;
+    /**
+     * @throws UncheckedIOException in case of I/O issues.
+     * @throws UncheckedBTreeException if there's an error with the BTree.
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     */
+    void indexPropertyInCollection(String collectionId, String property);
 
+    /**
+     * @throws IndexNotFoundException if the index is not found.
+     * @throws UncheckedBTreeException if there's an error with the BTree.
+     */
     void addToIndex(
             String collectionId,
             String documentId,
             String property,
-            byte[] newKeyBytes)
-            throws IndexNotFoundException,
-            BTreeException;
+            byte[] newKeyBytes);
 
     /**
+     * @throws IndexNotFoundException if the index is not found.
      * @throws IllegalArgumentException if previousKeyBytes is null.
+     * @throws UncheckedBTreeException if there's an error with the BTree.
      */
     void addToIndex(
             String collectionId,
             String documentId,
             String property,
             byte[] previousKeyBytes,
-            byte[] newKeyBytes)
-            throws IndexNotFoundException,
-            IllegalArgumentException,
-            BTreeException;
+            byte[] newKeyBytes);
 
     List<String> getIndexedProperties(String collectionId);
 
     boolean isPropertyIndexed(String collectionId, String property);
 
-    void removeIndexFromCollectionProperty(String collectionId, String property)
-            throws IndexNotFoundException,
-            BTreeException,
-            IOException, CollectionDoesNotExistException;
+    /**
+     * @throws IndexNotFoundException if the index is not found.
+     * @throws UncheckedBTreeException if there's an error with the BTree.
+     * @throws UncheckedIOException in case of I/O issues.
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     */
+    void removeIndexFromCollectionProperty(String collectionId, String property);
 
+    /**
+     * @throws IndexNotFoundException if the index is not found.
+     * @throws UncheckedBTreeException if there's an error with the BTree.
+     * @throws InvalidOperatorUsage if the operator usage is invalid.
+     * @throws UnRecognizedOperatorException if the operator is unrecognized.
+     */
     void runQuery(
             String collectionId,
             Operator operator,
             String property,
             Customstruct.CustomValue value,
-            Consumer<String> responseConsumer
-    ) throws IndexNotFoundException,
-            BTreeException,
-            InvalidOperatorUsage,
-            UnRecognizedOperatorException;
+            Consumer<String> responseConsumer);
 
+    /**
+     * @throws IndexNotFoundException if the index is not found.
+     * @throws UncheckedBTreeException if there's an error with the BTree.
+     * @throws InvalidOperatorUsage if the operator usage is invalid.
+     * @throws UnRecognizedOperatorException if the operator is unrecognized.
+     */
     List<String> runQuery(
             String collectionId,
             Operator operator,
             String property,
-            Customstruct.CustomValue value
-    ) throws IndexNotFoundException,
-            BTreeException,
-            InvalidOperatorUsage,
-            UnRecognizedOperatorException;
+            Customstruct.CustomValue value);
 }

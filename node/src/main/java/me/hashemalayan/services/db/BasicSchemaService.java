@@ -11,7 +11,6 @@ import me.hashemalayan.factories.JsonDirectoryIteratorFactory;
 import me.hashemalayan.nosql.shared.CollectionPropertyType;
 import me.hashemalayan.services.db.exceptions.CollectionDoesNotExistException;
 import me.hashemalayan.services.db.exceptions.PropertyDoesNotExistException;
-import me.hashemalayan.services.db.exceptions.SampleMalformedException;
 import me.hashemalayan.services.db.interfaces.CollectionConfigurationService;
 import me.hashemalayan.services.db.interfaces.SampleFromSchemaService;
 import me.hashemalayan.services.db.interfaces.SchemaService;
@@ -52,30 +51,26 @@ public class BasicSchemaService implements SchemaService {
 
     @Override
     public void load() {
-
-        try {
-            configurationService.load();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        configurationService.load();
     }
 
     @Override
-    public String getSample(String collectionId)
-            throws CollectionDoesNotExistException,
-            SampleMalformedException,
-            JsonProcessingException {
+    public String getSample(String collectionId) {
 
-        final var schema = configurationService.getCollectionSchema(collectionId);
+        try {
+            final var schema = configurationService.getCollectionSchema(collectionId);
 
-        if (schema.isEmpty()) throw new CollectionDoesNotExistException();
+            if (schema.isEmpty()) throw new CollectionDoesNotExistException();
 
-        final var sample = sampleFromSchemaService.getSample(collectionId, schema.get().getSchemaNode());
+            final var sample = sampleFromSchemaService.getSample(collectionId, schema.get().getSchemaNode());
 
-        if (sample.has("data"))
-            return objectMapper.writeValueAsString(sample.get("data"));
+            if (sample.has("data"))
+                return objectMapper.writeValueAsString(sample.get("data"));
 
-        return objectMapper.writeValueAsString(sample);
+            return objectMapper.writeValueAsString(sample);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -91,9 +86,13 @@ public class BasicSchemaService implements SchemaService {
     public Set<ValidationMessage> validateDocument(
             String collectionName,
             String jsonDocument
-    ) throws JsonProcessingException {
+    )  {
 
-        return validateDocument(collectionName, objectMapper.readTree(jsonDocument));
+        try {
+            return validateDocument(collectionName, objectMapper.readTree(jsonDocument));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void validateAll() {
@@ -132,9 +131,7 @@ public class BasicSchemaService implements SchemaService {
         }
     }
 
-    public CollectionPropertyType getPropertyType(String collectionId, String property)
-            throws CollectionDoesNotExistException,
-            PropertyDoesNotExistException {
+    public CollectionPropertyType getPropertyType(String collectionId, String property) {
 
         final var schemaOpt = configurationService.getCollectionSchema(collectionId);
         if (schemaOpt.isEmpty()) throw new CollectionDoesNotExistException();

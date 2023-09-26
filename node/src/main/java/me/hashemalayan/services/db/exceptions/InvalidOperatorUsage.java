@@ -1,4 +1,4 @@
 package me.hashemalayan.services.db.exceptions;
 
-public class InvalidOperatorUsage extends Exception {
+public class InvalidOperatorUsage extends RuntimeException {
 }

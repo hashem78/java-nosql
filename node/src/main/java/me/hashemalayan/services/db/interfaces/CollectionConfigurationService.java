@@ -9,47 +9,69 @@ import me.hashemalayan.services.db.exceptions.InvalidCollectionSchemaException;
 import me.hashemalayan.services.db.models.CollectionConfiguration;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
+import static me.hashemalayan.nosql.shared.Common.*;
+
 public interface CollectionConfigurationService {
-    void load() throws IOException;
+    /**
+     * @throws UncheckedIOException in case of I/O issues.
+     */
+    void load();
 
-    void save(Path filePath, CollectionConfiguration config) throws IOException;
+    /**
+     * @throws UncheckedIOException in case of I/O issues.
+     */
+    void save(Path filePath, CollectionConfiguration config);
 
-    CollectionConfiguration createMetaData(String collectionName, String schema)
-            throws IOException,
-            InvalidCollectionSchemaException,
-            CollectionAlreadyExistsException;
+    /**
+     * @throws UncheckedIOException in case of I/O issues.
+     * @throws InvalidCollectionSchemaException if the collection schema is invalid.
+     * @throws CollectionAlreadyExistsException if the collection already exists.
+     */
+    CollectionConfiguration createMetaData(String collectionName, String schema);
 
     boolean isValidRootSchema(JsonNode schema);
 
-    Optional<Common.CollectionMetaData> getCollectionMetaData(String collectionId);
+    Optional<CollectionMetaData> getCollectionMetaData(String collectionId);
 
     Optional<JsonSchema> getCollectionSchema(String collectionId);
 
-    List<Common.CollectionMetaData> getAllCollectionsMetaData();
+    List<CollectionMetaData> getAllCollectionsMetaData();
 
     boolean collectionConfigurationIsLoaded(String collectionId);
 
     Set<String> validateAgainstMetaSchema(JsonNode schema);
 
-    void editCollection(String collectionId, String collectionName)
-            throws CollectionDoesNotExistException,
-            IOException;
+    /**
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     * @throws UncheckedIOException in case of I/O issues.
+     */
+    void editCollection(String collectionId, String collectionName);
 
-    void deleteCollection(String collectionId)
-            throws CollectionDoesNotExistException,
-            IOException;
+    /**
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     * @throws UncheckedIOException in case of I/O issues.
+     */
+    void deleteCollection(String collectionId);
 
+    /**
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     * @throws UncheckedIOException in case of I/O issues.
+     */
     void editCollectionMetaData(
             String collectionId,
-            Function<Common.CollectionMetaData.Builder, Common.CollectionMetaData.Builder> editor
-    ) throws CollectionDoesNotExistException, IOException;
+            Function<CollectionMetaData.Builder, CollectionMetaData.Builder> editor
+    );
 
-    void createConfiguration(Common.CollectionMetaData metaData, String schema) throws IOException,
-            CollectionAlreadyExistsException;
+    /**
+     * @throws UncheckedIOException in case of I/O issues.
+     * @throws CollectionAlreadyExistsException if the collection already exists.
+     */
+    void createConfiguration(CollectionMetaData metaData, String schema);
 }

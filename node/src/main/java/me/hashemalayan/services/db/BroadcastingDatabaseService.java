@@ -1,17 +1,12 @@
 package me.hashemalayan.services.db;
 
-import btree4j.BTreeException;
 import com.google.inject.Inject;
 import me.hashemalayan.nosql.shared.*;
-import me.hashemalayan.services.db.exceptions.*;
 import me.hashemalayan.services.db.interfaces.AbstractDatabaseService;
 import me.hashemalayan.services.db.interfaces.CollectionService;
 import me.hashemalayan.services.db.interfaces.IndexService;
 import me.hashemalayan.services.db.interfaces.SchemaService;
 import me.hashemalayan.services.grpc.interfaces.RemoteReplicationService;
-
-import java.io.IOException;
-import java.text.ParseException;
 
 public class BroadcastingDatabaseService extends AbstractDatabaseService {
     private final RemoteReplicationService replicationService;
@@ -27,10 +22,7 @@ public class BroadcastingDatabaseService extends AbstractDatabaseService {
     }
 
     @Override
-    public Common.CollectionMetaData createCollection(String collectionName, String schema)
-            throws IOException,
-            CollectionAlreadyExistsException,
-            InvalidCollectionSchemaException {
+    public Common.CollectionMetaData createCollection(String collectionName, String schema) {
         final var metaData = super.createCollection(collectionName, schema);
         replicationService.broadcast(
                 ReplicationMessage.newBuilder()
@@ -49,14 +41,7 @@ public class BroadcastingDatabaseService extends AbstractDatabaseService {
             String collectionId,
             String documentId,
             String documentJson
-    ) throws DocumentSchemaValidationException,
-            CollectionDoesNotExistException,
-            IOException,
-            BTreeException,
-            IndexNotFoundException,
-            AffinityMismatchException,
-            ParseException,
-            DocumentOptimisticLockException {
+    )  {
 
         final var document = super.setDocument(collectionId, documentId, documentJson);
         replicationService.broadcast(
@@ -75,8 +60,7 @@ public class BroadcastingDatabaseService extends AbstractDatabaseService {
     public void editCollection(
             String collectionId,
             String collectionName
-    ) throws CollectionDoesNotExistException,
-            IOException {
+    )  {
         super.editCollection(collectionId, collectionName);
         replicationService.broadcast(
                 ReplicationMessage.newBuilder()
@@ -91,7 +75,7 @@ public class BroadcastingDatabaseService extends AbstractDatabaseService {
     }
 
 
-    public void deleteCollection(String collectionId) throws CollectionDoesNotExistException, IOException {
+    public void deleteCollection(String collectionId) {
         super.deleteCollection(collectionId);
         replicationService.broadcast(
                 ReplicationMessage.newBuilder()
@@ -104,10 +88,7 @@ public class BroadcastingDatabaseService extends AbstractDatabaseService {
         );
     }
 
-    public void deleteDocument(String collectionId, String documentId) throws
-            CollectionDoesNotExistException,
-            DocumentDoesNotExistException,
-            IOException {
+    public void deleteDocument(String collectionId, String documentId){
         super.deleteDocument(collectionId, documentId);
         replicationService.broadcast(
                 ReplicationMessage.newBuilder()
@@ -121,10 +102,7 @@ public class BroadcastingDatabaseService extends AbstractDatabaseService {
         );
     }
 
-    public void indexPropertyInCollection(String collectionId, String property) throws
-            IOException,
-            BTreeException,
-            CollectionDoesNotExistException {
+    public void indexPropertyInCollection(String collectionId, String property) {
         super.indexPropertyInCollection(collectionId, property);
         replicationService.broadcast(
                 ReplicationMessage.newBuilder()
@@ -138,10 +116,7 @@ public class BroadcastingDatabaseService extends AbstractDatabaseService {
         );
     }
 
-    public void removeIndexFromCollectionProperty(String collectionId, String property)
-            throws IndexNotFoundException,
-            BTreeException,
-            IOException, CollectionDoesNotExistException {
+    public void removeIndexFromCollectionProperty(String collectionId, String property) {
         super.removeIndexFromCollectionProperty(collectionId, property);
         replicationService.broadcast(
                 ReplicationMessage.newBuilder()

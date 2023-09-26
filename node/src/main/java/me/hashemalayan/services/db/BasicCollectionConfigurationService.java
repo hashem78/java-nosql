@@ -19,6 +19,7 @@ import me.hashemalayan.util.Constants;
 import org.slf4j.Logger;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -57,104 +58,113 @@ public class BasicCollectionConfigurationService implements CollectionConfigurat
     }
 
     @Override
-    public void load() throws IOException {
+    public void load() {
 
-        logger.info("Loading configurations for all collections");
-        final var collectionsPath = Paths.get(nodeProperties.getName(), "collections");
+        try {
+            logger.info("Loading configurations for all collections");
+            final var collectionsPath = Paths.get(nodeProperties.getName(), "collections");
 
-        logger.info("Collections Path: " + collectionsPath);
+            logger.info("Collections Path: " + collectionsPath);
 
-        if (!Files.exists(collectionsPath))
-            Files.createDirectories(collectionsPath);
+            if (!Files.exists(collectionsPath))
+                Files.createDirectories(collectionsPath);
 
-        try (final var directoryStream = Files.newDirectoryStream(collectionsPath)) {
+            try (final var directoryStream = Files.newDirectoryStream(collectionsPath)) {
 
-            for (final var path : directoryStream) {
+                for (final var path : directoryStream) {
 
-                logger.info("Loading configuration for " + path.getFileName());
+                    logger.info("Loading configuration for " + path.getFileName());
 
-                try {
+                    try {
 
-                    final var configFilePath = path.resolve("config.json");
+                        final var configFilePath = path.resolve("config.json");
 
-                    logger.info("Config file path: " + configFilePath);
+                        logger.info("Config file path: " + configFilePath);
 
-                    if (!Files.exists(configFilePath))
-                        throw new CollectionConfigurationNotFoundException();
+                        if (!Files.exists(configFilePath))
+                            throw new CollectionConfigurationNotFoundException();
 
-                    final var configuration = objectMapper.readValue(
-                            configFilePath.toFile(),
-                            CollectionConfiguration.class
-                    );
+                        final var configuration = objectMapper.readValue(
+                                configFilePath.toFile(),
+                                CollectionConfiguration.class
+                        );
 
-                    configurationMap.put(configuration.getMetaData().getId(), configuration);
+                        configurationMap.put(configuration.getMetaData().getId(), configuration);
 
-                    logger.info("Loaded configuration for collection " + path.getFileName());
+                        logger.info("Loaded configuration for collection " + path.getFileName());
 
-                } catch (CollectionConfigurationNotFoundException e) {
+                    } catch (CollectionConfigurationNotFoundException e) {
 
-                    logger.error("FATAL: Failed to find config for " + path.getFileName());
-                    System.exit(1);
+                        logger.error("FATAL: Failed to find config for " + path.getFileName());
+                        System.exit(1);
+                    }
                 }
             }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
     @Override
-    public void save(Path filePath, CollectionConfiguration config) throws IOException {
+    public void save(Path filePath, CollectionConfiguration config) {
 
-        objectMapper.writerWithDefaultPrettyPrinter()
-                .writeValue(filePath.toFile(), config);
+        try {
+            objectMapper.writerWithDefaultPrettyPrinter()
+                    .writeValue(filePath.toFile(), config);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     @Override
-    public CollectionConfiguration createMetaData(String collectionName, String schema)
-            throws IOException,
-            InvalidCollectionSchemaException,
-            CollectionAlreadyExistsException {
+    public CollectionConfiguration createMetaData(String collectionName, String schema) {
 
-        for (final var config : configurationMap.values()) {
-            final var name = config.getMetaData().getName();
-            if (collectionName.equals(name) && !config.getMetaData().getDeleted()) {
-                throw new CollectionAlreadyExistsException();
+        try {
+            for (final var config : configurationMap.values()) {
+                final var name = config.getMetaData().getName();
+                if (collectionName.equals(name) && !config.getMetaData().getDeleted()) {
+                    throw new CollectionAlreadyExistsException();
+                }
             }
+
+            final var metaData = CollectionMetaData.newBuilder()
+                    .setName(collectionName)
+                    .setId(UUID.randomUUID().toString())
+                    .setCreatedOn(Timestamps.fromMillis(System.currentTimeMillis()))
+                    .build();
+
+            final var mappedSchema = objectMapper.readTree(schema);
+            final var report = validateAgainstMetaSchema(mappedSchema);
+
+            if (!report.isEmpty()) {
+                throw new InvalidCollectionSchemaException(
+                        report.stream()
+                                .reduce(String::concat)
+                                .orElse("")
+                );
+            }
+
+            if (!isValidRootSchema(mappedSchema)) {
+                throw new InvalidCollectionSchemaException("Root schema should be an object");
+            }
+
+            final var jsonSchema = jsonSchemaFactory.getSchema(mappedSchema);
+            final var config = new CollectionConfiguration(metaData, jsonSchema);
+            final var collectionPath = collectionsPath.resolve(metaData.getId());
+
+            if (!Files.exists(collectionPath))
+                Files.createDirectories(collectionPath);
+
+            final var configFilePath = collectionPath.resolve("config.json");
+
+            save(configFilePath, config);
+
+            configurationMap.put(metaData.getId(), config);
+
+            return config;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
-
-        final var metaData = CollectionMetaData.newBuilder()
-                .setName(collectionName)
-                .setId(UUID.randomUUID().toString())
-                .setCreatedOn(Timestamps.fromMillis(System.currentTimeMillis()))
-                .build();
-
-        final var mappedSchema = objectMapper.readTree(schema);
-        final var report = validateAgainstMetaSchema(mappedSchema);
-
-        if (!report.isEmpty()) {
-            throw new InvalidCollectionSchemaException(
-                    report.stream()
-                            .reduce(String::concat)
-                            .orElse("")
-            );
-        }
-
-        if (!isValidRootSchema(mappedSchema)) {
-            throw new InvalidCollectionSchemaException("Root schema should be an object");
-        }
-
-        final var jsonSchema = jsonSchemaFactory.getSchema(mappedSchema);
-        final var config = new CollectionConfiguration(metaData, jsonSchema);
-        final var collectionPath = collectionsPath.resolve(metaData.getId());
-
-        if (!Files.exists(collectionPath))
-            Files.createDirectories(collectionPath);
-
-        final var configFilePath = collectionPath.resolve("config.json");
-
-        save(configFilePath, config);
-
-        configurationMap.put(metaData.getId(), config);
-
-        return config;
     }
 
     @Override
@@ -217,9 +227,7 @@ public class BasicCollectionConfigurationService implements CollectionConfigurat
     }
 
     @Override
-    public void editCollection(String collectionId, String collectionName)
-            throws CollectionDoesNotExistException,
-            IOException {
+    public void editCollection(String collectionId, String collectionName) {
 
         if (!configurationMap.containsKey(collectionId))
             throw new CollectionDoesNotExistException();
@@ -237,9 +245,7 @@ public class BasicCollectionConfigurationService implements CollectionConfigurat
     }
 
     @Override
-    public void deleteCollection(String collectionId)
-            throws CollectionDoesNotExistException,
-            IOException {
+    public void deleteCollection(String collectionId) {
         editCollectionMetaData(collectionId, (metadata) -> metadata.setDeleted(true));
     }
 
@@ -247,7 +253,7 @@ public class BasicCollectionConfigurationService implements CollectionConfigurat
     public void editCollectionMetaData(
             String collectionId,
             Function<CollectionMetaData.Builder, CollectionMetaData.Builder> editor
-    ) throws CollectionDoesNotExistException, IOException {
+    ) {
 
         if (!configurationMap.containsKey(collectionId))
             throw new CollectionDoesNotExistException();
@@ -263,23 +269,26 @@ public class BasicCollectionConfigurationService implements CollectionConfigurat
     }
 
     @Override
-    public void createConfiguration(CollectionMetaData metaData, String schema) throws IOException,
-            CollectionAlreadyExistsException {
+    public void createConfiguration(CollectionMetaData metaData, String schema) {
 
-        if (configurationMap.containsKey(metaData.getId())) {
-            throw new CollectionAlreadyExistsException();
+        try {
+            if (configurationMap.containsKey(metaData.getId())) {
+                throw new CollectionAlreadyExistsException();
+            }
+
+            final var jsonSchema = jsonSchemaFactory.getSchema(schema);
+            final var config = new CollectionConfiguration(metaData, jsonSchema);
+            final var collectionPath = collectionsPath.resolve(metaData.getId());
+
+            if (!Files.exists(collectionPath))
+                Files.createDirectories(collectionPath);
+
+            final var configFilePath = collectionPath.resolve("config.json");
+
+            save(configFilePath, config);
+            configurationMap.put(metaData.getId(), config);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
-
-        final var jsonSchema = jsonSchemaFactory.getSchema(schema);
-        final var config = new CollectionConfiguration(metaData, jsonSchema);
-        final var collectionPath = collectionsPath.resolve(metaData.getId());
-
-        if (!Files.exists(collectionPath))
-            Files.createDirectories(collectionPath);
-
-        final var configFilePath = collectionPath.resolve("config.json");
-
-        save(configFilePath, config);
-        configurationMap.put(metaData.getId(), config);
     }
 }

@@ -1,65 +1,83 @@
 package me.hashemalayan.services.db.interfaces;
 
-import btree4j.BTreeException;
 import me.hashemalayan.nosql.shared.Common.CollectionDocument;
 import me.hashemalayan.nosql.shared.Common.CollectionMetaData;
 import me.hashemalayan.services.db.exceptions.*;
 import me.hashemalayan.services.db.models.CollectionConfiguration;
 
-import java.io.IOException;
-import java.text.ParseException;
+import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
 public interface CollectionService {
-    CollectionConfiguration createCollection(String collectionName, String schema)
-            throws IOException,
-            InvalidCollectionSchemaException,
-            CollectionAlreadyExistsException;
+    /**
+     * @throws UncheckedIOException in case of I/O issues.
+     * @throws InvalidCollectionSchemaException if the collection schema is invalid.
+     * @throws CollectionAlreadyExistsException if the collection already exists.
+     */
+    CollectionConfiguration createCollection(String collectionName, String schema);
 
     List<CollectionMetaData> getCollections();
 
-    void getDocuments(String collectionId, Consumer<CollectionDocument> onDocumentLoaded)
-            throws CollectionDoesNotExistException, IOException;
+    /**
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     * @throws UncheckedIOException in case of I/O issues.
+     */
+    void getDocuments(String collectionId, Consumer<CollectionDocument> onDocumentLoaded);
 
-    CollectionDocument getDocument(String collectionId, String documentId)
-            throws CollectionDoesNotExistException,
-            IOException,
-            DocumentDoesNotExistException;
+    /**
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     * @throws UncheckedIOException in case of I/O issues.
+     * @throws DocumentDoesNotExistException if the document does not exist.
+     */
+    CollectionDocument getDocument(String collectionId, String documentId);
 
-    CollectionDocument setDocument(
-            String collectionId,
-            String documentId,
-            String documentJson
-    ) throws IOException,
-            CollectionDoesNotExistException,
-            DocumentSchemaValidationException,
-            BTreeException,
-            IndexNotFoundException,
-            AffinityMismatchException, ParseException, DocumentOptimisticLockException;
+    /**
+     * @throws UncheckedIOException in case of I/O issues.
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     * @throws DocumentSchemaValidationException if the document schema validation fails.
+     * @throws UncheckedBTreeException if there's an error with the BTree.
+     * @throws IndexNotFoundException if the index is not found.
+     * @throws AffinityMismatchException if there's an affinity mismatch.
+     * @throws DocumentOptimisticLockException if there's an optimistic lock exception on the document.
+     */
+    CollectionDocument setDocument(String collectionId, String documentId, String documentJson);
 
-    void setDocument(String collectionId, CollectionDocument document)
-            throws CollectionDoesNotExistException,
-            IOException,
-            DocumentSchemaValidationException,
-            BTreeException,
-            IndexNotFoundException, DocumentOptimisticLockException, ParseException;
+    /**
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     * @throws UncheckedIOException in case of I/O issues.
+     * @throws DocumentSchemaValidationException if the document schema validation fails.
+     * @throws UncheckedBTreeException if there's an error with the BTree.
+     * @throws IndexNotFoundException if the index is not found.
+     * @throws DocumentOptimisticLockException if there's an optimistic lock exception on the document.
+     */
+    void setDocument(String collectionId, CollectionDocument document);
 
-    void editCollection(String collectionId, String collectionName)
-            throws CollectionDoesNotExistException,
-            IOException;
+    /**
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     * @throws UncheckedIOException in case of I/O issues.
+     */
+    void editCollection(String collectionId, String collectionName);
 
-    void deleteCollection(String collectionId)
-            throws CollectionDoesNotExistException, IOException;
+    /**
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     * @throws UncheckedIOException in case of I/O issues.
+     */
+    void deleteCollection(String collectionId);
 
-    void deleteDocument(String collectionId, String documentId)
-            throws CollectionDoesNotExistException,
-            DocumentDoesNotExistException, IOException;
+    /**
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     * @throws DocumentDoesNotExistException if the document does not exist.
+     * @throws UncheckedIOException in case of I/O issues.
+     */
+    void deleteDocument(String collectionId, String documentId);
 
     Optional<CollectionMetaData> getCollectionMetaData(String collectionId);
 
-    void createCollection(CollectionMetaData metaData, String schema)
-            throws IOException,
-            CollectionAlreadyExistsException;
+    /**
+     * @throws UncheckedIOException in case of I/O issues.
+     * @throws CollectionAlreadyExistsException if the collection already exists.
+     */
+    void createCollection(CollectionMetaData metaData, String schema);
 }

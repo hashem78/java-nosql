@@ -2,6 +2,7 @@ package me.hashemalayan;
 
 import btree4j.BTreeException;
 import com.google.inject.Inject;
+import me.hashemalayan.services.db.exceptions.UncheckedBTreeException;
 import me.hashemalayan.services.db.interfaces.IndexService;
 import me.hashemalayan.services.db.interfaces.SchemaService;
 import me.hashemalayan.services.grpc.interfaces.LocalServicesManager;
@@ -53,7 +54,7 @@ public class NodeEntryPoint {
             logger.info("Loading indexes");
             indexService.load();
             nodeManager.awaitTermination();
-        } catch (IOException | InterruptedException | BTreeException e) {
+        } catch (IOException | InterruptedException | UncheckedBTreeException e) {
             throw new RuntimeException(e);
         }
     }

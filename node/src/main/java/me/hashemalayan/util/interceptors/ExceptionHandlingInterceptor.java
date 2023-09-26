@@ -1,14 +1,13 @@
 package me.hashemalayan.util.interceptors;
 
-import btree4j.BTreeException;
-import com.fasterxml.jackson.core.JsonProcessingException;
+
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.grpc.ForwardingServerCall.SimpleForwardingServerCall;
 import io.grpc.*;
 import me.hashemalayan.services.db.exceptions.*;
 
-import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.text.ParseException;
 
 public class ExceptionHandlingInterceptor implements ServerInterceptor {
@@ -29,7 +28,7 @@ public class ExceptionHandlingInterceptor implements ServerInterceptor {
                 if (status.isOk() || status.getCause() == null) {
                     super.close(status, trailers);
                 } else {
-                    Throwable exception = status.getCause().getCause();
+                    Throwable exception = status.getCause();
                     Status transformedStatus = mapExceptionToStatus(exception);
                     super.close(transformedStatus, trailers);
                 }
@@ -42,7 +41,7 @@ public class ExceptionHandlingInterceptor implements ServerInterceptor {
                 try {
                     super.onHalfClose();
                 } catch (Exception e) {
-                    call.close(mapExceptionToStatus(e.getCause()), new Metadata());
+                    call.close(mapExceptionToStatus(e), new Metadata());
                 }
             }
         };
@@ -53,12 +52,9 @@ public class ExceptionHandlingInterceptor implements ServerInterceptor {
             return Status.INTERNAL.withDescription("Internal server error").withCause(e);
         } else if (e instanceof CollectionAlreadyExistsException) {
             return Status.ALREADY_EXISTS.withDescription("Collection already exists").withCause(e);
-        } else if (e instanceof IOException) {
-            if (e instanceof JsonProcessingException)
-                return Status.INTERNAL.withDescription("Json Processing Error occurred").withCause(e);
-            e.printStackTrace();
+        } else if (e instanceof UncheckedIOException) {
             return Status.INTERNAL.withDescription("IO Error occurred").withCause(e);
-        } else if (e instanceof BTreeException) {
+        } else if (e instanceof UncheckedBTreeException) {
             return Status.INTERNAL.withDescription("A Database Error occurred").withCause(e);
         } else if (e instanceof InvalidCollectionSchemaException) {
             return Status.INVALID_ARGUMENT.withDescription("Invalid Collection Schema").withCause(e);
@@ -81,7 +77,6 @@ public class ExceptionHandlingInterceptor implements ServerInterceptor {
         } else if (e instanceof ParseException) {
             return Status.ABORTED.withDescription("Failed to parse timestamp").withCause(e);
         } else {
-            e.printStackTrace();
             return Status.UNKNOWN.withDescription("Unknown error occurred").withCause(e);
         }
     }

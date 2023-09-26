@@ -1,4 +1,4 @@
 package me.hashemalayan.services.db.exceptions;
 
-public class SampleMalformedException extends Exception {
+public class SampleMalformedException extends RuntimeException {
 }

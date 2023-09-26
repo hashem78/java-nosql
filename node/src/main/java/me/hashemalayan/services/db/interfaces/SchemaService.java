@@ -13,21 +13,24 @@ import java.util.Set;
 public interface SchemaService {
     void load();
 
-    String getSample(String collectionId)
-            throws CollectionDoesNotExistException,
-            SampleMalformedException,
-            JsonProcessingException;
+    /**
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     * @throws SampleMalformedException if the sample is malformed.
+     */
+    String getSample(String collectionId);
 
     Set<ValidationMessage> validateDocument(String collectionName, JsonNode jsonNode);
 
     Set<ValidationMessage> validateDocument(
             String collectionName,
             String jsonDocument
-    ) throws JsonProcessingException;
+    );
 
     void validateAll();
 
-    CollectionPropertyType getPropertyType(String collectionId, String property)
-            throws CollectionDoesNotExistException,
-            PropertyDoesNotExistException;
+    /**
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     * @throws PropertyDoesNotExistException if the property does not exist.
+     */
+    CollectionPropertyType getPropertyType(String collectionId, String property);
 }

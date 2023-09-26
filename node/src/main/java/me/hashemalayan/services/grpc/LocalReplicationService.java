@@ -45,13 +45,9 @@ public class LocalReplicationService extends ReplicationServiceGrpc.ReplicationS
             EditCollectionReplicationMessage request,
             StreamObserver<ReplicationResponse> responseObserver
     ) {
-        try {
-            databaseService.editCollection(request.getCollectionId(), request.getCollectionName());
-            responseObserver.onNext(ReplicationResponse.newBuilder().build());
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        databaseService.editCollection(request.getCollectionId(), request.getCollectionName());
+        responseObserver.onNext(ReplicationResponse.newBuilder().build());
+        responseObserver.onCompleted();
     }
 
     @Override
@@ -59,13 +55,10 @@ public class LocalReplicationService extends ReplicationServiceGrpc.ReplicationS
             DeleteCollectionReplicationMessage request,
             StreamObserver<ReplicationResponse> responseObserver
     ) {
-        try {
-            databaseService.deleteCollection(request.getCollectionId());
-            responseObserver.onNext(ReplicationResponse.newBuilder().build());
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+
+        databaseService.deleteCollection(request.getCollectionId());
+        responseObserver.onNext(ReplicationResponse.newBuilder().build());
+        responseObserver.onCompleted();
     }
 
     @Override
@@ -73,16 +66,13 @@ public class LocalReplicationService extends ReplicationServiceGrpc.ReplicationS
             SetDocumentReplicationMessage request,
             StreamObserver<ReplicationResponse> responseObserver
     ) {
-        try {
-            databaseService.setDocument(
-                    request.getCollectionId(),
-                    request.getDocument()
-            );
-            responseObserver.onNext(ReplicationResponse.newBuilder().build());
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+
+        databaseService.setDocument(
+                request.getCollectionId(),
+                request.getDocument()
+        );
+        responseObserver.onNext(ReplicationResponse.newBuilder().build());
+        responseObserver.onCompleted();
     }
 
     @Override
@@ -110,8 +100,8 @@ public class LocalReplicationService extends ReplicationServiceGrpc.ReplicationS
 
             responseObserver.onNext(
                     SetCollectionDocumentResponse.newBuilder()
-                    .setDocument(document)
-                    .build()
+                            .setDocument(document)
+                            .build()
             );
             responseObserver.onCompleted();
         } catch (DocumentOptimisticLockException e) {
@@ -121,8 +111,6 @@ public class LocalReplicationService extends ReplicationServiceGrpc.ReplicationS
                             .build()
             );
             responseObserver.onCompleted();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -131,16 +119,12 @@ public class LocalReplicationService extends ReplicationServiceGrpc.ReplicationS
             DeleteDocumentReplicationMessage request,
             StreamObserver<ReplicationResponse> responseObserver
     ) {
-        try {
-            databaseService.deleteDocument(
-                    request.getCollectionId(),
-                    request.getDocumentId()
-            );
-            responseObserver.onNext(ReplicationResponse.newBuilder().build());
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        databaseService.deleteDocument(
+                request.getCollectionId(),
+                request.getDocumentId()
+        );
+        responseObserver.onNext(ReplicationResponse.newBuilder().build());
+        responseObserver.onCompleted();
     }
 
     @Override
@@ -148,16 +132,12 @@ public class LocalReplicationService extends ReplicationServiceGrpc.ReplicationS
             IndexCollectionPropertyReplicationMessage request,
             StreamObserver<ReplicationResponse> responseObserver
     ) {
-        try {
-            databaseService.indexPropertyInCollection(
-                    request.getCollectionId(),
-                    request.getProperty()
-            );
-            responseObserver.onNext(ReplicationResponse.newBuilder().build());
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        databaseService.indexPropertyInCollection(
+                request.getCollectionId(),
+                request.getProperty()
+        );
+        responseObserver.onNext(ReplicationResponse.newBuilder().build());
+        responseObserver.onCompleted();
     }
 
     @Override
@@ -165,15 +145,11 @@ public class LocalReplicationService extends ReplicationServiceGrpc.ReplicationS
             RemoveIndexReplicationMessage request,
             StreamObserver<ReplicationResponse> responseObserver
     ) {
-        try {
-            databaseService.removeIndexFromCollectionProperty(
-                    request.getCollectionId(),
-                    request.getProperty()
-            );
-            responseObserver.onNext(ReplicationResponse.newBuilder().build());
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        databaseService.removeIndexFromCollectionProperty(
+                request.getCollectionId(),
+                request.getProperty()
+        );
+        responseObserver.onNext(ReplicationResponse.newBuilder().build());
+        responseObserver.onCompleted();
     }
 }

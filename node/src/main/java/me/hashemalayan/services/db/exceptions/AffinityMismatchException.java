@@ -5,6 +5,6 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class AffinityMismatchException extends Exception {
+public class AffinityMismatchException extends RuntimeException {
     private final int expectedAffinity;
 }

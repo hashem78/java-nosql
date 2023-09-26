@@ -1,7 +1,5 @@
 package me.hashemalayan.services.db.interfaces;
 
-import btree4j.BTreeException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import me.hashemalayan.nosql.shared.CollectionPropertyType;
 import me.hashemalayan.nosql.shared.Common.CollectionDocument;
 import me.hashemalayan.nosql.shared.Common.CollectionMetaData;
@@ -9,8 +7,7 @@ import me.hashemalayan.nosql.shared.Customstruct.CustomValue;
 import me.hashemalayan.nosql.shared.Operator;
 import me.hashemalayan.services.db.exceptions.*;
 
-import java.io.IOException;
-import java.text.ParseException;
+import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -29,79 +26,91 @@ public abstract class AbstractDatabaseService {
         this.schemaService = schemaService;
         this.indexService = indexService;
     }
+
     public List<CollectionMetaData> getCollections() {
         return collectionService.getCollections();
     }
 
-    public void getDocuments(String collectionId, Consumer<CollectionDocument> onDocumentLoaded)
-            throws CollectionDoesNotExistException, IOException {
+    /**
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     * @throws UncheckedIOException in case of I/O issues.
+     */
+    public void getDocuments(String collectionId, Consumer<CollectionDocument> onDocumentLoaded) {
         collectionService.getDocuments(collectionId, onDocumentLoaded);
     }
 
-    public void editCollection(
-            String collectionId,
-            String collectionName
-    ) throws CollectionDoesNotExistException,
-            IOException {
+    /**
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     * @throws UncheckedIOException in case of I/O issues.
+     */
+    public void editCollection(String collectionId, String collectionName) {
         collectionService.editCollection(collectionId, collectionName);
     }
 
-    public void deleteCollection(String collectionId) throws CollectionDoesNotExistException, IOException {
+    /**
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     * @throws UncheckedIOException in case of I/O issues.
+     */
+    public void deleteCollection(String collectionId) {
         collectionService.deleteCollection(collectionId);
     }
 
-    public String getDocumentSample(String collectionId)
-            throws SampleMalformedException,
-            CollectionDoesNotExistException,
-            JsonProcessingException {
+    /**
+     * @throws SampleMalformedException if the sample is malformed.
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     */
+    public String getDocumentSample(String collectionId) {
         return schemaService.getSample(collectionId);
     }
 
-    public CollectionDocument setDocument(
-            String collectionId,
-            String documentId,
-            String documentJson
-    ) throws DocumentSchemaValidationException,
-            CollectionDoesNotExistException,
-            IOException,
-            BTreeException,
-            IndexNotFoundException,
-            AffinityMismatchException,
-            ParseException, DocumentOptimisticLockException {
-
+    /**
+     * @throws DocumentSchemaValidationException if the document schema validation fails.
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     * @throws UncheckedIOException in case of I/O issues.
+     * @throws UncheckedBTreeException if there's an error with the BTree.
+     * @throws IndexNotFoundException if the index is not found.
+     * @throws AffinityMismatchException if there's an affinity mismatch.
+     * @throws DocumentOptimisticLockException if there's an optimistic lock exception on the document.
+     */
+    public CollectionDocument setDocument(String collectionId, String documentId, String documentJson) {
         return collectionService.setDocument(collectionId, documentId, documentJson);
     }
 
-    public void setDocument(String collectionId, CollectionDocument document)
-            throws BTreeException,
-            DocumentSchemaValidationException,
-            CollectionDoesNotExistException,
-            IndexNotFoundException,
-            IOException,
-            DocumentOptimisticLockException,
-            ParseException {
+    /**
+     * @throws UncheckedBTreeException if there's an error with the BTree.
+     * @throws DocumentSchemaValidationException if the document schema validation fails.
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     * @throws IndexNotFoundException if the index is not found.
+     * @throws UncheckedIOException in case of I/O issues.
+     * @throws DocumentOptimisticLockException if there's an optimistic lock exception on the document.
+     */
+    public void setDocument(String collectionId, CollectionDocument document) {
         collectionService.setDocument(collectionId, document);
     }
 
-
-    public void deleteDocument(String collectionId, String documentId) throws
-            CollectionDoesNotExistException,
-            DocumentDoesNotExistException,
-            IOException {
+    /**
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     * @throws DocumentDoesNotExistException if the document does not exist.
+     * @throws UncheckedIOException in case of I/O issues.
+     */
+    public void deleteDocument(String collectionId, String documentId) {
         collectionService.deleteDocument(collectionId, documentId);
     }
 
-    public CollectionMetaData createCollection(String collectionName, String schema)
-            throws IOException,
-            CollectionAlreadyExistsException,
-            InvalidCollectionSchemaException {
+    /**
+     * @throws UncheckedIOException in case of I/O issues.
+     * @throws CollectionAlreadyExistsException if the collection already exists.
+     * @throws InvalidCollectionSchemaException if the collection schema is invalid.
+     */
+    public CollectionMetaData createCollection(String collectionName, String schema) {
         return collectionService.createCollection(collectionName, schema).getMetaData();
     }
 
-    public void createCollection(CollectionMetaData collectionMetaData, String schema)
-            throws IOException,
-            CollectionAlreadyExistsException {
-
+    /**
+     * @throws UncheckedIOException in case of I/O issues.
+     * @throws CollectionAlreadyExistsException if the collection already exists.
+     */
+    public void createCollection(CollectionMetaData collectionMetaData, String schema) {
         collectionService.createCollection(collectionMetaData, schema);
     }
 
@@ -109,23 +118,29 @@ public abstract class AbstractDatabaseService {
         return collectionService.getCollectionMetaData(collectionId);
     }
 
-    public CollectionDocument getDocument(String collectionId, String documentId)
-            throws CollectionDoesNotExistException,
-            DocumentDoesNotExistException,
-            IOException {
+    /**
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     * @throws DocumentDoesNotExistException if the document does not exist.
+     * @throws UncheckedIOException in case of I/O issues.
+     */
+    public CollectionDocument getDocument(String collectionId, String documentId) {
         return collectionService.getDocument(collectionId, documentId);
     }
 
-    public CollectionPropertyType getPropertyType(String collectionId, String property)
-            throws CollectionDoesNotExistException,
-            PropertyDoesNotExistException {
+    /**
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     * @throws PropertyDoesNotExistException if the property does not exist.
+     */
+    public CollectionPropertyType getPropertyType(String collectionId, String property) {
         return schemaService.getPropertyType(collectionId, property);
     }
 
-    public void indexPropertyInCollection(String collectionId, String property) throws
-            IOException,
-            BTreeException,
-            CollectionDoesNotExistException {
+    /**
+     * @throws UncheckedIOException in case of I/O issues.
+     * @throws UncheckedBTreeException if there's an error with the BTree.
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     */
+    public void indexPropertyInCollection(String collectionId, String property) {
         indexService.indexPropertyInCollection(collectionId, property);
     }
 
@@ -133,23 +148,29 @@ public abstract class AbstractDatabaseService {
         return indexService.isPropertyIndexed(collectionId, property);
     }
 
-    public void removeIndexFromCollectionProperty(String collectionId, String property)
-            throws IndexNotFoundException,
-            BTreeException,
-            IOException, CollectionDoesNotExistException {
+    /**
+     * @throws IndexNotFoundException if the index is not found.
+     * @throws UncheckedBTreeException if there's an error with the BTree.
+     * @throws UncheckedIOException in case of I/O issues.
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     */
+    public void removeIndexFromCollectionProperty(String collectionId, String property) {
         indexService.removeIndexFromCollectionProperty(collectionId, property);
     }
 
+    /**
+     * @throws IndexNotFoundException if the index is not found.
+     * @throws UncheckedBTreeException if there's an error with the BTree.
+     * @throws InvalidOperatorUsage if the operator usage is invalid.
+     * @throws UnRecognizedOperatorException if the operator is unrecognized.
+     */
     public void runQuery(
             String collectionId,
             Operator operator,
             String property,
             CustomValue value,
             Consumer<String> responseConsumer
-    ) throws IndexNotFoundException,
-            BTreeException,
-            InvalidOperatorUsage,
-            UnRecognizedOperatorException {
+    ) {
         indexService.runQuery(collectionId, operator, property, value, responseConsumer);
     }
 }

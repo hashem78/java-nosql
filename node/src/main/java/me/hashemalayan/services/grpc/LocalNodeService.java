@@ -63,17 +63,14 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             CreateCollectionRequest request,
             StreamObserver<CollectionMetaData> responseObserver
     ) {
-        try {
-            responseObserver.onNext(
-                    databaseService.createCollection(
-                            request.getName(),
-                            request.getSchema()
-                    )
-            );
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+
+        responseObserver.onNext(
+                databaseService.createCollection(
+                        request.getName(),
+                        request.getSchema()
+                )
+        );
+        responseObserver.onCompleted();
     }
 
     @Override
@@ -94,15 +91,12 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             GetCollectionDocumentsRequest request,
             StreamObserver<CollectionDocument> responseObserver
     ) {
-        try {
-            databaseService.getDocuments(
-                    request.getCollectionId(),
-                    responseObserver::onNext
-            );
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+
+        databaseService.getDocuments(
+                request.getCollectionId(),
+                responseObserver::onNext
+        );
+        responseObserver.onCompleted();
     }
 
     @Override
@@ -110,16 +104,12 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             EditCollectionRequest request,
             StreamObserver<EditCollectionResponse> responseObserver
     ) {
-        try {
-            databaseService.editCollection(
-                    request.getCollectionId(),
-                    request.getCollectionName()
-            );
-            responseObserver.onNext(EditCollectionResponse.newBuilder().build());
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        databaseService.editCollection(
+                request.getCollectionId(),
+                request.getCollectionName()
+        );
+        responseObserver.onNext(EditCollectionResponse.newBuilder().build());
+        responseObserver.onCompleted();
     }
 
     @Override
@@ -127,16 +117,12 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             DeleteCollectionRequest request,
             StreamObserver<DeleteCollectionResponse> responseObserver
     ) {
-        try {
-            databaseService.deleteCollection(request.getCollectionId());
-            responseObserver.onNext(
-                    DeleteCollectionResponse.newBuilder()
-                            .build()
-            );
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        databaseService.deleteCollection(request.getCollectionId());
+        responseObserver.onNext(
+                DeleteCollectionResponse.newBuilder()
+                        .build()
+        );
+        responseObserver.onCompleted();
     }
 
     @Override
@@ -144,17 +130,14 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             GetDocumentSampleRequest request,
             StreamObserver<GetDocumentSampleResponse> responseObserver
     ) {
-        try {
-            var sample = databaseService.getDocumentSample(request.getCollectionId());
-            responseObserver.onNext(
-                    GetDocumentSampleResponse.newBuilder()
-                            .setDocumentSample(sample)
-                            .build()
-            );
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+
+        var sample = databaseService.getDocumentSample(request.getCollectionId());
+        responseObserver.onNext(
+                GetDocumentSampleResponse.newBuilder()
+                        .setDocumentSample(sample)
+                        .build()
+        );
+        responseObserver.onCompleted();
     }
 
     @Override
@@ -188,8 +171,6 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
                             .build()
             );
             responseObserver.onCompleted();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -198,14 +179,10 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             DeleteCollectionDocumentRequest request,
             StreamObserver<DeleteCollectionDocumentResponse> responseObserver
     ) {
-        try {
-            databaseService.deleteDocument(request.getCollectionId(), request.getDocumentId());
 
-            responseObserver.onNext(DeleteCollectionDocumentResponse.newBuilder().build());
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        databaseService.deleteDocument(request.getCollectionId(), request.getDocumentId());
+        responseObserver.onNext(DeleteCollectionDocumentResponse.newBuilder().build());
+        responseObserver.onCompleted();
     }
 
     @Override
@@ -239,14 +216,11 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             IndexCollectionPropertyRequest request,
             StreamObserver<IndexCollectionPropertyResponse> responseObserver
     ) {
-        try {
-            logger.info("Indexing " + request.getProperty() + " in collection " + request.getCollectionId());
-            databaseService.indexPropertyInCollection(request.getCollectionId(), request.getProperty());
-            responseObserver.onNext(IndexCollectionPropertyResponse.newBuilder().build());
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+
+        logger.info("Indexing " + request.getProperty() + " in collection " + request.getCollectionId());
+        databaseService.indexPropertyInCollection(request.getCollectionId(), request.getProperty());
+        responseObserver.onNext(IndexCollectionPropertyResponse.newBuilder().build());
+        responseObserver.onCompleted();
     }
 
     @Override
@@ -271,16 +245,13 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             RemoveIndexFromCollectionPropertyRequest request,
             StreamObserver<RemoveIndexFromCollectionPropertyResponse> responseObserver
     ) {
-        try {
-            databaseService.removeIndexFromCollectionProperty(
-                    request.getCollectionId(),
-                    request.getProperty()
-            );
-            responseObserver.onNext(RemoveIndexFromCollectionPropertyResponse.newBuilder().build());
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+
+        databaseService.removeIndexFromCollectionProperty(
+                request.getCollectionId(),
+                request.getProperty()
+        );
+        responseObserver.onNext(RemoveIndexFromCollectionPropertyResponse.newBuilder().build());
+        responseObserver.onCompleted();
     }
 
     @Override
@@ -294,7 +265,7 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             responseObserver.onCompleted();
         } else {
             logger.error("User requested to get metadata of collection" + request.getCollectionId() + " but it's not present");
-            var status = Status.INTERNAL
+            var status = Status.NOT_FOUND
                     .withDescription(request.getCollectionId() + " does not exist");
             responseObserver.onError(status.asException());
         }
@@ -311,21 +282,18 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
         final var value = request.getValue();
         logger.info("Query Request: \n" + request);
 
-        try {
-            databaseService.runQuery(
-                    collectionId, operator,
-                    property,
-                    value,
-                    result -> responseObserver.onNext(
-                            QueryDatabaseResponse.newBuilder()
-                                    .setData(result)
-                                    .build()
-                    )
-            );
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+
+        databaseService.runQuery(
+                collectionId, operator,
+                property,
+                value,
+                result -> responseObserver.onNext(
+                        QueryDatabaseResponse.newBuilder()
+                                .setData(result)
+                                .build()
+                )
+        );
+        responseObserver.onCompleted();
     }
 
     @Override
@@ -333,17 +301,14 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             GetCollectionDocumentRequest request,
             StreamObserver<CollectionDocument> responseObserver
     ) {
-        try {
-            responseObserver.onNext(
-                    databaseService.getDocument(
-                            request.getCollectionId(),
-                            request.getDocumentId()
-                    )
-            );
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+
+        responseObserver.onNext(
+                databaseService.getDocument(
+                        request.getCollectionId(),
+                        request.getDocumentId()
+                )
+        );
+        responseObserver.onCompleted();
     }
 
     @Override
@@ -351,19 +316,15 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             GetCollectionPropertyTypeRequest request,
             StreamObserver<GetCollectionPropertyTypeResponse> responseObserver
     ) {
-        try {
-            final var propertyType = databaseService.getPropertyType(
-                    request.getCollectionId(),
-                    request.getProperty()
-            );
-            responseObserver.onNext(
-                    GetCollectionPropertyTypeResponse.newBuilder()
-                            .setPropertyType(propertyType)
-                            .build()
-            );
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        final var propertyType = databaseService.getPropertyType(
+                request.getCollectionId(),
+                request.getProperty()
+        );
+        responseObserver.onNext(
+                GetCollectionPropertyTypeResponse.newBuilder()
+                        .setPropertyType(propertyType)
+                        .build()
+        );
+        responseObserver.onCompleted();
     }
 }
