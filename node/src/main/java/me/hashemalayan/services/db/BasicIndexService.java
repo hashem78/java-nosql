@@ -248,15 +248,7 @@ public class BasicIndexService implements IndexService {
             BTreeException,
             InvalidOperatorUsage,
             UnRecognizedOperatorException {
-        final var pair = new CollectionPropertyPair(collectionId, property);
 
-        if (!indexMap.containsKey(pair))
-            throw new IndexNotFoundException();
-
-        final var index = indexMap.get(pair);
-
-        final var valueBytes = getCustomValueBytes(value);
-        final var bTreeValue = new Value(valueBytes);
         final var adapter = bTreeCallbackFactory.create(
                 (k, v) -> {
                     responseConsumer.accept(v);
@@ -264,7 +256,12 @@ public class BasicIndexService implements IndexService {
                 }
         );
 
-        performQuery(operator, value, index, valueBytes, bTreeValue, adapter);
+        performQuery(
+                operator,
+                value,
+                new CollectionPropertyPair(collectionId, property),
+                adapter
+        );
     }
 
     public List<String> runQuery(
@@ -277,7 +274,34 @@ public class BasicIndexService implements IndexService {
             InvalidOperatorUsage,
             UnRecognizedOperatorException {
         final var results = new ArrayList<String>();
-        final var pair = new CollectionPropertyPair(collectionId, property);
+
+        final var adapter = bTreeCallbackFactory.create(
+                (k, v) -> {
+                    results.add(v);
+                    return true;
+                }
+        );
+
+        performQuery(
+                operator,
+                value,
+                new CollectionPropertyPair(collectionId, property),
+                adapter
+        );
+
+        return results;
+    }
+
+    private void performQuery(
+            Operator operator,
+            CustomValue value,
+            CollectionPropertyPair pair,
+            BTreeCallback adapter
+    ) throws BTreeException,
+            InvalidOperatorUsage,
+            UnRecognizedOperatorException,
+            IndexNotFoundException {
+
 
         if (!indexMap.containsKey(pair))
             throw new IndexNotFoundException();
@@ -286,25 +310,6 @@ public class BasicIndexService implements IndexService {
 
         final var valueBytes = getCustomValueBytes(value);
         final var bTreeValue = new Value(valueBytes);
-        final var adapter = bTreeCallbackFactory.create(
-                (k, v) -> {
-                    results.add(v);
-                    return true;
-                }
-        );
-        performQuery(operator, value, index, valueBytes, bTreeValue, adapter);
-
-        return results;
-    }
-
-    private void performQuery(
-            Operator operator,
-            CustomValue value,
-            BTreeIndexDup index,
-            byte[] valueBytes,
-            Value bTreeValue,
-            BTreeCallback adapter
-    ) throws BTreeException, InvalidOperatorUsage, UnRecognizedOperatorException {
         switch (operator) {
 
             case EQUALS -> index.search(new IndexConditionEQ(bTreeValue), adapter);
