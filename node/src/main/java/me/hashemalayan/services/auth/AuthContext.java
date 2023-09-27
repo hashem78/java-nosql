@@ -56,9 +56,14 @@ public class AuthContext {
                         )
                         .build()
         );
-        if(result.isEmpty())
+        if (result.isEmpty())
             return Optional.empty();
-        return Optional.of(result.get(0));
+
+        try {
+            return Optional.of(objectMapper.readValue(result.get(0), String.class));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public User getCredentials(String email, String password) {
@@ -71,7 +76,7 @@ public class AuthContext {
             final var docJson = objectMapper.readTree(doc.getData());
             return User.newBuilder()
                     .setEmail(docJson.get("email").asText())
-                    .setUserId(docJson.get("password").asText())
+                    .setUserId(docJson.get("userId").asText())
                     .build();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -91,7 +96,7 @@ public class AuthContext {
 
         userJsonNode.put("userId", userId);
         userJsonNode.put("email", email);
-        userJsonNode.put("password", email);
+        userJsonNode.put("password", password);
 
         try {
             databaseService.setDocument(
