@@ -5,6 +5,7 @@ import me.hashemalayan.services.db.interfaces.AbstractDatabaseService;
 import me.hashemalayan.services.db.interfaces.CollectionService;
 import me.hashemalayan.services.db.interfaces.IndexService;
 import me.hashemalayan.services.db.interfaces.SchemaService;
+import me.hashemalayan.util.CustomStructToJson;
 
 public class BasicDatabaseService extends AbstractDatabaseService {
 
@@ -12,8 +13,9 @@ public class BasicDatabaseService extends AbstractDatabaseService {
     public BasicDatabaseService(
             CollectionService collectionService,
             SchemaService schemaService,
-            IndexService indexService
+            IndexService indexService,
+            CustomStructToJson customStructToJson
     ) {
-        super(collectionService, schemaService, indexService);
+        super(collectionService, schemaService, indexService, customStructToJson);
     }
 }

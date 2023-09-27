@@ -21,7 +21,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import static me.hashemalayan.nosql.shared.Common.CollectionMetaData;
 
@@ -118,10 +117,7 @@ public class NodeEntryPoint {
                             .setData(objectMapper.writeValueAsString(userJsonNode))
                             .build()
             );
-
-            indexService.indexPropertyInCollection("auth", "name");
-            indexService.indexPropertyInCollection("auth", "email");
-            indexService.indexPropertyInCollection("auth", "password");
+            indexService.compoundIndex("auth", List.of("email", "password"));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

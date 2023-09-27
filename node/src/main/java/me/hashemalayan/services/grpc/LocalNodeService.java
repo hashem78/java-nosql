@@ -276,17 +276,12 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
             QueryDatabaseRequest request,
             StreamObserver<QueryDatabaseResponse> responseObserver
     ) {
-        final var collectionId = request.getCollectionId();
-        final var property = request.getProperty();
-        final var operator = request.getOperator();
-        final var value = request.getValue();
-        logger.info("Query Request: \n" + request);
-
 
         databaseService.runQuery(
-                collectionId, operator,
-                property,
-                value,
+                request.getCollectionId(),
+                request.getOperator(),
+                request.getProperty(),
+                request.getValue(),
                 result -> responseObserver.onNext(
                         QueryDatabaseResponse.newBuilder()
                                 .setData(result)
@@ -324,6 +319,54 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
                 GetCollectionPropertyTypeResponse.newBuilder()
                         .setPropertyType(propertyType)
                         .build()
+        );
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void compoundIndex(
+            CompoundIndexRequest request,
+            StreamObserver<IndexCollectionPropertyResponse> responseObserver
+    ) {
+        databaseService.compoundIndex(request.getCollectionId(), request.getPropertiesList());
+        responseObserver.onNext(IndexCollectionPropertyResponse.newBuilder().build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void compoundQuery(
+            CompoundIndexQueryRequest request,
+            StreamObserver<QueryDatabaseResponse> responseObserver
+    ) {
+
+        databaseService.compoundQuery(
+                request.getCollectionId(),
+                request.getOperator(),
+                request.getQuery(),
+                result -> responseObserver.onNext(
+                        QueryDatabaseResponse.newBuilder()
+                                .setData(result)
+                                .build()
+                )
+        );
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void compoundQuerySync(
+            CompoundIndexQueryRequest request,
+            StreamObserver<CompoundIndexQueryResponse> responseObserver
+    ) {
+
+        final var queryResponse = databaseService.compoundQuery(
+                request.getCollectionId(),
+                request.getOperator(),
+                request.getQuery()
+        );
+        responseObserver.onNext(
+                CompoundIndexQueryResponse.newBuilder()
+                        .addAllDocumentIds(queryResponse)
+                .build()
         );
         responseObserver.onCompleted();
     }

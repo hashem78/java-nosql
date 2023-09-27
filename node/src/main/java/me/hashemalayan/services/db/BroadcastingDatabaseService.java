@@ -7,6 +7,7 @@ import me.hashemalayan.services.db.interfaces.CollectionService;
 import me.hashemalayan.services.db.interfaces.IndexService;
 import me.hashemalayan.services.db.interfaces.SchemaService;
 import me.hashemalayan.services.grpc.interfaces.RemoteReplicationService;
+import me.hashemalayan.util.CustomStructToJson;
 
 public class BroadcastingDatabaseService extends AbstractDatabaseService {
     private final RemoteReplicationService replicationService;
@@ -15,9 +16,10 @@ public class BroadcastingDatabaseService extends AbstractDatabaseService {
             CollectionService collectionService,
             SchemaService schemaService,
             IndexService indexService,
-            RemoteReplicationService replicationService
+            RemoteReplicationService replicationService,
+            CustomStructToJson customStructToJson
     ) {
-        super(collectionService, schemaService, indexService);
+        super(collectionService, schemaService, indexService, customStructToJson);
         this.replicationService = replicationService;
     }
 

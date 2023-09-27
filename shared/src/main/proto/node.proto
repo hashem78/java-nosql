@@ -28,6 +28,24 @@ service NodeService {
   rpc GetCollectionMetaData(GetCollectionMetaDataRequest) returns (CollectionMetaData);
   rpc QueryDatabase(QueryDatabaseRequest) returns (stream QueryDatabaseResponse);
   rpc GetPropertyType(GetCollectionPropertyTypeRequest) returns(GetCollectionPropertyTypeResponse);
+  rpc CompoundIndex(CompoundIndexRequest) returns (IndexCollectionPropertyResponse);
+  rpc CompoundQuery(CompoundIndexQueryRequest) returns (stream QueryDatabaseResponse);
+  rpc CompoundQuerySync(CompoundIndexQueryRequest) returns (CompoundIndexQueryResponse);
+}
+
+message CompoundIndexQueryResponse {
+  repeated string document_ids = 1;
+}
+
+message CompoundIndexQueryRequest {
+  string collection_id = 1;
+  Operator operator = 2;
+  CustomStruct query = 3;
+}
+
+message CompoundIndexRequest{
+  string collection_id = 1;
+  repeated string properties = 2;
 }
 
 message GetCollectionPropertyTypeRequest {

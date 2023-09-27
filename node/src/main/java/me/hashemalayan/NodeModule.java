@@ -29,6 +29,7 @@ import me.hashemalayan.services.grpc.interfaces.LocalServicesManager;
 import me.hashemalayan.services.grpc.interfaces.RemoteReplicationService;
 import me.hashemalayan.services.grpc.interfaces.RemoteSignalingService;
 import me.hashemalayan.util.BTreeCallbackFactory;
+import me.hashemalayan.util.CustomStructToJson;
 import me.hashemalayan.util.JsonSchemaDeserializer;
 import me.hashemalayan.util.JsonSchemaSerializer;
 import me.hashemalayan.util.interceptors.ExceptionHandlingInterceptor;
@@ -62,6 +63,7 @@ public class NodeModule extends AbstractModule {
         bind(ReplicationServiceImplBase.class).to(LocalReplicationService.class).asEagerSingleton();
         bind(LocalAuthService.class).asEagerSingleton();
         bind(AuthContext.class).asEagerSingleton();
+        bind(CustomStructToJson.class);
 
         bind(CollectionConfigurationService.class).to(BasicCollectionConfigurationService.class).asEagerSingleton();
         bind(CollectionService.class).to(BasicCollectionService.class).asEagerSingleton();

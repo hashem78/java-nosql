@@ -6,7 +6,9 @@ import btree4j.BTreeIndexDup;
 import btree4j.Value;
 import btree4j.indexer.LikeIndexQuery;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Inject;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.factories.JsonDirectoryIteratorFactory;
@@ -70,12 +72,14 @@ public class BasicIndexService implements IndexService {
             for (final var collectionPath : collectionPathStream) {
                 if (!Files.isDirectory(collectionPath)) continue;
                 final var collectionId = collectionPath.getFileName().toString();
+                logger.debug("Loading Indexes for collection " + collectionId);
                 final var collectionIndexesPath = collectionPath.resolve("indexes");
                 if (!Files.exists(collectionIndexesPath))
                     Files.createDirectories(collectionIndexesPath);
                 try (final var collectionIndexesPathStream = Files.newDirectoryStream(collectionIndexesPath)) {
                     for (final var collectionIndexPath : collectionIndexesPathStream) {
                         final var propertyName = collectionIndexPath.getFileName().toString();
+                        logger.debug("  Loading " + propertyName);
                         final var bTree = new BTreeIndexDup(collectionIndexPath.toFile());
                         bTree.init(false);
                         indexMap.put(new CollectionPropertyPair(collectionId, propertyName), bTree);
@@ -370,9 +374,10 @@ public class BasicIndexService implements IndexService {
                 .toArray(Value[]::new);
     }
 
-    public void compoundIndex(String collectionId, String... properties) {
+    public void compoundIndex(String collectionId, List<String> properties) {
 
         final var joinedProperties = String.join("_", properties);
+        final var pair = new CollectionPropertyPair(collectionId, joinedProperties);
 
         final var collectionPath = collectionsPath.resolve(collectionId);
         final var collectionIndexesPath = collectionsPath.resolve(collectionId).resolve("indexes");
@@ -383,8 +388,10 @@ public class BasicIndexService implements IndexService {
             if (!Files.exists(collectionIndexesPath))
                 Files.createDirectories(collectionIndexesPath);
             final var indexFilePath = collectionIndexesPath.resolve(joinedProperties);
-
             final var documentsPath = collectionPath.resolve("documents");
+
+            final var bTreeIndex = new BTreeIndexDup(indexFilePath.toFile());
+            bTreeIndex.init(false);
 
             final var documentsIterator = jsonDirectoryIteratorFactory.create(documentsPath);
             while (documentsIterator.hasNext()) {
@@ -399,6 +406,7 @@ public class BasicIndexService implements IndexService {
                 boolean shouldBreak = false;
                 for (final var property : properties) {
                     if (!dataNode.has(property)) {
+                        logger.info("Document does not have property " + property);
                         shouldBreak = true;
                     }
                 }
@@ -411,14 +419,85 @@ public class BasicIndexService implements IndexService {
                 }
 
                 bTreeIndex.addValue(
-                        new Value(objectMapper.writeValueAsBytes(valueOfProperty)),
+                        new Value(objectMapper.writeValueAsBytes(indexObj)),
                         new Value("\"" + FilenameUtils.removeExtension(iteratorResult.documentName()) + "\"")
                 );
             }
+            bTreeIndex.flush();
+            indexMap.put(pair, bTreeIndex);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } catch (BTreeException e) {
             throw new UncheckedBTreeException(e);
+        }
+    }
+
+    public List<String> compoundQuery(
+            String collectionId,
+            Operator operator,
+            ObjectNode query,
+            List<String> properties
+    ) {
+
+        final var results = new ArrayList<String>();
+        final var adapter = bTreeCallbackFactory.create(
+                (k, v) -> {
+                    results.add(v);
+                    return true;
+                }
+        );
+        performCompoundQuery(collectionId, operator, query, adapter, properties);
+        return results;
+    }
+
+    public void compoundQuery(
+            String collectionId,
+            Operator operator,
+            ObjectNode query,
+            Consumer<String> responseConsumer,
+            List<String> properties
+    ) {
+
+        final var adapter = bTreeCallbackFactory.create(
+                (k, v) -> {
+                    responseConsumer.accept(v);
+                    return true;
+                }
+        );
+
+        performCompoundQuery(collectionId, operator, query, adapter, properties);
+    }
+
+    private void performCompoundQuery(
+            String collectionId,
+            Operator operator,
+            JsonNode query,
+            BTreeCallback callback,
+            List<String> properties
+    ) {
+        final var joinedProperties = String.join("_", properties);
+        final var pair = new CollectionPropertyPair(collectionId, joinedProperties);
+
+        if (!indexMap.containsKey(pair))
+            throw new IndexNotFoundException();
+
+        try {
+            final var bTreeValue = new Value(objectMapper.writeValueAsBytes(query));
+            final var index = indexMap.get(pair);
+            switch (operator) {
+                case EQUALS -> index.search(new IndexConditionEQ(bTreeValue), callback);
+                case NOT_EQUALS -> index.search(new IndexConditionNE(bTreeValue), callback);
+                case UNRECOGNIZED -> throw new UnRecognizedOperatorException();
+                default -> throw new UnSupportedOperatorException();
+            }
+            configurationService.editCollectionMetaData(
+                    pair.collectionId(),
+                    (metaData) -> metaData.addIndexedProperties(joinedProperties)
+            );
+        } catch (BTreeException e) {
+            throw new UncheckedBTreeException(e);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
         }
     }
 }

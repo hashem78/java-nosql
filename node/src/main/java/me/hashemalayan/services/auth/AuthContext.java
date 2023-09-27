@@ -7,14 +7,17 @@ import com.google.inject.name.Named;
 import com.google.protobuf.util.Timestamps;
 import me.hashemalayan.NodeProperties;
 import me.hashemalayan.nosql.shared.Common;
+import me.hashemalayan.nosql.shared.Common.CollectionDocument;
 import me.hashemalayan.nosql.shared.Common.DocumentMetaData;
 import me.hashemalayan.nosql.shared.Customstruct;
+import me.hashemalayan.nosql.shared.Customstruct.CustomStruct;
 import me.hashemalayan.nosql.shared.Operator;
 import me.hashemalayan.nosql.shared.User;
 import me.hashemalayan.services.auth.exceptions.UserAlreadyExistsException;
 import me.hashemalayan.services.auth.exceptions.UserDoesNotExistException;
 import me.hashemalayan.services.db.interfaces.AbstractDatabaseService;
 
+import java.io.FileDescriptor;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -34,40 +37,41 @@ public class AuthContext {
         this.nodeProperties = nodeProperties;
     }
 
-    public Optional<String> getUserId(String email, String password) {
-        final var emailResults = databaseService.runQuery(
+    private Optional<String> queryAuth(String email, String password) {
+        final var result = databaseService.compoundQuery(
                 "auth",
                 Operator.EQUALS,
-                "email",
-                Customstruct.CustomValue.newBuilder()
-                        .setStringValue(email)
+                CustomStruct.newBuilder()
+                        .putFields(
+                                "email",
+                                Customstruct.CustomValue.newBuilder()
+                                        .setStringValue(email)
+                                        .build()
+                        )
+                        .putFields(
+                                "password",
+                                Customstruct.CustomValue.newBuilder()
+                                        .setStringValue(password)
+                                        .build()
+                        )
                         .build()
         );
-        final var passwordResults = databaseService.runQuery(
-                "auth",
-                Operator.EQUALS,
-                "password",
-                Customstruct.CustomValue.newBuilder()
-                        .setStringValue(password)
-                        .build()
-        );
-        if (!emailResults.isEmpty() && !passwordResults.isEmpty()) {
-            return Optional.of(passwordResults.get(0));
-        }
-        return Optional.empty();
+        if(result.isEmpty())
+            return Optional.empty();
+        return Optional.of(result.get(0));
     }
 
     public User getCredentials(String email, String password) {
-        final var userIdOpt = getUserId(email, password);
-        if (userIdOpt.isEmpty()) {
+        final var docId = queryAuth(email, password);
+        if (docId.isEmpty()) {
             throw new UserDoesNotExistException();
         }
         try {
-            final var doc = databaseService.getDocument("auth", userIdOpt.get());
+            final var doc = databaseService.getDocument("auth", docId.get());
             final var docJson = objectMapper.readTree(doc.getData());
             return User.newBuilder()
                     .setEmail(docJson.get("email").asText())
-                    .setUserId(userIdOpt.get())
+                    .setUserId(docJson.get("password").asText())
                     .build();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -76,7 +80,7 @@ public class AuthContext {
 
     public User registerUser(String email, String password) throws UserAlreadyExistsException {
 
-        if (getUserId(email, password).isPresent()) {
+        if (queryAuth(email, password).isPresent()) {
             throw new UserAlreadyExistsException();
         }
 
@@ -92,7 +96,7 @@ public class AuthContext {
         try {
             databaseService.setDocument(
                     "auth",
-                    Common.CollectionDocument
+                    CollectionDocument
                             .newBuilder()
                             .setMetaData(
                                     DocumentMetaData.newBuilder()

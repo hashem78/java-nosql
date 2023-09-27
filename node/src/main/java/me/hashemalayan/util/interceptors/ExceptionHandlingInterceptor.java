@@ -82,6 +82,8 @@ public class ExceptionHandlingInterceptor implements ServerInterceptor {
             return Status.ALREADY_EXISTS.withDescription("User already exists").withCause(e);
         } else if (e instanceof UserDoesNotExistException) {
             return Status.ALREADY_EXISTS.withDescription("User does not exist").withCause(e);
+        } else if (e instanceof UnSupportedOperatorException) {
+            return Status.INVALID_ARGUMENT.withDescription("Unsupported operator");
         } else {
             return Status.UNKNOWN.withDescription("Unknown error occurred").withCause(e);
         }
