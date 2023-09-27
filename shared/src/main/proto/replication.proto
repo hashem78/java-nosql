@@ -15,6 +15,18 @@ service ReplicationService {
   rpc DeleteCollectionDocument(DeleteDocumentReplicationMessage) returns (ReplicationResponse);
   rpc IndexCollectionProperty(IndexCollectionPropertyReplicationMessage) returns(ReplicationResponse);
   rpc RemoveIndexFromCollectionProperty(RemoveIndexReplicationMessage) returns(ReplicationResponse);
+  rpc CompoundIndex(CompoundIndexReplicationMessage) returns(ReplicationResponse);
+  rpc RemoveCompoundIndex(RemoveCompoundIndexReplicationMessage) returns(ReplicationResponse);
+}
+
+message RemoveCompoundIndexReplicationMessage{
+  string collection_id = 1;
+  repeated string properties = 2;
+}
+
+message CompoundIndexReplicationMessage{
+  string collection_id = 1;
+  repeated string properties = 2;
 }
 
 message RemoveIndexReplicationMessage{
@@ -59,6 +71,8 @@ message ReplicationMessage {
     DeleteDocumentReplicationMessage delete_document_replication_message = 5;
     IndexCollectionPropertyReplicationMessage index_collection_property_replication_message = 6;
     RemoveIndexReplicationMessage remove_index_replication_message = 7;
+    CompoundIndexReplicationMessage compound_index_replication_message = 8;
+    RemoveCompoundIndexReplicationMessage remove_compound_index_replication_message = 9;
   }
 }
 

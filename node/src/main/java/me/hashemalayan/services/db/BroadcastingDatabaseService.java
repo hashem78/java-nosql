@@ -9,6 +9,8 @@ import me.hashemalayan.services.db.interfaces.SchemaService;
 import me.hashemalayan.services.grpc.interfaces.RemoteReplicationService;
 import me.hashemalayan.util.CustomStructToJson;
 
+import java.util.List;
+
 public class BroadcastingDatabaseService extends AbstractDatabaseService {
     private final RemoteReplicationService replicationService;
     @Inject
@@ -126,6 +128,36 @@ public class BroadcastingDatabaseService extends AbstractDatabaseService {
                                 RemoveIndexReplicationMessage.newBuilder()
                                         .setCollectionId(collectionId)
                                         .setProperty(property)
+                                        .build()
+                        )
+                        .build()
+        );
+    }
+
+    @Override
+    public void compoundIndex(String collectionId, List<String> properties) {
+        super.compoundIndex(collectionId, properties);
+        replicationService.broadcast(
+                ReplicationMessage.newBuilder()
+                        .setCompoundIndexReplicationMessage(
+                                CompoundIndexReplicationMessage.newBuilder()
+                                        .setCollectionId(collectionId)
+                                        .addAllProperties(properties)
+                                        .build()
+                        )
+                        .build()
+        );
+    }
+
+    @Override
+    public void removeCompoundIndex(String collectionId, List<String> properties) {
+        super.removeCompoundIndex(collectionId, properties);
+        replicationService.broadcast(
+                ReplicationMessage.newBuilder()
+                        .setRemoveCompoundIndexReplicationMessage(
+                                RemoveCompoundIndexReplicationMessage.newBuilder()
+                                        .setCollectionId(collectionId)
+                                        .addAllProperties(properties)
                                         .build()
                         )
                         .build()

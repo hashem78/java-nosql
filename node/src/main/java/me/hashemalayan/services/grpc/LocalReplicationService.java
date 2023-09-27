@@ -152,4 +152,24 @@ public class LocalReplicationService extends ReplicationServiceGrpc.ReplicationS
         responseObserver.onNext(ReplicationResponse.newBuilder().build());
         responseObserver.onCompleted();
     }
+
+    @Override
+    public void compoundIndex(
+            CompoundIndexReplicationMessage request,
+            StreamObserver<ReplicationResponse> responseObserver
+    ) {
+        databaseService.compoundIndex(request.getCollectionId(), request.getPropertiesList());
+        responseObserver.onNext(ReplicationResponse.newBuilder().build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void removeCompoundIndex(
+            RemoveCompoundIndexReplicationMessage request,
+            StreamObserver<ReplicationResponse> responseObserver
+    ) {
+        databaseService.removeCompoundIndex(request.getCollectionId(), request.getPropertiesList());
+        responseObserver.onNext(ReplicationResponse.newBuilder().build());
+        responseObserver.onCompleted();
+    }
 }

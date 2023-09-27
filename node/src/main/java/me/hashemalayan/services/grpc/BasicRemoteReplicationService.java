@@ -94,7 +94,11 @@ public class BasicRemoteReplicationService implements RemoteReplicationService {
             case INDEX_COLLECTION_PROPERTY_REPLICATION_MESSAGE ->
                     internalBroadcast(x -> x.indexCollectionProperty(message.getIndexCollectionPropertyReplicationMessage()));
             case REMOVE_INDEX_REPLICATION_MESSAGE ->
-                internalBroadcast(x -> x.removeIndexFromCollectionProperty(message.getRemoveIndexReplicationMessage()));
+                    internalBroadcast(x -> x.removeIndexFromCollectionProperty(message.getRemoveIndexReplicationMessage()));
+            case COMPOUND_INDEX_REPLICATION_MESSAGE ->
+                    internalBroadcast(x -> x.compoundIndex(message.getCompoundIndexReplicationMessage()));
+            case REMOVE_COMPOUND_INDEX_REPLICATION_MESSAGE ->
+                internalBroadcast(x -> x.removeCompoundIndex(message.getRemoveCompoundIndexReplicationMessage()));
             case MESSAGE_NOT_SET -> {
             }
         }
