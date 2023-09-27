@@ -225,6 +225,16 @@ public class BasicIndexService implements IndexService {
         return metaData.getIndexedPropertiesList();
     }
 
+    public List<String> getCompoundIndexedProperties(String collectionId) {
+        final var metaDataOpt = configurationService.getCollectionMetaData(collectionId);
+
+        if (metaDataOpt.isEmpty())
+            return new ArrayList<>();
+
+        final var metaData = metaDataOpt.get();
+        return metaData.getIndexedCompoundPropertiesList();
+    }
+
     public void removeIndexFromCollectionProperty(String collectionId, String property) {
 
         final var pair = new CollectionPropertyPair(collectionId, property);
@@ -243,6 +253,35 @@ public class BasicIndexService implements IndexService {
                         final var props = new ArrayList<>(x.getIndexedPropertiesList());
                         props.remove(property);
                         return x.clearIndexedProperties().addAllIndexedProperties(props);
+                    }
+            );
+            Files.deleteIfExists(indexFilePath);
+        } catch (BTreeException e) {
+            throw new UncheckedBTreeException(e);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    public void removeCompoundIndex(String collectionId, List<String> properties) {
+        final var joinedProperties = String.join("_", properties);
+        final var pair = new CollectionPropertyPair(collectionId, joinedProperties);
+
+        if (!indexMap.containsKey(pair))
+            throw new IndexNotFoundException();
+
+        final var collectionIndexesPath = collectionsPath.resolve(collectionId).resolve("indexes");
+        final var indexFilePath = collectionIndexesPath.resolve(joinedProperties);
+
+        final var index = indexMap.get(pair);
+        try {
+            index.close();
+            indexMap.remove(pair);
+            configurationService.editCollectionMetaData(
+                    collectionId, x -> {
+                        final var props = new ArrayList<>(x.getIndexedCompoundPropertiesList());
+                        props.remove(joinedProperties);
+                        return x.clearIndexedCompoundProperties().addAllIndexedCompoundProperties(props);
                     }
             );
             Files.deleteIfExists(indexFilePath);
@@ -425,6 +464,10 @@ public class BasicIndexService implements IndexService {
             }
             bTreeIndex.flush();
             indexMap.put(pair, bTreeIndex);
+            configurationService.editCollectionMetaData(
+                    collectionId,
+                    (metaData) -> metaData.addIndexedCompoundProperties(joinedProperties)
+            );
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } catch (BTreeException e) {
@@ -490,10 +533,6 @@ public class BasicIndexService implements IndexService {
                 case UNRECOGNIZED -> throw new UnRecognizedOperatorException();
                 default -> throw new UnSupportedOperatorException();
             }
-            configurationService.editCollectionMetaData(
-                    pair.collectionId(),
-                    (metaData) -> metaData.addIndexedProperties(joinedProperties)
-            );
         } catch (BTreeException e) {
             throw new UncheckedBTreeException(e);
         } catch (JsonProcessingException e) {

@@ -2,6 +2,7 @@ package me.hashemalayan.services.db.interfaces;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.protobuf.ProtocolStringList;
 import me.hashemalayan.nosql.shared.CollectionPropertyType;
 import me.hashemalayan.nosql.shared.Common.CollectionDocument;
 import me.hashemalayan.nosql.shared.Common.CollectionMetaData;
@@ -233,5 +234,9 @@ public abstract class AbstractDatabaseService {
         List<String> list = new ArrayList<>();
         queryObj.fieldNames().forEachRemaining(list::add);
         return list;
+    }
+
+    public void removeCompoundIndex(String collectionId, List<String> propertiesList) {
+        indexService.removeCompoundIndex(collectionId, propertiesList);
     }
 }

@@ -333,10 +333,11 @@ public class BasicCollectionService implements CollectionService {
             String documentId,
             ObjectNode documentNode,
             JsonNode oldDataNode
-    )  {
+    ) {
         try {
             final var dataNode = documentNode.get("data");
             final var indexedPropertiesInCollection = indexService.getIndexedProperties(collectionId);
+            final var compoundIndexedPropertiesInCollection = indexService.getCompoundIndexedProperties(collectionId);
             for (final var indexedPropertyInCollection : indexedPropertiesInCollection) {
                 final var dataNodeToBeAddedToIndex = dataNode.get(indexedPropertyInCollection);
                 if (oldDataNode == null) {
@@ -352,6 +353,33 @@ public class BasicCollectionService implements CollectionService {
                             documentId,
                             indexedPropertyInCollection,
                             objectMapper.writeValueAsBytes(oldDataNode.get(indexedPropertyInCollection)),
+                            objectMapper.writeValueAsBytes(dataNodeToBeAddedToIndex)
+                    );
+                }
+            }
+            for (final var indexedPropertyInCollection : compoundIndexedPropertiesInCollection) {
+                final var properties = indexedPropertyInCollection.split("_");
+                final var dataNodeToBeAddedToIndex = objectMapper.createObjectNode();
+                for (final var property : properties) {
+                    dataNodeToBeAddedToIndex.set(property, dataNode.get(property));
+                }
+                if (oldDataNode == null) {
+                    indexService.addToIndex(
+                            collectionId,
+                            documentId,
+                            indexedPropertyInCollection,
+                            objectMapper.writeValueAsBytes(dataNodeToBeAddedToIndex)
+                    );
+                } else {
+                    final var oldKeyNode = objectMapper.createObjectNode();
+                    for (final var property : properties) {
+                        oldKeyNode.set(property, oldDataNode.get(property));
+                    }
+                    indexService.addToIndex(
+                            collectionId,
+                            documentId,
+                            indexedPropertyInCollection,
+                            objectMapper.writeValueAsBytes(oldKeyNode),
                             objectMapper.writeValueAsBytes(dataNodeToBeAddedToIndex)
                     );
                 }

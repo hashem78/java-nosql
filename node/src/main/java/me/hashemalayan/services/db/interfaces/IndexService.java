@@ -49,6 +49,8 @@ public interface IndexService {
 
     List<String> getIndexedProperties(String collectionId);
 
+    List<String> getCompoundIndexedProperties(String collectionId);
+
     boolean isPropertyIndexed(String collectionId, String property);
 
     /**
@@ -100,4 +102,12 @@ public interface IndexService {
             Consumer<String> responseConsumer,
             List<String> properties
     );
+
+    /**
+     * @throws IndexNotFoundException          if the index is not found.
+     * @throws UncheckedBTreeException         if there's an error with the BTree.
+     * @throws UncheckedIOException            in case of I/O issues.
+     * @throws CollectionDoesNotExistException if the collection does not exist.
+     */
+    void removeCompoundIndex(String collectionId, List<String> properties);
 }

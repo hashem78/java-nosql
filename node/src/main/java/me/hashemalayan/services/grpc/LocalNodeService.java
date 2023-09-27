@@ -370,4 +370,14 @@ public class LocalNodeService extends NodeServiceGrpc.NodeServiceImplBase {
         );
         responseObserver.onCompleted();
     }
+
+    @Override
+    public void removeCompoundIndex(
+            RemoveCompoundIndexRequest request,
+            StreamObserver<RemoveCompoundIndexResponse> responseObserver
+    ) {
+        databaseService.removeCompoundIndex(request.getCollectionId(), request.getPropertiesList());
+        responseObserver.onNext(RemoveCompoundIndexResponse.newBuilder().build());
+        responseObserver.onCompleted();
+    }
 }

@@ -31,6 +31,16 @@ service NodeService {
   rpc CompoundIndex(CompoundIndexRequest) returns (IndexCollectionPropertyResponse);
   rpc CompoundQuery(CompoundIndexQueryRequest) returns (stream QueryDatabaseResponse);
   rpc CompoundQuerySync(CompoundIndexQueryRequest) returns (CompoundIndexQueryResponse);
+  rpc RemoveCompoundIndex(RemoveCompoundIndexRequest) returns (RemoveCompoundIndexResponse);
+}
+
+message RemoveCompoundIndexResponse{
+
+}
+
+message RemoveCompoundIndexRequest {
+  string collection_id = 1;
+  repeated string properties = 2;
 }
 
 message CompoundIndexQueryResponse {

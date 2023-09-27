@@ -9,6 +9,7 @@ message CollectionMetaData {
   google.protobuf.Timestamp created_on = 3;
   bool deleted = 4;
   repeated string indexed_properties = 5;
+  repeated string indexed_compound_properties = 6;
 }
 
 message SetCollectionDocumentRequest {
