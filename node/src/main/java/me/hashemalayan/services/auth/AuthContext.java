@@ -28,7 +28,7 @@ public class AuthContext {
 
     @Inject
     public AuthContext(
-            @Named("BasicDbService") AbstractDatabaseService databaseService,
+            @Named("BroadcastingDbService") AbstractDatabaseService databaseService,
             ObjectMapper objectMapper,
             NodeProperties nodeProperties
     ) {
