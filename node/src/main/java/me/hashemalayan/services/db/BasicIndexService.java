@@ -369,4 +369,56 @@ public class BasicIndexService implements IndexService {
                 .map(Value::new)
                 .toArray(Value[]::new);
     }
+
+    public void compoundIndex(String collectionId, String... properties) {
+
+        final var joinedProperties = String.join("_", properties);
+
+        final var collectionPath = collectionsPath.resolve(collectionId);
+        final var collectionIndexesPath = collectionsPath.resolve(collectionId).resolve("indexes");
+
+        try {
+            if (!Files.exists(collectionPath))
+                throw new CollectionDoesNotExistException();
+            if (!Files.exists(collectionIndexesPath))
+                Files.createDirectories(collectionIndexesPath);
+            final var indexFilePath = collectionIndexesPath.resolve(joinedProperties);
+
+            final var documentsPath = collectionPath.resolve("documents");
+
+            final var documentsIterator = jsonDirectoryIteratorFactory.create(documentsPath);
+            while (documentsIterator.hasNext()) {
+                final var iteratorResult = documentsIterator.next();
+                final var documentPath = collectionPath.resolve(iteratorResult.documentName());
+                logger.debug("Indexing " + documentPath);
+                final var documentNode = iteratorResult.jsonNode();
+                if (!documentNode.has("data")) continue;
+                final var dataNode = documentNode.get("data");
+
+                // Make sure all the properties we want are present
+                boolean shouldBreak = false;
+                for (final var property : properties) {
+                    if (!dataNode.has(property)) {
+                        shouldBreak = true;
+                    }
+                }
+                if (shouldBreak) break;
+
+                final var indexObj = objectMapper.createObjectNode();
+                for (final var property : properties) {
+                    final var valueOfProperty = dataNode.get(property);
+                    indexObj.set(property, valueOfProperty);
+                }
+
+                bTreeIndex.addValue(
+                        new Value(objectMapper.writeValueAsBytes(valueOfProperty)),
+                        new Value("\"" + FilenameUtils.removeExtension(iteratorResult.documentName()) + "\"")
+                );
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } catch (BTreeException e) {
+            throw new UncheckedBTreeException(e);
+        }
+    }
 }

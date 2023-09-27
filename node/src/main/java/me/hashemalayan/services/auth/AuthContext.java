@@ -12,8 +12,10 @@ import me.hashemalayan.nosql.shared.Customstruct;
 import me.hashemalayan.nosql.shared.Operator;
 import me.hashemalayan.nosql.shared.User;
 import me.hashemalayan.services.auth.exceptions.UserAlreadyExistsException;
+import me.hashemalayan.services.auth.exceptions.UserDoesNotExistException;
 import me.hashemalayan.services.db.interfaces.AbstractDatabaseService;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public class AuthContext {
@@ -32,7 +34,7 @@ public class AuthContext {
         this.nodeProperties = nodeProperties;
     }
 
-    public boolean userExists(String email, String password) {
+    public Optional<String> getUserId(String email, String password) {
         final var emailResults = databaseService.runQuery(
                 "auth",
                 Operator.EQUALS,
@@ -49,30 +51,37 @@ public class AuthContext {
                         .setStringValue(password)
                         .build()
         );
-        return !emailResults.isEmpty() && !passwordResults.isEmpty();
+        if (!emailResults.isEmpty() && !passwordResults.isEmpty()) {
+            return Optional.of(passwordResults.get(0));
+        }
+        return Optional.empty();
     }
 
-    public boolean userExists(String userId) {
-        final var userIdResults = databaseService.runQuery(
-                "auth",
-                Operator.EQUALS,
-                "userId",
-                Customstruct.CustomValue.newBuilder()
-                        .setStringValue(userId)
-                        .build()
-        );
-        return !userIdResults.isEmpty();
+    public User getCredentials(String email, String password) {
+        final var userIdOpt = getUserId(email, password);
+        if (userIdOpt.isEmpty()) {
+            throw new UserDoesNotExistException();
+        }
+        try {
+            final var doc = databaseService.getDocument("auth", userIdOpt.get());
+            final var docJson = objectMapper.readTree(doc.getData());
+            return User.newBuilder()
+                    .setEmail(docJson.get("email").asText())
+                    .setUserId(userIdOpt.get())
+                    .build();
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public User registerUser(String email, String password) throws UserAlreadyExistsException {
 
-        if (userExists(email, password)) {
+        if (getUserId(email, password).isPresent()) {
             throw new UserAlreadyExistsException();
         }
 
         final var createdOn = Timestamps.fromMillis(System.currentTimeMillis());
         final var userId = UUID.randomUUID().toString();
-        final var documentId = UUID.randomUUID().toString();
 
         final var userJsonNode = objectMapper.createObjectNode();
 
@@ -90,7 +99,7 @@ public class AuthContext {
                                             .setCreatedOn(createdOn)
                                             .setLastEditedOn(createdOn)
                                             .setAffinity(nodeProperties.getPort())
-                                            .setId(documentId)
+                                            .setId(userId)
                                             .setDeleted(false)
                                             .build()
                             )

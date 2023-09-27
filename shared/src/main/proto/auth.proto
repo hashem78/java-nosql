@@ -8,9 +8,15 @@ package auth;
 
 service AuthService {
   rpc RegisterUser(UserRegistrationRequest) returns (User);
+  rpc GetCredentials(GetUserCredentialsRequest) returns (User);
 }
 
 message UserRegistrationRequest{
+  string email = 1;
+  string password = 2;
+}
+
+message GetUserCredentialsRequest{
   string email = 1;
   string password = 2;
 }

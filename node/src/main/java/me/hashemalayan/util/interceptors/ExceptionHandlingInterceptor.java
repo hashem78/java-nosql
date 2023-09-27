@@ -6,6 +6,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import io.grpc.ForwardingServerCall.SimpleForwardingServerCall;
 import io.grpc.*;
 import me.hashemalayan.services.auth.exceptions.UserAlreadyExistsException;
+import me.hashemalayan.services.auth.exceptions.UserDoesNotExistException;
 import me.hashemalayan.services.db.exceptions.*;
 
 import java.io.UncheckedIOException;
@@ -79,6 +80,8 @@ public class ExceptionHandlingInterceptor implements ServerInterceptor {
             return Status.ABORTED.withDescription("Failed to parse timestamp").withCause(e);
         } else if (e instanceof UserAlreadyExistsException) {
             return Status.ALREADY_EXISTS.withDescription("User already exists").withCause(e);
+        } else if (e instanceof UserDoesNotExistException) {
+            return Status.ALREADY_EXISTS.withDescription("User does not exist").withCause(e);
         } else {
             return Status.UNKNOWN.withDescription("Unknown error occurred").withCause(e);
         }
