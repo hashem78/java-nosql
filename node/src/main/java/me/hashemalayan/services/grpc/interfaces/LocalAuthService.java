@@ -2,10 +2,7 @@ package me.hashemalayan.services.grpc.interfaces;
 
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
-import me.hashemalayan.nosql.shared.AuthServiceGrpc;
-import me.hashemalayan.nosql.shared.GetUserCredentialsRequest;
-import me.hashemalayan.nosql.shared.User;
-import me.hashemalayan.nosql.shared.UserRegistrationRequest;
+import me.hashemalayan.nosql.shared.*;
 import me.hashemalayan.services.auth.AuthContext;
 
 public class LocalAuthService extends AuthServiceGrpc.AuthServiceImplBase {
@@ -29,6 +26,20 @@ public class LocalAuthService extends AuthServiceGrpc.AuthServiceImplBase {
     @Override
     public void getCredentials(GetUserCredentialsRequest request, StreamObserver<User> responseObserver) {
         responseObserver.onNext(authContext.getCredentials(request.getEmail(), request.getPassword()));
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void authenticateUser(
+            UserAuthenticationRequest request,
+            StreamObserver<UserAuthenticationResponse> responseObserver
+    ) {
+
+        responseObserver.onNext(
+                UserAuthenticationResponse.newBuilder()
+                        .setToken(authContext.authenticateUser(request.getEmail(), request.getPassword()))
+                        .build()
+        );
         responseObserver.onCompleted();
     }
 }

@@ -10,6 +10,7 @@ import me.hashemalayan.nosql.shared.ReplicationServiceGrpc.ReplicationServiceImp
 import me.hashemalayan.services.grpc.interfaces.LocalAuthService;
 import me.hashemalayan.services.grpc.interfaces.LocalServicesManager;
 import me.hashemalayan.util.interceptors.ExceptionHandlingInterceptor;
+import me.hashemalayan.util.interceptors.JwtInterceptor;
 import me.hashemalayan.util.interceptors.LoggingInterceptor;
 import org.slf4j.Logger;
 
@@ -23,6 +24,7 @@ public class BasicLocalServicesManager implements LocalServicesManager {
     private final NodeServiceImplBase localNodeService;
     final private ExceptionHandlingInterceptor exceptionHandlingInterceptor;
     final private LoggingInterceptor loggingInterceptor;
+    final private JwtInterceptor jwtInterceptor;
     private final ReplicationServiceImplBase localReplicationService;
     private final LocalAuthService localAuthService;
 
@@ -35,6 +37,7 @@ public class BasicLocalServicesManager implements LocalServicesManager {
             NodeServiceImplBase localNodeService,
             ExceptionHandlingInterceptor exceptionHandlingInterceptor,
             LoggingInterceptor loggingInterceptor,
+            JwtInterceptor jwtInterceptor,
             ReplicationServiceImplBase localReplicationService,
             LocalAuthService localAuthService,
             Logger logger) {
@@ -43,6 +46,7 @@ public class BasicLocalServicesManager implements LocalServicesManager {
         this.localNodeService = localNodeService;
         this.exceptionHandlingInterceptor = exceptionHandlingInterceptor;
         this.loggingInterceptor = loggingInterceptor;
+        this.jwtInterceptor = jwtInterceptor;
         this.localReplicationService = localReplicationService;
         this.localAuthService = localAuthService;
         this.logger = logger;
@@ -70,6 +74,7 @@ public class BasicLocalServicesManager implements LocalServicesManager {
                 .addService(localAuthService)
                 .intercept(exceptionHandlingInterceptor)
                 .intercept(loggingInterceptor)
+                .intercept(jwtInterceptor)
                 .build();
 
         server.start();

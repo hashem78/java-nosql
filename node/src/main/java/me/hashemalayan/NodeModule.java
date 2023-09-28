@@ -33,6 +33,7 @@ import me.hashemalayan.util.CustomStructToJson;
 import me.hashemalayan.util.JsonSchemaDeserializer;
 import me.hashemalayan.util.JsonSchemaSerializer;
 import me.hashemalayan.util.interceptors.ExceptionHandlingInterceptor;
+import me.hashemalayan.util.interceptors.JwtInterceptor;
 import me.hashemalayan.util.interceptors.LoggingInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +65,7 @@ public class NodeModule extends AbstractModule {
         bind(LocalAuthService.class).asEagerSingleton();
         bind(AuthContext.class).asEagerSingleton();
         bind(CustomStructToJson.class);
+        bind(JwtInterceptor.class);
 
         bind(CollectionConfigurationService.class).to(BasicCollectionConfigurationService.class).asEagerSingleton();
         bind(CollectionService.class).to(BasicCollectionService.class).asEagerSingleton();

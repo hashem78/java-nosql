@@ -5,8 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.util.Timestamps;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import me.hashemalayan.NodeProperties;
-import me.hashemalayan.nosql.shared.Common;
 import me.hashemalayan.nosql.shared.Common.CollectionDocument;
 import me.hashemalayan.nosql.shared.Common.DocumentMetaData;
 import me.hashemalayan.nosql.shared.Customstruct;
@@ -16,8 +17,8 @@ import me.hashemalayan.nosql.shared.User;
 import me.hashemalayan.services.auth.exceptions.UserAlreadyExistsException;
 import me.hashemalayan.services.auth.exceptions.UserDoesNotExistException;
 import me.hashemalayan.services.db.interfaces.AbstractDatabaseService;
+import me.hashemalayan.util.Constants;
 
-import java.io.FileDescriptor;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -123,5 +124,13 @@ public class AuthContext {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public String authenticateUser(String email, String password) {
+        final var credentials = getCredentials(email, password);
+        return Jwts.builder()
+                .setSubject(credentials.getUserId())
+                .signWith(Keys.hmacShaKeyFor(Constants.JWT_SIGNING_KEY.getBytes()))
+                .compact();
     }
 }
