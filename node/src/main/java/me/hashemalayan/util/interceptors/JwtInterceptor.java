@@ -9,6 +9,7 @@ import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import me.hashemalayan.nosql.shared.AuthServiceGrpc;
 import me.hashemalayan.nosql.shared.LoadBalancingServiceGrpc;
+import me.hashemalayan.nosql.shared.ReplicationServiceGrpc;
 import me.hashemalayan.nosql.shared.SignalingServiceGrpc;
 import me.hashemalayan.util.Constants;
 
@@ -37,6 +38,8 @@ public class JwtInterceptor implements ServerInterceptor {
         else if (Objects.equals(serviceName, LoadBalancingServiceGrpc.SERVICE_NAME)) {
             return serverCallHandler.startCall(serverCall, metadata);
         } else if (Objects.equals(serviceName, AuthServiceGrpc.SERVICE_NAME)) {
+            return serverCallHandler.startCall(serverCall, metadata);
+        } else if(Objects.equals(serviceName, ReplicationServiceGrpc.SERVICE_NAME)){
             return serverCallHandler.startCall(serverCall, metadata);
         }
 
